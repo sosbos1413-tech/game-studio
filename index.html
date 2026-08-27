@@ -9924,5 +9924,800 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
   };
 })();
 </script>
+<script id="v90StudioDepthSystems">
+(()=>{
+  'use strict';
+  const lang=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>lang()==='en'?en:ar;
+
+  /* ========================================================================
+   * 1. Catalogs
+   * ==================================================================== */
+  const DNA_TRAITS={
+    arcade:{id:'arcade',icon:'🕹️',name:'Arcade'},
+    realistic:{id:'realistic',icon:'🎯',name:'Realistic'},
+    storyDriven:{id:'storyDriven',icon:'📖',name:'Story-Driven'},
+    competitive:{id:'competitive',icon:'🏆',name:'Competitive'},
+    casual:{id:'casual',icon:'🙂',name:'Casual'},
+    hardcore:{id:'hardcore',icon:'💀',name:'Hardcore'},
+    experimental:{id:'experimental',icon:'🧪',name:'Experimental'},
+    accessible:{id:'accessible',icon:'🤝',name:'Accessible'},
+    atmospheric:{id:'atmospheric',icon:'🌫️',name:'Atmospheric'},
+    strategic:{id:'strategic',icon:'♟️',name:'Strategic'},
+    multiplayer:{id:'multiplayer',icon:'👥',name:'Multiplayer'},
+    singlePlayer:{id:'singlePlayer',icon:'🧍',name:'Single Player'},
+    fastPaced:{id:'fastPaced',icon:'⚡',name:'Fast-Paced'},
+    deep:{id:'deep',icon:'🌊',name:'Deep'},
+    innovative:{id:'innovative',icon:'💡',name:'Innovative'}
+  };
+  const DNA_IDS=Object.keys(DNA_TRAITS);
+
+  const GENRE_DNA_LEAN={
+    racing:{arcade:18,competitive:14,fastPaced:16},
+    horror:{atmospheric:20,storyDriven:10,hardcore:8},
+    puzzle:{strategic:14,deep:10,casual:8},
+    action:{fastPaced:16,competitive:10,arcade:8},
+    simulation:{deep:14,realistic:16,casual:6},
+    adventure:{storyDriven:16,singlePlayer:12,atmospheric:10},
+    rpg:{storyDriven:18,deep:16,singlePlayer:10},
+    strategy:{strategic:20,deep:14,hardcore:8},
+    sports:{competitive:18,multiplayer:12,fastPaced:10}
+  };
+  const TOPIC_DNA_LEAN={
+    streets:{arcade:8,fastPaced:6},
+    space:{innovative:10,atmospheric:8},
+    ruins:{atmospheric:12,storyDriven:6},
+    delivery:{casual:8,accessible:6},
+    zombies:{hardcore:12,atmospheric:10},
+    war:{hardcore:10,strategic:8},
+    fantasy:{innovative:8,atmospheric:10,storyDriven:6},
+    pirates:{storyDriven:8,atmospheric:6},
+    espionage:{strategic:8,storyDriven:6},
+    crime:{atmospheric:8,hardcore:6},
+    football:{competitive:10,accessible:6},
+    robots:{innovative:10,strategic:6},
+    survival:{hardcore:12,deep:8},
+    farm:{casual:12,accessible:10},
+    school:{casual:10,accessible:8},
+    medicine:{deep:8,realistic:8}
+  };
+  const DIRECTION_DNA_LEAN={
+    safe:{accessible:14,innovative:-10},
+    balanced:{},
+    experimental:{innovative:20,experimental:20,accessible:-8}
+  };
+  const BRANCH_DNA_LEAN={
+    'foundation:solid':{realistic:10,deep:6},
+    'foundation:fast':{innovative:8,fastPaced:6},
+    'visual:assets':{accessible:8,casual:6},
+    'visual:custom':{innovative:10,atmospheric:6},
+    'scopeStrategy:disciplined':{accessible:10,casual:6},
+    'scopeStrategy:ambitious':{innovative:10,hardcore:6}
+  };
+  const TRAIT_DNA_LEAN={
+    perfectionist:{deep:8,realistic:6},
+    creative:{innovative:8,atmospheric:6},
+    reliable:{accessible:8,casual:6}
+  };
+  const FAMILY_TOPICS=new Set(['farm','school']);
+  const HARSH_TOPICS=new Set(['zombies','war','survival','crime']);
+
+  const SEGMENT_IDS=['casual','core','hardcore','competitive','storyFans','strategyFans','simulationFans','family','multiplayerFans','indieFans'];
+
+  const IDENTITY_DEFS={
+    racingSpecialist:{id:'racingSpecialist',icon:'🏎',name:t('متخصصو السباقات','Racing Specialists')},
+    creativeIndie:{id:'creativeIndie',icon:'🎨',name:t('استوديو إندي مبدع','Creative Indie Studio')},
+    storytellingMasters:{id:'storytellingMasters',icon:'📖',name:t('أساتذة السرد','Storytelling Masters')},
+    experimentalDevs:{id:'experimentalDevs',icon:'🧪',name:t('مطورون تجريبيون','Experimental Developers')},
+    prestigeStudio:{id:'prestigeStudio',icon:'🏆',name:t('استوديو مرموق','Prestige Studio')},
+    commercialHitmakers:{id:'commercialHitmakers',icon:'💰',name:t('صنّاع النجاحات التجارية','Commercial Hitmakers')},
+    hardcoreGameStudio:{id:'hardcoreGameStudio',icon:'🎮',name:t('استوديو ألعاب Hardcore','Hardcore Game Studio')},
+    familyGameStudio:{id:'familyGameStudio',icon:'👨‍👩‍👧',name:t('استوديو ألعاب عائلية','Family Game Studio')}
+  };
+
+  const LAUNCH_STRATEGIES={
+    trailer:{id:'trailer',icon:'🎬',name:t('Trailer','Trailer'),cost:80,hype:6,quality:0,bugs:0,delayWeeks:0},
+    demo:{id:'demo',icon:'🎮',name:t('Demo','Demo'),cost:150,hype:10,quality:2,bugs:-0.5,delayWeeks:1},
+    closedBeta:{id:'closedBeta',icon:'🧪',name:t('Closed Beta','Closed Beta'),cost:220,hype:8,quality:4,bugs:-1.5,delayWeeks:1},
+    influencer:{id:'influencer',icon:'📺',name:t('عرض مؤثر','Influencer Preview'),cost:300,hype:16,quality:0,bugs:0,delayWeeks:0},
+    silent:{id:'silent',icon:'🤫',name:t('إطلاق صامت','Silent Launch'),cost:0,hype:-6,quality:0,bugs:0,delayWeeks:0},
+    delay:{id:'delay',icon:'⏳',name:t('تأجيل الإصدار','Delay Release'),cost:60,hype:-3,quality:5,bugs:-2,delayWeeks:2},
+    marketingPush:{id:'marketingPush',icon:'🔥',name:t('حملة تسويق ضخمة','Massive Marketing Push'),cost:450,hype:22,quality:0,bugs:0,delayWeeks:0}
+  };
+
+  const RIVALRY_WINDOW_WEEKS=4;
+
+  /* ========================================================================
+   * 2. Game DNA
+   * ==================================================================== */
+  function ensureDnaProfile(p){
+    if(!p)return null;
+    if(!p.dnaProfile||typeof p.dnaProfile!=='object'){
+      p.dnaProfile={traits:Object.fromEntries(DNA_IDS.map(id=>[id,0])),primary:[],decisionBonus:Object.fromEntries(DNA_IDS.map(id=>[id,0])),lastComputedTurn:-1};
+    }
+    if(!p.dnaProfile.decisionBonus)p.dnaProfile.decisionBonus=Object.fromEntries(DNA_IDS.map(id=>[id,0]));
+    if(!p.dnaProfile.traits)p.dnaProfile.traits=Object.fromEntries(DNA_IDS.map(id=>[id,0]));
+    if(!Array.isArray(p.dnaProfile.primary))p.dnaProfile.primary=[];
+    return p.dnaProfile;
+  }
+  function addLean(scores,lean){
+    if(!lean)return;
+    Object.entries(lean).forEach(([k,v])=>{if(k in scores)scores[k]+=v});
+  }
+  function nudgeDna(project,partial){
+    const profile=ensureDnaProfile(project);
+    Object.entries(partial).forEach(([k,v])=>{
+      if(k in profile.decisionBonus)profile.decisionBonus[k]=clamp(profile.decisionBonus[k]+v,-40,40);
+    });
+  }
+  function computeDnaProfile(project){
+    if(!project)return null;
+    const profile=ensureDnaProfile(project);
+    const scores=Object.fromEntries(DNA_IDS.map(id=>[id,0]));
+    addLean(scores,GENRE_DNA_LEAN[project.genre]);
+    addLean(scores,TOPIC_DNA_LEAN[project.topic]);
+    addLean(scores,DIRECTION_DNA_LEAN[project.direction]||{});
+    const focus=project.focus||{};
+    scores.innovative+=(focus.innovation||0)*0.4;
+    scores.experimental+=(focus.innovation||0)*0.25;
+    scores.storyDriven+=(focus.story||0)*0.4;
+    scores.deep+=(focus.story||0)*0.2;
+    scores.arcade+=(focus.gameplay||0)*0.12;
+    scores.competitive+=(focus.gameplay||0)*0.10;
+    scores.fastPaced+=(focus.gameplay||0)*0.10;
+    scores.atmospheric+=((focus.graphics||0)+(focus.sound||0))*0.12;
+    scores.realistic+=(focus.graphics||0)*0.12;
+    const branches=project.branches||{};
+    Object.entries(branches).forEach(([k,v])=>addLean(scores,BRANCH_DNA_LEAN[k+':'+v]));
+    try{
+      const eff=engineEffect(project);
+      if(eff.innovation>1)scores.innovative+=(eff.innovation-1)*40;
+      if(eff.bugMult<1)scores.realistic+=(1-eff.bugMult)*40;
+    }catch(e){}
+    try{
+      allEmployees().forEach(emp=>{
+        const led=employeeLedTasksForProject(project,emp);
+        if(led<=0)return;
+        const factor=clamp(led/3,0.3,1.6);
+        if(PEOPLE_TRAITS[emp.trait]&&TRAIT_DNA_LEAN[emp.trait]){
+          Object.entries(TRAIT_DNA_LEAN[emp.trait]).forEach(([k,v])=>{scores[k]+=v*factor});
+        }else if(packTrait(emp)){
+          scores.hardcore+=2*factor;
+        }
+      });
+    }catch(e){}
+    Object.entries(profile.decisionBonus).forEach(([k,v])=>{scores[k]+=v});
+    DNA_IDS.forEach(id=>{scores[id]=clamp(Math.round(scores[id]),0,100)});
+    profile.traits=scores;
+    profile.primary=[...DNA_IDS].sort((a,b)=>scores[b]-scores[a]||DNA_IDS.indexOf(a)-DNA_IDS.indexOf(b)).slice(0,3);
+    profile.lastComputedTurn=project.productionTurn||0;
+    return profile;
+  }
+  function currentDna(project){
+    computeDnaProfile(project);
+    return project.dnaProfile;
+  }
+
+  /* ========================================================================
+   * 3. Audience Segments
+   * ==================================================================== */
+  function ensureAudienceSegments(){
+    const c=gameState.company;
+    if(!c.audienceSegments||typeof c.audienceSegments!=='object'){
+      c.audienceSegments={version:1,affinity:Object.fromEntries(SEGMENT_IDS.map(s=>[s,0])),distribution:Object.fromEntries(SEGMENT_IDS.map(s=>[s,0])),backfilled:false,history:[]};
+    }
+    const seg=c.audienceSegments;
+    if(!seg.affinity)seg.affinity=Object.fromEntries(SEGMENT_IDS.map(s=>[s,0]));
+    if(!seg.distribution)seg.distribution=Object.fromEntries(SEGMENT_IDS.map(s=>[s,0]));
+    SEGMENT_IDS.forEach(s=>{
+      if(!Number.isFinite(seg.affinity[s]))seg.affinity[s]=0;
+      if(!Number.isFinite(seg.distribution[s]))seg.distribution[s]=0;
+    });
+    if(!Array.isArray(seg.history))seg.history=[];
+    if(!seg.backfilled){
+      const fans=c.fans||0,share=Math.round(fans/SEGMENT_IDS.length);
+      let assigned=0;
+      SEGMENT_IDS.forEach((s,i)=>{const v=i===SEGMENT_IDS.length-1?Math.max(0,fans-assigned):share;seg.distribution[s]=v;assigned+=v});
+      seg.backfilled=true;
+    }
+    return seg;
+  }
+  function segmentPullFromDna(dna,topic){
+    const s=(dna&&dna.traits)||{};
+    const avg=(...ks)=>ks.reduce((a,k)=>a+(s[k]||0),0)/ks.length;
+    const familyMult=FAMILY_TOPICS.has(topic)?1.3:(HARSH_TOPICS.has(topic)?0.5:1);
+    return {
+      hardcore:avg('hardcore','deep','competitive'),
+      casual:avg('casual','accessible','arcade'),
+      storyFans:avg('storyDriven','atmospheric','deep'),
+      competitive:avg('competitive','multiplayer','fastPaced'),
+      strategyFans:avg('strategic','deep'),
+      simulationFans:avg('realistic','deep','accessible'),
+      family:avg('casual','accessible')*familyMult,
+      multiplayerFans:avg('multiplayer','competitive','fastPaced'),
+      indieFans:avg('innovative','experimental','atmospheric'),
+      core:avg(...DNA_IDS)
+    };
+  }
+  function normalizeWeights(pull){
+    const total=Object.values(pull).reduce((a,b)=>a+Math.max(0,b),0)||1;
+    const out={};
+    Object.entries(pull).forEach(([k,v])=>{out[k]=Math.max(0,v)/total});
+    return out;
+  }
+  function cosineSim(a,b){
+    let dot=0,na=0,nb=0;
+    SEGMENT_IDS.forEach(k=>{const av=a[k]||0,bv=b[k]||0;dot+=av*bv;na+=av*av;nb+=bv*bv});
+    if(!na||!nb)return 0;
+    return dot/(Math.sqrt(na)*Math.sqrt(nb));
+  }
+  function updateAudienceSegments(project){
+    const seg=ensureAudienceSegments();
+    const dna=currentDna(project);
+    const weights=normalizeWeights(segmentPullFromDna(dna,project.topic));
+    const affinityNorm=normalizeWeights(seg.affinity);
+    const hasHistory=Object.values(seg.affinity).some(v=>v>5);
+    const pivotDistance=hasHistory?1-cosineSim(weights,affinityNorm):0;
+    let fansGained=Math.max(0,Math.round(project.fansGained||0));
+    let pivotPenalty=0;
+    if(pivotDistance>0.5){
+      pivotPenalty=Math.round(fansGained*clamp((pivotDistance-0.5)*0.4,0,0.20));
+      fansGained=Math.max(0,fansGained-pivotPenalty);
+    }
+    project.fansGained=fansGained;
+    const order=[...SEGMENT_IDS].sort((a,b)=>weights[b]-weights[a]);
+    const gained={};let assigned=0;
+    order.forEach((s,i)=>{
+      const v=i===order.length-1?fansGained-assigned:Math.round(fansGained*weights[s]);
+      gained[s]=v;assigned+=v;
+    });
+    SEGMENT_IDS.forEach(s=>{
+      seg.distribution[s]=Math.max(0,(seg.distribution[s]||0)+(gained[s]||0));
+      seg.affinity[s]=clamp((seg.affinity[s]||0)*0.90+weights[s]*100*0.10,0,100);
+    });
+    seg.history.push({gameId:project.id,week:gameState.company.week,gained,dominantSegment:order[0]});
+    if(seg.history.length>12)seg.history=seg.history.slice(-12);
+    return {pivotPenalty,gained,dominantSegment:order[0]};
+  }
+
+  /* ========================================================================
+   * 4. Studio Identity
+   * ==================================================================== */
+  function ensureStudioIdentity(){
+    const c=gameState.company;
+    if(!c.studioIdentity||typeof c.studioIdentity!=='object'){
+      c.studioIdentity={version:1,tags:[],scores:Object.fromEntries(Object.keys(IDENTITY_DEFS).map(id=>[id,0])),windowSize:6};
+    }
+    if(!c.studioIdentity.scores)c.studioIdentity.scores=Object.fromEntries(Object.keys(IDENTITY_DEFS).map(id=>[id,0]));
+    Object.keys(IDENTITY_DEFS).forEach(id=>{if(!Number.isFinite(c.studioIdentity.scores[id]))c.studioIdentity.scores[id]=0});
+    if(!Array.isArray(c.studioIdentity.tags))c.studioIdentity.tags=[];
+    if(!Number.isFinite(c.studioIdentity.windowSize))c.studioIdentity.windowSize=6;
+    return c.studioIdentity;
+  }
+  function computeStudioIdentityScores(){
+    const identity=ensureStudioIdentity();
+    const hist=(gameState.history||[]).slice(-identity.windowSize);
+    if(!hist.length)return identity;
+    const n=hist.length;
+    const avgField=key=>hist.reduce((s,h)=>s+(h[key]||0),0)/n;
+    const avgReview=avgField('reviewAverage');
+    const avgCopies=avgField('copies');
+    const dnaAvg=trait=>hist.reduce((s,h)=>s+(((h.dnaProfile&&h.dnaProfile.traits)||{})[trait]||0),0)/n;
+    const raw={};
+    raw.racingSpecialist=(hist.filter(h=>h.genre==='racing').length/n*100)*clamp(avgReview/10,0.5,1);
+    raw.creativeIndie=clamp((dnaAvg('innovative')+dnaAvg('experimental'))/2-(hist.filter(h=>h.size==='large').length/n*20),0,100);
+    raw.storytellingMasters=avgReview>=6?clamp((dnaAvg('storyDriven')+dnaAvg('atmospheric'))/2,0,100):0;
+    raw.experimentalDevs=clamp((hist.filter(h=>h.direction==='experimental').length/n*100)*clamp(dnaAvg('innovative')/100+0.4,0.4,1.2),0,100);
+    raw.prestigeStudio=clamp((hist.reduce((s,h)=>s+((h.awardsWon&&h.awardsWon.length)||0),0)/n)*60+avgReview*4,0,100);
+    raw.commercialHitmakers=clamp(avgCopies/2000*100,0,100);
+    raw.hardcoreGameStudio=clamp((dnaAvg('hardcore')+dnaAvg('deep')+dnaAvg('competitive'))/3,0,100);
+    raw.familyGameStudio=clamp((dnaAvg('casual')+dnaAvg('accessible'))/2*(hist.some(h=>FAMILY_TOPICS.has(h.topic))?1.15:0.85),0,100);
+    Object.keys(IDENTITY_DEFS).forEach(id=>{
+      identity.scores[id]=clamp(Math.round((identity.scores[id]||0)*0.6+(raw[id]||0)*0.4),0,100);
+    });
+    const gameNumber=gameState.company.gamesReleased;
+    const top=Object.entries(identity.scores).filter(([,v])=>v>=45).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    const prevTags=identity.tags;
+    identity.tags=top.map(([id,score])=>{
+      const existing=prevTags.find(x=>x.id===id);
+      return {id,name:IDENTITY_DEFS[id].name,icon:IDENTITY_DEFS[id].icon,score,since:(existing&&existing.since)||gameNumber};
+    });
+    return identity;
+  }
+  function tagRelevance(tagId,project){
+    if(tagId==='racingSpecialist')return project.genre==='racing'?1:0.25;
+    if(tagId==='hardcoreGameStudio')return 0.6;
+    if(tagId==='familyGameStudio')return FAMILY_TOPICS.has(project.topic)?1:0.25;
+    if(tagId==='prestigeStudio')return 0.5;
+    if(tagId==='commercialHitmakers')return 0.5;
+    return 0.4;
+  }
+  function identityBonusForProject(project){
+    const identity=ensureStudioIdentity();
+    let bonus=0;
+    (identity.tags||[]).forEach(tg=>{bonus+=tagRelevance(tg.id,project)*(tg.score/100)*0.15});
+    return bonus;
+  }
+
+  /* ========================================================================
+   * 5. Studio Learning + Post-Mortem "Why"
+   * ==================================================================== */
+  function ensureStudioLearning(){
+    const c=gameState.company;
+    if(!c.studioLearning||typeof c.studioLearning!=='object'){
+      c.studioLearning={version:1,validatedPatterns:{},activeHints:[]};
+    }
+    if(!c.studioLearning.validatedPatterns)c.studioLearning.validatedPatterns={};
+    if(!Array.isArray(c.studioLearning.activeHints))c.studioLearning.activeHints=[];
+    return c.studioLearning;
+  }
+  function teamExperienceScore(project){
+    const leader=selectedLeaderEmployee(project);
+    if(!leader)return 0;
+    const info=expertiseInfo(leader,project.genre);
+    return (info.stars-2)*4;
+  }
+  function matchingRivalryForProject(project){
+    const rivalries=ensureRivalries();
+    return rivalries.find(r=>r.sharedGenre===project.genre&&Math.abs((r.lastEventWeek||0)-gameState.company.week)<=RIVALRY_WINDOW_WEEKS)||null;
+  }
+  function computeWhyFactors(project){
+    const sm=project.salesModel||{};
+    const factors=[];
+    if(Number.isFinite(sm.fitFactor))factors.push({id:'fit',label:t('توافق النوع/الموضوع','Genre/Topic Fit'),pct:Math.round((sm.fitFactor-1)*100),direction:sm.fitFactor>=1?'positive':'negative'});
+    if(Number.isFinite(sm.identityBonus))factors.push({id:'identity',label:t('هوية الاستوديو','Studio Identity'),pct:Math.round(sm.identityBonus*100),direction:sm.identityBonus>=0?'positive':'negative'});
+    if(Number.isFinite(sm.marketFactor))factors.push({id:'market',label:t('شهية السوق','Market Demand'),pct:Math.round((sm.marketFactor-1)*100),direction:sm.marketFactor>=1?'positive':'negative'});
+    const teamXp=teamExperienceScore(project);
+    if(teamXp)factors.push({id:'team',label:t('خبرة الفريق','Team Experience'),pct:Math.round(teamXp),direction:teamXp>=0?'positive':'negative'});
+    const gap=Number.isFinite(sm.expectationGap)?sm.expectationGap:((sm.hype||project.hype||0)-(sm.avgReviews||0)*10);
+    if(Math.abs(gap)>=8)factors.push({id:'hypeGap',label:t('فجوة Hype/جودة','Hype-Quality Gap'),pct:-Math.round(Math.abs(gap)/2),direction:'negative'});
+    if((project.bugs||0)>0.5)factors.push({id:'bugs',label:t('أخطاء عند الإصدار','Bugs at Launch'),pct:-Math.round(project.bugs*3),direction:'negative'});
+    const rivalry=matchingRivalryForProject(project);
+    if(rivalry)factors.push({id:'rival',label:t('منافسة قوية','Rival Competition'),pct:-Math.round(rivalry.intensity/10),direction:'negative'});
+    if(project.launchStrategy)factors.push({id:'launch',label:t('استراتيجية الإطلاق','Launch Strategy'),pct:Math.round((project.launchStrategy.hypeDelta||0)*0.5),direction:(project.launchStrategy.hypeDelta||0)>=0?'positive':'negative'});
+    if(sm.audiencePivotPenalty)factors.push({id:'pivot',label:t('تحوّل جمهوري مفاجئ','Audience Pivot'),pct:-Math.round(sm.audiencePivotPenalty/Math.max(1,(project.fansGained||0)+sm.audiencePivotPenalty)*100),direction:'negative'});
+    factors.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
+    return factors.slice(0,7);
+  }
+  function computeTakeaways(project,factors){
+    const learning=ensureStudioLearning();
+    const dna=currentDna(project);
+    const key=project.genre+':'+(dna.primary||[]).join(',');
+    const success=(project.profit||0)>0&&averageReviews(project)>=6.5;
+    const pattern=learning.validatedPatterns[key]||{successCount:0,failCount:0};
+    if(success)pattern.successCount=(pattern.successCount||0)+1;else pattern.failCount=(pattern.failCount||0)+1;
+    pattern.lastGameId=project.id;
+    learning.validatedPatterns[key]=pattern;
+    const takeaways=[];
+    const top=factors[0];
+    const genreName=(genres[project.genre]&&genres[project.genre].name)||project.genre;
+    if(top){
+      if(top.id==='fit'&&top.direction==='positive')takeaways.push(t(`جمهورك متوافق مع ${genreName} — استمر على هذا الاتجاه.`,`Your audience aligns with ${project.genre} — keep leaning into it.`));
+      else if(top.id==='hypeGap')takeaways.push(t('التوقعات كانت أعلى من الجودة الفعلية — راقب Hype قبل الإصدار القادم.','Expectations outran quality — watch hype ahead of the next launch.'));
+      else if(top.id==='bugs')takeaways.push(t('الأخطاء عند الإصدار كلفتك تقييمات وسمعة — خصص وقتًا أكبر للصقل.','Launch bugs cost you reviews and reputation — budget more time for polish.'));
+      else if(top.id==='identity')takeaways.push(t('هوية استوديوك بدأت تنعكس على استقبال الجمهور.','Your studio identity is starting to shape audience reception.'));
+    }
+    const dnaLabel=(dna.primary||[]).slice(0,2).map(id=>DNA_TRAITS[id]?DNA_TRAITS[id].name:id).join('/');
+    if(pattern.successCount>=2&&pattern.failCount===0)takeaways.push(t(`نمط ${genreName} + ${dnaLabel} أثبت نجاحه أكثر من مرة.`,`The ${project.genre} + ${dnaLabel} pattern has proven itself repeatedly.`));
+    else if(pattern.failCount>=2&&pattern.successCount===0)takeaways.push(t(`نمط ${genreName} + ${dnaLabel} لم ينجح حتى الآن.`,`The ${project.genre} + ${dnaLabel} pattern hasn't worked out yet.`));
+    const ranked=Object.entries(learning.validatedPatterns).map(([k,v])=>({k,score:(v.successCount||0)-(v.failCount||0)})).sort((a,b)=>b.score-a.score).filter(p=>p.score>0).slice(0,2);
+    learning.activeHints=ranked.map(p=>{
+      const g=p.k.split(':')[0],gn=(genres[g]&&genres[g].name)||g;
+      return t(`💡 نمط ${gn} أثبت نجاحه سابقًا في استوديوك.`,`💡 The ${g} pattern has worked well for your studio before.`);
+    });
+    return takeaways.slice(0,3);
+  }
+
+  /* ========================================================================
+   * 6. Rivalries
+   * ==================================================================== */
+  function ensureRivalries(){
+    const ind=normalizeIndustryState();
+    if(!Array.isArray(ind.rivalries))ind.rivalries=[];
+    return ind.rivalries;
+  }
+  function detectAndUpdateRivalries(project){
+    const ind=normalizeIndustryState();
+    const rivalries=ensureRivalries();
+    const week=gameState.company.week;
+    const avgReview=averageReviews(project);
+    const matches=(ind.companies||[]).filter(r=>r.specialty===project.genre&&r.latestGame&&Math.abs((r.latestGame.week||0)-week)<=RIVALRY_WINDOW_WEEKS);
+    matches.forEach(r=>{
+      let rv=rivalries.find(x=>x.rivalId===r.id);
+      if(!rv){
+        rv={rivalId:r.id,gamesCount:0,playerAvgReview:0,rivalAvgReview:0,playerAvgCopies:0,rivalAvgCopies:0,playerAwards:0,rivalAwards:0,playerFranchiseStrength:0,rivalFranchiseStrength:0,sharedGenre:project.genre,intensity:0,lastEventWeek:week,log:[]};
+        rivalries.push(rv);
+      }
+      const n=rv.gamesCount+1;
+      rv.playerAvgReview=(rv.playerAvgReview*rv.gamesCount+avgReview)/n;
+      rv.rivalAvgReview=(rv.rivalAvgReview*rv.gamesCount+(r.latestGame.score||0))/n;
+      rv.playerAvgCopies=(rv.playerAvgCopies*rv.gamesCount+(project.copies||0))/n;
+      rv.rivalAvgCopies=(rv.rivalAvgCopies*rv.gamesCount+(r.latestGame.copies||0))/n;
+      try{rv.playerAwards=(typeof awardsState==='function'&&awardsState().totalAwards)||rv.playerAwards}catch(e){}
+      rv.rivalAwards=(r.awardsWon&&r.awardsWon.length)||0;
+      try{
+        const ips=((gameState.company.franchiseStudio&&gameState.company.franchiseStudio.ips)||[]).filter(ip=>(ip.gameIds||[]).some(id=>{
+          const h=(gameState.history||[]).find(x=>x.id===id);return h&&h.genre===project.genre;
+        }));
+        rv.playerFranchiseStrength=ips.reduce((s,ip)=>s+(ip.reputation||0),0);
+        rv.rivalFranchiseStrength=((r.franchises&&r.franchises.length)||0)*10;
+      }catch(e){}
+      rv.gamesCount=n;
+      rv.sharedGenre=project.genre;
+      rv.lastEventWeek=week;
+      rv.intensity=clamp(rv.gamesCount*15-Math.abs(rv.playerAvgReview-rv.rivalAvgReview)*5+50,0,100);
+      rv.log=Array.isArray(rv.log)?rv.log:[];
+      if(rv.gamesCount===2){
+        const msg=t(`🎯 <b>${r.name}</b> بدأت منافسة حقيقية معك في ${(genres[project.genre]&&genres[project.genre].name)||project.genre}.`,`🎯 <b>${r.name}</b> has started a real rivalry with you in ${project.genre}.`);
+        ind.news=[msg,...(ind.news||[])].slice(0,12);
+        rv.log.push({week,type:'announce',text:msg});
+      }
+      if(rv.playerAvgReview-rv.rivalAvgReview>=1.5){
+        r.lastReleaseWeek=Math.max((r.lastReleaseWeek||week)-3,week+2);
+        const msg=t(`📰 بعد نجاحك، تتوقع الصحافة أن ترد <b>${r.name}</b> بمشروع جديد قريبًا.`,`📰 After your success, the press expects <b>${r.name}</b> to respond soon.`);
+        ind.news=[msg,...(ind.news||[])].slice(0,12);
+        rv.log.push({week,type:'compare',text:msg});
+      }
+      rv.log=rv.log.slice(-5);
+    });
+    rivalries.forEach(rv=>{if(!matches.some(m=>m.id===rv.rivalId))rv.intensity=clamp((rv.intensity||0)*0.92,0,100)});
+    return rivalries;
+  }
+
+  /* ========================================================================
+   * 7. Launch Strategy
+   * ==================================================================== */
+  function resolveLaunchStrategy(id){
+    const def=LAUNCH_STRATEGIES[id];
+    if(!def||!state||state.launchPhaseComplete)return false;
+    if(def.cost&&gameState.company.cash<def.cost)return false;
+    gameState.company.cash-=def.cost;
+    if(def.quality){
+      const weakest=focusKeys.reduce((a,b)=>state.quality[a]<state.quality[b]?a:b);
+      addQuality({[weakest]:def.quality});
+    }
+    if(def.bugs)state.bugs=Math.max(0,state.bugs+def.bugs);
+    state.hype=clamp(state.hype+def.hype,0,100);
+    if(def.delayWeeks)gameState.company.week+=def.delayWeeks;
+    state.launchStrategy={id,cost:def.cost,hypeDelta:def.hype,qualityDelta:def.quality,bugDelta:def.bugs,delayWeeks:def.delayWeeks,chosenAtWeek:gameState.company.week};
+    state.launchPhaseComplete=true;
+    saveGame();
+    return true;
+  }
+  function launchOverlayHTML(){
+    return `<div id="v90LaunchOverlay" style="position:fixed;inset:0;z-index:9999;background:rgba(8,10,20,.86);display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="max-width:520px;width:100%;background:#12162a;border:1px solid rgba(124,92,252,.35);border-radius:16px;padding:20px;max-height:90vh;overflow:auto;color:#eef2fb">
+        <h2 style="margin:0 0 6px">🚀 ${t('استراتيجية الإطلاق','Launch Strategy')}</h2>
+        <p style="opacity:.8;margin:0 0 14px;font-size:13px">${t('اختر قرارًا واحدًا قبل الإطلاق. Hype الحالي: ','Pick one decision before launch. Current hype: ')}${Math.round(state.hype)}</p>
+        <div id="v90LaunchOptions" style="display:grid;gap:8px"></div>
+      </div>
+    </div>`;
+  }
+  function showLaunchOverlay(onDone){
+    if(document.getElementById('v90LaunchOverlay'))return;
+    document.body.insertAdjacentHTML('beforeend',launchOverlayHTML());
+    const box=document.getElementById('v90LaunchOptions');
+    box.innerHTML=Object.values(LAUNCH_STRATEGIES).map(def=>`<button data-v90-launch="${def.id}" style="text-align:start;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:inherit;cursor:pointer" ${def.cost&&gameState.company.cash<def.cost?'disabled':''}><b>${def.icon} ${def.name}</b><br><small>💵 ${fmt(def.cost)} • Hype ${def.hype>=0?'+':''}${def.hype}${def.delayWeeks?(' • +'+def.delayWeeks+'w'):''}</small></button>`).join('');
+    box.querySelectorAll('[data-v90-launch]').forEach(btn=>btn.addEventListener('click',()=>{
+      if(!resolveLaunchStrategy(btn.dataset.v90Launch))return;
+      const el=document.getElementById('v90LaunchOverlay');if(el)el.remove();
+      onDone();
+    }));
+  }
+  function rewireToSalesBtn(){
+    const btn=document.getElementById('toSalesBtn');
+    if(!btn||btn.dataset.v90Wired)return;
+    const clone=btn.cloneNode(true);
+    btn.replaceWith(clone);
+    clone.dataset.v90Wired='1';
+    clone.addEventListener('click',()=>{
+      const proceed=()=>{if(!state.weekSales||!state.weekSales.length)calculateSales();setPhase('sales');renderSales();saveGame()};
+      if(state.launchPhaseComplete)return proceed();
+      showLaunchOverlay(proceed);
+    });
+  }
+
+  /* ========================================================================
+   * 8. UI extensions
+   * ==================================================================== */
+  function factorRowHTML(f){
+    const sign=f.pct>=0?'+':'';
+    const color=f.pct>=0?'#4ade80':'#f87171';
+    const icon=f.pct>=0?'✅':(Math.abs(f.pct)>=8?'❌':'⚠️');
+    return `<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;font-size:13px"><span>${icon} ${f.label}</span><b style="color:${color}">${sign}${f.pct}%</b></div>`;
+  }
+  function appendWhySummary(){
+    const modal=document.getElementById('v1681PostReleaseModal'),content=document.getElementById('v1681PostReleaseContent');
+    if(!modal||!modal.classList.contains('show')||!content||content.querySelector('.v90-why-box'))return;
+    const h=(gameState.history||[]).find(g=>g.id===state.id);
+    const pm=h&&h.postMortemV1;
+    if(!pm)return;
+    const box=document.createElement('div');
+    box.className='v90-why-box';
+    box.style.cssText='margin-top:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)';
+    box.innerHTML=`<h3 style="margin:0 0 6px">${t('🔎 لماذا نجحت أو فشلت اللعبة؟','🔎 Why did this game succeed or fail?')}</h3>${(pm.factors||[]).map(factorRowHTML).join('')}${(pm.takeaways&&pm.takeaways.length)?`<h3 style="margin:12px 0 6px">${t('📚 ماذا تعلم الاستوديو؟','📚 What did the studio learn?')}</h3>${pm.takeaways.map(x=>`<div style="font-size:13px;padding:3px 0">📚 ${x}</div>`).join('')}`:''}`;
+    content.appendChild(box);
+  }
+  function renderStudioLearningHints(){
+    const scr=document.getElementById('setupScreen');
+    if(!scr)return;
+    scr.querySelectorAll('.v90-hint-box').forEach(el=>el.remove());
+    const learning=ensureStudioLearning();
+    if(!learning.activeHints.length)return;
+    const box=document.createElement('div');
+    box.className='v90-hint-box';
+    box.style.cssText='margin:0 0 10px;padding:10px 12px;border-radius:12px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);font-size:13px;line-height:1.6';
+    box.innerHTML=learning.activeHints.map(h=>`<div>${h}</div>`).join('');
+    scr.insertBefore(box,scr.firstChild);
+  }
+  function identityBadgeHTML(){
+    const identity=ensureStudioIdentity();
+    if(!identity.tags.length)return '';
+    return `<div class="v90-identity-badges" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${identity.tags.map(tg=>`<span style="padding:4px 10px;border-radius:999px;background:rgba(124,92,252,.16);border:1px solid rgba(124,92,252,.35);font-size:12px">${tg.icon} ${tg.name}</span>`).join('')}</div>`;
+  }
+  function renderIdentityBadges(){
+    const card=document.getElementById('lastGameCard');
+    if(!card)return;
+    let box=document.getElementById('v90IdentityBadges');
+    if(!box){box=document.createElement('div');box.id='v90IdentityBadges';card.insertAdjacentElement('afterend',box)}
+    box.innerHTML=identityBadgeHTML();
+  }
+  function rivalryRowHTML(rv){
+    const ind=normalizeIndustryState();
+    const rival=(ind.companies||[]).find(r=>r.id===rv.rivalId);
+    const genreName=(genres[rv.sharedGenre]&&genres[rv.sharedGenre].name)||rv.sharedGenre;
+    return `<div class="industry-row"><span class="pos">${(rival&&rival.icon)||'🏢'}</span><span><b>${(rival&&rival.name)||rv.rivalId}</b><small>${genreName} • ${rv.gamesCount} ${t('مواجهات','matchups')}</small></span><span class="industry-value">🔥 ${Math.round(rv.intensity)}</span></div>`;
+  }
+  function renderRivalriesPanel(){
+    const anchor=document.getElementById('industryNews');
+    if(!anchor)return;
+    let box=document.getElementById('v90RivalriesPanel');
+    if(!box){box=document.createElement('div');box.id='v90RivalriesPanel';anchor.insertAdjacentElement('afterend',box)}
+    const rivalries=[...ensureRivalries()].sort((a,b)=>b.intensity-a.intensity).slice(0,4);
+    box.innerHTML=rivalries.length?`<h3 style="margin:12px 0 6px">${t('🔥 المنافسات','🔥 Rivalries')}</h3>${rivalries.map(rivalryRowHTML).join('')}`:'';
+  }
+
+  /* ========================================================================
+   * 9. Drama extension
+   * ==================================================================== */
+  function pushV90Drama(id,choice,impact,turn,pressure){
+    const d=state.projectDrama||(state.projectDrama={events:[],flags:{},pressure:0,lastTurn:-9});
+    d.flags[id]=true;
+    d.lastTurn=turn;
+    d.pressure=Math.max(0,(d.pressure||0)+(pressure||0));
+    d.events=Array.isArray(d.events)?d.events:[];
+    d.events.push({id,title:id,choice,impact,turn});
+    if(d.events.length>6)d.events=d.events.slice(-6);
+  }
+  function dnaAwareDramaEvent(){
+    if(!state)return null;
+    const d=state.projectDrama||(state.projectDrama={events:[],flags:{},pressure:0,lastTurn:-9});
+    const turn=state.productionTurn||0;
+    if((d.events||[]).length>=3||turn-(Number.isFinite(d.lastTurn)?d.lastTurn:-9)<2)return null;
+    const dna=currentDna(state);
+    if(dna.primary.includes('experimental')&&turn>=2&&!d.flags.v90FunMechanic){
+      return {id:'v90FunMechanic',title:t('💡 اكتشاف غير متوقع','💡 An Unexpected Discovery'),
+        text:t('أثناء التجربة، اكتشف الفريق آلية لعب لم تكن مخططة لكنها ممتعة فعلاً.','While experimenting, the team stumbled onto an unplanned mechanic that actually feels fun.'),
+        options:[
+          {title:t('طوّرها رسميًا','Develop It Properly'),effect:t('$110 • Innovation +6 • Hype +3','$110 • Innovation +6 • Hype +3'),cost:110,quality:{innovation:6},hype:3,short:t('تطوير الاكتشاف','Develop the discovery'),tone:'primary',run:()=>pushV90Drama('v90FunMechanic',t('تطوير الاكتشاف','Develop discovery'),t('التجربة أصبحت أكثر تميزًا.','The experience became more distinctive.'),turn,0)},
+          {title:t('تجاهلها والاستمرار','Ignore It and Move On'),effect:t('Hype +1','Hype +1'),hype:1,short:t('تجاهل الاكتشاف','Ignore the discovery'),run:()=>pushV90Drama('v90FunMechanic',t('تجاهل الاكتشاف','Ignore discovery'),t('استمر الفريق في الخطة الأصلية.','The team stuck to the original plan.'),turn,0)}
+        ]};
+    }
+    const leader=selectedLeaderEmployee(state);
+    if(leader&&leader.trait==='perfectionist'&&state.bugs>=3&&!d.flags.v90PerfRebuild){
+      return {id:'v90PerfRebuild',title:t('🧠 مطالبة المثالي','🧠 The Perfectionist Insists'),
+        text:t(`${leader.name} يرى أن جزءًا من النظام غير مقبول ويطلب إعادة بنائه بالكامل.`,`${leader.name} thinks part of the system is unacceptable and wants a full rebuild.`),
+        options:[
+          {title:t('وافق على إعادة البناء','Approve the Rebuild'),effect:t('$200 • +1 جلسة • Bugs -5 • Gameplay +4','$200 • +1 session • Bugs -5 • Gameplay +4'),cost:200,productionTurns:1,bugs:-5,quality:{gameplay:4},short:t('إعادة بناء كاملة','Full rebuild'),tone:'primary',run:()=>pushV90Drama('v90PerfRebuild',t('إعادة بناء','Rebuild'),t('النظام أصبح أكثر صلابة لكن الجدول تأخر.','The system became far more solid, but the schedule slipped.'),turn,0)},
+          {title:t('ارفض واستمر','Refuse and Move On'),effect:t('Bugs +1 • تعب -2','Bugs +1 • Fatigue -2'),bugs:1,fatigue:-2,short:t('رفض الطلب','Refuse the request'),run:()=>pushV90Drama('v90PerfRebuild',t('رفض','Refuse'),t('توتر داخل الفريق لكن الجدول بقي كما هو.','Tension inside the team, but the schedule held.'),turn,1)}
+        ]};
+    }
+    const identity=ensureStudioIdentity();
+    if(identity.tags.some(tg=>tg.id==='prestigeStudio')&&state.bugs>=4&&!d.flags.v90IdentityPressure){
+      return {id:'v90IdentityPressure',title:t('📰 الصحافة تتوقع المزيد','📰 The Press Expects More'),
+        text:t('استوديوك معروف بالجودة، والصحافة لن تتسامح مع أخطاء كانت لتُغتفر لاستوديو آخر.','Your studio is known for quality, and the press won\'t forgive bugs it would excuse elsewhere.'),
+        options:[
+          {title:t('معالجة عاجلة','Emergency Fix'),effect:t('$180 • Bugs -5','$180 • Bugs -5'),cost:180,bugs:-5,short:t('معالجة عاجلة','Emergency fix'),tone:'primary',run:()=>pushV90Drama('v90IdentityPressure',t('معالجة عاجلة','Emergency fix'),t('حمت السمعة لكنها كلفت الميزانية.','It protected the reputation, but cost the budget.'),turn,1)},
+          {title:t('تجاهل الضغط','Ignore the Pressure'),effect:t('لا تغيير الآن','No change now'),short:t('تجاهل الضغط الإعلامي','Ignore the press pressure'),run:()=>pushV90Drama('v90IdentityPressure',t('تجاهل','Ignore'),t('السمعة قد تتأثر أكثر عند الإصدار.','Reputation may take a bigger hit at launch.'),turn,2)}
+        ]};
+    }
+    try{
+      const sat=saturationInfo(state.genre,gameState.history);
+      if(sat&&sat.factor<0.95&&turn>=3&&!d.flags.v90Saturation){
+        return {id:'v90Saturation',title:t('📉 السوق يبدو مزدحمًا','📉 The Market Feels Crowded'),
+          text:t('عدة إصدارات حديثة من نفس النوع قد تشتت جمهورك. تعديل بسيط في التسويق قد يساعد.','Several recent releases in this genre could split your audience. A small marketing tweak might help.'),
+          options:[
+            {title:t('عدّل زاوية التسويق','Adjust the Marketing Angle'),effect:t('$90 • Hype +4','$90 • Hype +4'),cost:90,hype:4,short:t('تعديل التسويق','Adjust marketing'),tone:'primary',run:()=>pushV90Drama('v90Saturation',t('تعديل التسويق','Adjust marketing'),t('حاولت إبراز اللعبة وسط الزحام.','You tried to stand out in a crowded market.'),turn,0)},
+            {title:t('تجاهل والاستمرار','Ignore and Continue'),effect:t('لا تغيير','No change'),short:t('تجاهل الازدحام','Ignore the crowding'),run:()=>pushV90Drama('v90Saturation',t('تجاهل','Ignore'),t('راهنت على أن الجودة وحدها كافية.','You bet that quality alone would be enough.'),turn,0)}
+          ]};
+      }
+    }catch(e){}
+    return null;
+  }
+
+  /* ========================================================================
+   * 10. Wraps / integration
+   * ==================================================================== */
+  const createBlankProjectBaseV90=window.createBlankProject||createBlankProject;
+  window.createBlankProject=createBlankProject=function(){
+    const p=createBlankProjectBaseV90.apply(this,arguments);
+    ensureDnaProfile(p);
+    p.launchStrategy=null;
+    p.launchPhaseComplete=false;
+    return p;
+  };
+
+  const normalizeLoadedGameBaseV90=window.normalizeLoadedGame||normalizeLoadedGame;
+  window.normalizeLoadedGame=normalizeLoadedGame=function(){
+    const r=normalizeLoadedGameBaseV90.apply(this,arguments);
+    if(r){
+      try{
+        ensureAudienceSegments();ensureStudioIdentity();ensureStudioLearning();ensureRivalries();
+        const p=gameState.currentProject;
+        if(p){
+          ensureDnaProfile(p);
+          if(p.launchStrategy===undefined)p.launchStrategy=null;
+          if(p.launchPhaseComplete===undefined)p.launchPhaseComplete=false;
+        }
+        (gameState.history||[]).forEach(h=>{if(h.dnaProfile===undefined)h.dnaProfile=null});
+      }catch(e){}
+    }
+    return r;
+  };
+
+  const normalizeIndustryStateBaseV90=window.normalizeIndustryState||normalizeIndustryState;
+  window.normalizeIndustryState=normalizeIndustryState=function(){
+    const r=normalizeIndustryStateBaseV90.apply(this,arguments);
+    if(r&&!Array.isArray(r.rivalries))r.rivalries=[];
+    return r;
+  };
+
+  const applyDecisionEffectBaseV90=window.applyDecisionEffect||applyDecisionEffect;
+  window.applyDecisionEffect=applyDecisionEffect=function(opt){
+    const r=applyDecisionEffectBaseV90.apply(this,arguments);
+    if(r&&opt&&state){
+      try{
+        const bump={};
+        if((opt.quality&&opt.quality.innovation||0)>0){bump.innovative=(bump.innovative||0)+3;bump.experimental=(bump.experimental||0)+2}
+        if((opt.bugs||0)<0){bump.realistic=(bump.realistic||0)+2;bump.deep=(bump.deep||0)+1}
+        if((opt.hype||0)>0){bump.competitive=(bump.competitive||0)+2;bump.arcade=(bump.arcade||0)+1}
+        if((opt.scope||0)>0){bump.hardcore=(bump.hardcore||0)+2}
+        if(Object.keys(bump).length)nudgeDna(state,bump);
+        computeDnaProfile(state);
+      }catch(e){}
+    }
+    return r;
+  };
+
+  const triggerDailyDecisionBaseV90=window.triggerDailyDecision||triggerDailyDecision;
+  window.triggerDailyDecision=triggerDailyDecision=function(){
+    let ev=null;
+    try{ev=dnaAwareDramaEvent()}catch(e){}
+    if(ev){
+      const d=state.projectDrama||(state.projectDrama={events:[],flags:{},pressure:0,lastTurn:-9});
+      d.flags['shown_'+ev.id]=true;
+      showDailyDecision(ev);
+      try{saveGame()}catch(e){}
+      return;
+    }
+    return triggerDailyDecisionBaseV90.apply(this,arguments);
+  };
+
+  const calculateStartingHypeBaseV90=window.calculateStartingHype||calculateStartingHype;
+  window.calculateStartingHype=calculateStartingHype=function(){
+    const base=calculateStartingHypeBaseV90.apply(this,arguments);
+    let bonus=0;
+    try{bonus=identityBonusForProject(state||{genre:'racing',topic:'streets'})*10}catch(e){}
+    return clamp(base+clamp(bonus,-8,8),8,36);
+  };
+
+  const calculateReputationChangeBaseV90=window.calculateReputationChange||calculateReputationChange;
+  window.calculateReputationChange=calculateReputationChange=function(project){
+    let delta=calculateReputationChangeBaseV90.apply(this,arguments);
+    try{
+      const p=project||state;
+      if(p&&p.salesModel&&p.salesModel.outcome==='hype_backlash'){
+        const gap=p.salesModel.expectationGap||0;
+        delta-=clamp((gap-20)/5,0,10);
+      }
+    }catch(e){}
+    return delta;
+  };
+
+  const calculateSalesBaseV90=window.calculateSales||calculateSales;
+  window.calculateSales=calculateSales=function(){
+    const r=calculateSalesBaseV90.apply(this,arguments);
+    try{
+      const sm=state.salesModel||(state.salesModel={});
+      sm.identityBonus=identityBonusForProject(state);
+      sm.expectationGap=Math.max(-100,Math.min(100,(sm.hype||state.hype||0)-(sm.avgReviews||0)*10));
+      if(state.launchStrategy){
+        const gap=sm.expectationGap;
+        if(gap<=-15&&state.launchStrategy.id==='silent'){
+          const chance=clamp(0.15+(-gap)/200,0.15,0.45);
+          if(Math.random()<chance){
+            for(let i=3;i<Math.min(6,state.weekSales.length);i++)state.weekSales[i]=Math.round(state.weekSales[i]*1.25);
+            state.copies=state.weekSales.reduce((a,b)=>a+b,0);
+            const price=9.99,fee=(sm.platformFee!=null?sm.platformFee:0.10);
+            state.revenue=state.copies*price*(1-fee);
+            state.profit=state.revenue-state.cost;
+            sm.outcome='sleeper_hit';
+          }
+        }else if(gap>=20){
+          sm.outcome='hype_backlash';
+        }
+      }
+      const segResult=updateAudienceSegments(state);
+      sm.audiencePivotPenalty=segResult.pivotPenalty;
+      sm.dominantSegment=segResult.dominantSegment;
+    }catch(e){}
+    try{saveGame()}catch(e){}
+    return r;
+  };
+
+  const finalizeProjectBaseV90=window.finalizeProject||finalizeProject;
+  window.finalizeProject=finalizeProject=function(){
+    const was=!!state.finalized;
+    const projRef=state;
+    const r=finalizeProjectBaseV90.apply(this,arguments);
+    if(!was&&projRef.finalized){
+      try{
+        computeDnaProfile(projRef);
+        const h=(gameState.history||[]).find(g=>g.id===projRef.id);
+        if(h){
+          h.dnaProfile=JSON.parse(JSON.stringify(projRef.dnaProfile));
+          if(projRef.launchStrategy)h.launchStrategyV1={id:projRef.launchStrategy.id,hypeDelta:projRef.launchStrategy.hypeDelta,expectationGap:(projRef.salesModel&&projRef.salesModel.expectationGap)||0,outcomeTag:(projRef.salesModel&&projRef.salesModel.outcome)||'normal'};
+          computeStudioIdentityScores();
+          detectAndUpdateRivalries(projRef);
+          const factors=computeWhyFactors(projRef);
+          const takeaways=computeTakeaways(projRef,factors);
+          h.postMortemV1={factors,takeaways};
+        }
+        saveGame();
+      }catch(e){}
+    }
+    return r;
+  };
+
+  const renderSetupBaseV90=window.renderSetup||renderSetup;
+  window.renderSetup=renderSetup=function(){
+    const r=renderSetupBaseV90.apply(this,arguments);
+    try{renderStudioLearningHints()}catch(e){}
+    return r;
+  };
+
+  const renderStudioBaseV90=window.renderStudio||renderStudio;
+  window.renderStudio=renderStudio=function(){
+    const r=renderStudioBaseV90.apply(this,arguments);
+    try{ensureStudioIdentity();renderIdentityBadges()}catch(e){}
+    return r;
+  };
+
+  const renderIndustryModalBaseV90=window.renderIndustryModal||renderIndustryModal;
+  window.renderIndustryModal=renderIndustryModal=function(){
+    const r=renderIndustryModalBaseV90.apply(this,arguments);
+    try{renderRivalriesPanel()}catch(e){}
+    return r;
+  };
+
+  const renderReviewsBaseV90=window.renderReviews||renderReviews;
+  window.renderReviews=renderReviews=function(){
+    const r=renderReviewsBaseV90.apply(this,arguments);
+    try{rewireToSalesBtn()}catch(e){}
+    return r;
+  };
+
+  try{rewireToSalesBtn()}catch(e){}
+  try{
+    const post=document.getElementById('v1681PostReleaseModal');
+    if(post)new MutationObserver(()=>setTimeout(appendWhySummary,30)).observe(post,{attributes:true,attributeFilter:['class']});
+  }catch(e){}
+  try{
+    ensureAudienceSegments();ensureStudioIdentity();ensureStudioLearning();ensureRivalries();
+    if(state)ensureDnaProfile(state);
+  }catch(e){}
+})();
+
+</script>
 </body>
 </html>

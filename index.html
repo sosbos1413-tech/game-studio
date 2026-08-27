@@ -10743,7 +10743,7 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
   }
   function loanCap(){
     const rep=gameState.company.reputation||0;
-    return Math.round(4000+rep*20);
+    return Math.round(12000+rep*30);
   }
   function loanAvailable(){
     return Math.max(0,loanCap()-ensureLoan().balance);
@@ -10773,7 +10773,11 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
     const box=document.getElementById('productionTasks');
     if(!box||!state)return;
     let rescue=document.getElementById('v91LoanRescue');
-    const stuck=state.productionTurn<state.productionTarget&&state.cash<45;
+    // Check the REAL disabled state of every rendered task button rather than guessing
+    // the cash threshold — extra per-session fees (size/budget-scaled) stack on top of
+    // the base $45 floor, so a fixed number here would drift out of sync.
+    const taskButtons=[...box.querySelectorAll('[data-prod-task]')];
+    const stuck=state.productionTurn<state.productionTarget&&taskButtons.length>0&&taskButtons.every(b=>b.disabled);
     if(stuck){
       if(!rescue){
         rescue=document.createElement('div');
@@ -10781,7 +10785,9 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
         rescue.style.cssText='margin-top:10px;padding:12px;border-radius:12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3)';
         box.insertAdjacentElement('afterend',rescue);
       }
-      const loan=ensureLoan(),avail=loanAvailable(),amount=Math.min(avail,Math.max(2000,45*4));
+      const loan=ensureLoan(),avail=loanAvailable();
+      const sizeBase={small:800,medium:3000,large:8000}[state.size]||800;
+      const amount=Math.min(avail,Math.max(sizeBase,(state.cash<0?-state.cash:0)+sizeBase));
       rescue.innerHTML=`<div style="font-size:13px;margin-bottom:8px">💸 ${t('رصيدك لا يكفي لإكمال أي مهمة إنتاج. خذ قرض طوارئ للاستمرار — سيُخصم تلقائيًا لاحقًا من أرباحك.','Your cash can\'t cover any production task. Take an emergency loan to continue — it is auto-repaid from future profits.')}</div>
         <button id="v91TakeLoanBtn" class="btn danger full" ${amount<=0?'disabled':''}>🏦 ${t('اقتراض','Borrow')} ${fmt(amount)} <small>(${t('فائدة 20%','20% interest')})</small></button>
         ${loan.balance>0?`<div style="font-size:12px;opacity:.75;margin-top:6px">${t('قرض قائم حاليًا','Currently outstanding')}: ${fmt(Math.round(loan.balance))}</div>`:''}`;

@@ -10397,23 +10397,32 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
     if(document.getElementById('v90LaunchOverlay'))return;
     document.body.insertAdjacentHTML('beforeend',launchOverlayHTML());
     const box=document.getElementById('v90LaunchOptions');
-    box.innerHTML=Object.values(LAUNCH_STRATEGIES).map(def=>`<button data-v90-launch="${def.id}" style="text-align:start;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:inherit;cursor:pointer" ${def.cost&&gameState.company.cash<def.cost?'disabled':''}><b>${def.icon} ${def.name}</b><br><small>💵 ${fmt(def.cost)} • Hype ${def.hype>=0?'+':''}${def.hype}${def.delayWeeks?(' • +'+def.delayWeeks+'w'):''}</small></button>`).join('');
+    if(!box)return console.error('v90LaunchOptions not found');
+    box.innerHTML=Object.values(LAUNCH_STRATEGIES).map(def=>`<button data-v90-launch="${def.id}" style="text-align:start;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:inherit;cursor:pointer;opacity:${def.cost&&gameState.company.cash<def.cost?'0.5':'1'}" ${def.cost&&gameState.company.cash<def.cost?'disabled':''}><b>${def.icon} ${def.name}</b><br><small>💵 ${fmt(def.cost)} • Hype ${def.hype>=0?'+':''}${def.hype}${def.delayWeeks?(' • +'+def.delayWeeks+'w'):''}</small></button>`).join('');
     box.querySelectorAll('[data-v90-launch]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(!resolveLaunchStrategy(btn.dataset.v90Launch))return;
-      const el=document.getElementById('v90LaunchOverlay');if(el)el.remove();
-      onDone();
+      try{
+        if(!resolveLaunchStrategy(btn.dataset.v90Launch)){alert('Not enough funds or invalid strategy');return}
+        const el=document.getElementById('v90LaunchOverlay');if(el)el.remove();
+        onDone();
+      }catch(e){console.error('Launch strategy error:',e);alert('Error applying strategy')}
     }));
   }
   function rewireToSalesBtn(){
     const btn=document.getElementById('toSalesBtn');
-    if(!btn||btn.dataset.v90Wired)return;
+    if(!btn)return;
+    if(btn.dataset.v90Wired)return;
     const clone=btn.cloneNode(true);
     btn.replaceWith(clone);
     clone.dataset.v90Wired='1';
+    clone.removeAttribute('disabled');
     clone.addEventListener('click',()=>{
-      const proceed=()=>{if(!state.weekSales||!state.weekSales.length)calculateSales();setPhase('sales');renderSales();saveGame()};
-      if(state.launchPhaseComplete)return proceed();
-      showLaunchOverlay(proceed);
+      if(clone.dataset.processing)return;
+      clone.dataset.processing='1';
+      setTimeout(()=>delete clone.dataset.processing,500);
+      try{
+        const proceed=()=>{if(!state.weekSales||!state.weekSales.length)calculateSales();setPhase('sales');renderSales();saveGame()};
+        if(state.launchPhaseComplete){proceed()}else{showLaunchOverlay(proceed)}
+      }catch(e){console.error('toSalesBtn error:',e);if(!state.weekSales||!state.weekSales.length)calculateSales();setPhase('sales');renderSales();saveGame()}
     });
   }
 
@@ -10718,6 +10727,96 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
   }catch(e){}
 })();
 
+</script>
+<script id="v91EmergencyLoanSystem">
+/* Rescues the player when cash drops below the $45/task floor and no task, undo,
+   or exit is available (a real dead-end otherwise). Repeatable, unlike the
+   one-time v1711 emergency funding: interest-bearing, auto-repaid from future cash. */
+(function(){
+  'use strict';
+  const langV91=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>langV91()==='en'?en:ar;
+  function ensureLoan(){
+    const c=gameState.company;
+    if(!c.loanV91||typeof c.loanV91!=='object')c.loanV91={balance:0,totalBorrowed:0,totalRepaid:0,count:0};
+    return c.loanV91;
+  }
+  function loanCap(){
+    const rep=gameState.company.reputation||0;
+    return Math.round(600+rep*10);
+  }
+  function loanAvailable(){
+    return Math.max(0,loanCap()-ensureLoan().balance);
+  }
+  function takeLoan(amount){
+    const loan=ensureLoan(),avail=loanAvailable(),borrow=Math.min(amount,avail);
+    if(borrow<=0)return false;
+    const owed=Math.round(borrow*1.20);
+    gameState.company.cash+=borrow;
+    loan.balance+=owed;loan.totalBorrowed+=borrow;loan.count++;
+    saveGame();
+    return true;
+  }
+  function repayLoanTick(){
+    const loan=ensureLoan();
+    if(loan.balance<=0)return;
+    const c=gameState.company,buffer=50;
+    if(c.cash>buffer){
+      const pay=Math.min(loan.balance,Math.round((c.cash-buffer)*0.30));
+      if(pay>0){c.cash-=pay;loan.balance-=pay;loan.totalRepaid+=pay;}
+    }
+  }
+  window.ensureLoanV91=ensureLoan;
+  window.takeLoanV91=takeLoan;
+
+  function renderLoanRescueBox(){
+    const box=document.getElementById('productionTasks');
+    if(!box||!state)return;
+    let rescue=document.getElementById('v91LoanRescue');
+    const stuck=state.productionTurn<state.productionTarget&&state.cash<45;
+    if(stuck){
+      if(!rescue){
+        rescue=document.createElement('div');
+        rescue.id='v91LoanRescue';
+        rescue.style.cssText='margin-top:10px;padding:12px;border-radius:12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3)';
+        box.insertAdjacentElement('afterend',rescue);
+      }
+      const loan=ensureLoan(),avail=loanAvailable(),amount=Math.min(avail,Math.max(200,45*4));
+      rescue.innerHTML=`<div style="font-size:13px;margin-bottom:8px">💸 ${t('رصيدك لا يكفي لإكمال أي مهمة إنتاج. خذ قرض طوارئ للاستمرار — سيُخصم تلقائيًا لاحقًا من أرباحك.','Your cash can\'t cover any production task. Take an emergency loan to continue — it is auto-repaid from future profits.')}</div>
+        <button id="v91TakeLoanBtn" class="btn danger full" ${amount<=0?'disabled':''}>🏦 ${t('اقتراض','Borrow')} ${fmt(amount)} <small>(${t('فائدة 20%','20% interest')})</small></button>
+        ${loan.balance>0?`<div style="font-size:12px;opacity:.75;margin-top:6px">${t('قرض قائم حاليًا','Currently outstanding')}: ${fmt(Math.round(loan.balance))}</div>`:''}`;
+      const btn=document.getElementById('v91TakeLoanBtn');
+      if(btn)btn.onclick=()=>{if(takeLoan(amount)){renderProduction();}};
+    }else if(rescue){
+      rescue.remove();
+    }
+  }
+
+  const renderProductionBaseV91=window.renderProduction||renderProduction;
+  window.renderProduction=renderProduction=function(){
+    const r=renderProductionBaseV91.apply(this,arguments);
+    try{repayLoanTick();renderLoanRescueBox();}catch(e){}
+    return r;
+  };
+
+  const renderStudioBaseV91=window.renderStudio||renderStudio;
+  window.renderStudio=renderStudio=function(){
+    const r=renderStudioBaseV91.apply(this,arguments);
+    try{
+      repayLoanTick();
+      const loan=ensureLoan();
+      const card=document.getElementById('lastGameCard');
+      let badge=document.getElementById('v91LoanBadge');
+      if(loan.balance>0){
+        if(!badge&&card){badge=document.createElement('div');badge.id='v91LoanBadge';card.insertAdjacentElement('afterend',badge);}
+        if(badge)badge.innerHTML=`<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);font-size:12px">🏦 ${t('قرض قائم','Outstanding loan')}: ${fmt(Math.round(loan.balance))}</div>`;
+      }else if(badge){badge.remove();}
+    }catch(e){}
+    return r;
+  };
+
+  try{ensureLoan();}catch(e){}
+})();
 </script>
 </body>
 </html>

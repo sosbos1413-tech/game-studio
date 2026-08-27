@@ -10743,7 +10743,7 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
   }
   function loanCap(){
     const rep=gameState.company.reputation||0;
-    return Math.round(1000+rep*10);
+    return Math.round(4000+rep*20);
   }
   function loanAvailable(){
     return Math.max(0,loanCap()-ensureLoan().balance);
@@ -10781,7 +10781,7 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
         rescue.style.cssText='margin-top:10px;padding:12px;border-radius:12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3)';
         box.insertAdjacentElement('afterend',rescue);
       }
-      const loan=ensureLoan(),avail=loanAvailable(),amount=Math.min(avail,Math.max(400,45*4));
+      const loan=ensureLoan(),avail=loanAvailable(),amount=Math.min(avail,Math.max(2000,45*4));
       rescue.innerHTML=`<div style="font-size:13px;margin-bottom:8px">💸 ${t('رصيدك لا يكفي لإكمال أي مهمة إنتاج. خذ قرض طوارئ للاستمرار — سيُخصم تلقائيًا لاحقًا من أرباحك.','Your cash can\'t cover any production task. Take an emergency loan to continue — it is auto-repaid from future profits.')}</div>
         <button id="v91TakeLoanBtn" class="btn danger full" ${amount<=0?'disabled':''}>🏦 ${t('اقتراض','Borrow')} ${fmt(amount)} <small>(${t('فائدة 20%','20% interest')})</small></button>
         ${loan.balance>0?`<div style="font-size:12px;opacity:.75;margin-top:6px">${t('قرض قائم حاليًا','Currently outstanding')}: ${fmt(Math.round(loan.balance))}</div>`:''}`;

@@ -10397,23 +10397,32 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
     if(document.getElementById('v90LaunchOverlay'))return;
     document.body.insertAdjacentHTML('beforeend',launchOverlayHTML());
     const box=document.getElementById('v90LaunchOptions');
-    box.innerHTML=Object.values(LAUNCH_STRATEGIES).map(def=>`<button data-v90-launch="${def.id}" style="text-align:start;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:inherit;cursor:pointer" ${def.cost&&gameState.company.cash<def.cost?'disabled':''}><b>${def.icon} ${def.name}</b><br><small>💵 ${fmt(def.cost)} • Hype ${def.hype>=0?'+':''}${def.hype}${def.delayWeeks?(' • +'+def.delayWeeks+'w'):''}</small></button>`).join('');
+    if(!box)return console.error('v90LaunchOptions not found');
+    box.innerHTML=Object.values(LAUNCH_STRATEGIES).map(def=>`<button data-v90-launch="${def.id}" style="text-align:start;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:inherit;cursor:pointer;opacity:${def.cost&&gameState.company.cash<def.cost?'0.5':'1'}" ${def.cost&&gameState.company.cash<def.cost?'disabled':''}><b>${def.icon} ${def.name}</b><br><small>💵 ${fmt(def.cost)} • Hype ${def.hype>=0?'+':''}${def.hype}${def.delayWeeks?(' • +'+def.delayWeeks+'w'):''}</small></button>`).join('');
     box.querySelectorAll('[data-v90-launch]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(!resolveLaunchStrategy(btn.dataset.v90Launch))return;
-      const el=document.getElementById('v90LaunchOverlay');if(el)el.remove();
-      onDone();
+      try{
+        if(!resolveLaunchStrategy(btn.dataset.v90Launch)){alert('Not enough funds or invalid strategy');return}
+        const el=document.getElementById('v90LaunchOverlay');if(el)el.remove();
+        onDone();
+      }catch(e){console.error('Launch strategy error:',e);alert('Error applying strategy')}
     }));
   }
   function rewireToSalesBtn(){
     const btn=document.getElementById('toSalesBtn');
-    if(!btn||btn.dataset.v90Wired)return;
+    if(!btn)return;
+    if(btn.dataset.v90Wired)return;
     const clone=btn.cloneNode(true);
     btn.replaceWith(clone);
     clone.dataset.v90Wired='1';
+    clone.removeAttribute('disabled');
     clone.addEventListener('click',()=>{
-      const proceed=()=>{if(!state.weekSales||!state.weekSales.length)calculateSales();setPhase('sales');renderSales();saveGame()};
-      if(state.launchPhaseComplete)return proceed();
-      showLaunchOverlay(proceed);
+      if(clone.dataset.processing)return;
+      clone.dataset.processing='1';
+      setTimeout(()=>delete clone.dataset.processing,500);
+      try{
+        const proceed=()=>{if(!state.weekSales||!state.weekSales.length)calculateSales();setPhase('sales');renderSales();saveGame()};
+        if(state.launchPhaseComplete){proceed()}else{showLaunchOverlay(proceed)}
+      }catch(e){console.error('toSalesBtn error:',e);if(!state.weekSales||!state.weekSales.length)calculateSales();setPhase('sales');renderSales();saveGame()}
     });
   }
 

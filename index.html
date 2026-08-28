@@ -11323,5 +11323,177 @@ body:not([data-phase]) .v92-stagestrip{display:none}
 }
 </style>
 
+<script id="v93ResearchAssistAndRest">
+/* ==================================================================
+   V93 — Research Assistants + Employee Rest
+   1) Idle-or-not employees can be toggled as research assistants: they
+      keep doing their normal job, but also speed up the currently
+      active research based on their energy (diminishing per assistant,
+      capped at 3 assistants), at a small weekly energy cost.
+   2) Employees previously had exactly one way to regain energy (a flat
+      +22 bump once per finalized project). This adds:
+        - passive weekly regen scaled to how many weeks actually passed
+          (assistants regen less, since they're pulling extra duty)
+        - an active "Rest" button (cash cost, cooldown, instant refill)
+   ================================================================== */
+(function(){
+  'use strict';
+  const langV93=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>langV93()==='en'?en:ar;
+
+  function activeResearch(){
+    try{ return window.ensureLivingStudioState().research.active; }catch(e){ return null; }
+  }
+  function assistantIds(){
+    const a=activeResearch();
+    if(!a) return [];
+    if(!Array.isArray(a.assistantsV93)) a.assistantsV93=[];
+    return a.assistantsV93;
+  }
+  function employeeById(id){ return allEmployees().find(e=>e.id===id); }
+
+  function recomputeResearchETA(){
+    const a=activeResearch();
+    if(!a) return;
+    const ids=assistantIds();
+    const week=gameState.company.week;
+    const elapsed=Math.max(0,week-a.startWeek);
+    const totalWeeks=a.totalWeeks||1;
+    const remainingBase=Math.max(0,totalWeeks-elapsed);
+    let speed=1;
+    ids.forEach(id=>{const e=employeeById(id);if(e)speed+=0.22*clamp(e.energy,0,100)/100});
+    a.endWeek=week+Math.max(1,Math.ceil(remainingBase/speed));
+  }
+
+  function toggleAssistant(id){
+    const a=activeResearch();
+    if(!a) return false;
+    const ids=assistantIds(),idx=ids.indexOf(id);
+    if(idx>=0){ids.splice(idx,1)}
+    else{
+      const e=employeeById(id);
+      if(!e||e.energy<=15||ids.length>=3) return false;
+      ids.push(id);
+    }
+    recomputeResearchETA();
+    saveGame();
+    return true;
+  }
+
+  function pruneAssistants(){
+    const a=activeResearch();
+    if(!a||!Array.isArray(a.assistantsV93)) return;
+    const emps=allEmployees();
+    const before=a.assistantsV93.length;
+    a.assistantsV93=a.assistantsV93.filter(id=>emps.some(e=>e.id===id));
+    if(a.assistantsV93.length!==before) recomputeResearchETA();
+  }
+
+  function renderResearchAssistants(){
+    const queueCard=document.getElementById('researchQueueCard');
+    if(!queueCard) return;
+    let box=document.getElementById('v93AssistBox');
+    const a=activeResearch();
+    if(!a){ if(box) box.remove(); return; }
+    if(!box){
+      box=document.createElement('div');
+      box.id='v93AssistBox';
+      box.className='card';
+      box.style.cssText='margin-top:8px';
+      queueCard.insertAdjacentElement('afterend',box);
+    }
+    const ids=assistantIds(),emps=allEmployees();
+    box.innerHTML=`<h3 style="margin:0 0 6px">${t('👥 مساعدة الفريق بالبحث','👥 Team research assist')}</h3>
+      <p style="margin:0 0 8px;font-size:12.5px;color:var(--muted)">${t('كل موظف مساعد يسرّع البحث الحالي حسب طاقته، ويستهلك جزءًا بسيطًا منها أسبوعيًا — دون أن يوقف عمله الأساسي.','Each assistant speeds up the current research based on their energy, at a small weekly energy cost — without stopping their normal work.')}</p>
+      ${emps.length?emps.map(e=>{
+        const active=ids.includes(e.id),disabled=!active&&(e.energy<=15||ids.length>=3);
+        return `<button class="leader-btn multi-row ${active?'active':''}" data-v93-assist="${e.id}" ${disabled?'disabled':''}><span class="avatar">${e.avatar}</span><span><b>${e.name}</b><small>${active?t('يساعد بالبحث الآن','assisting now'):t('متاح للمساعدة','available')}</small></span><span class="fit">${Math.round(e.energy)}%</span></button>`;
+      }).join(''):`<div class="note">${t('لا يوجد موظفون بعد.','No employees yet.')}</div>`}
+      <div style="margin-top:6px;font-size:12.5px;color:var(--muted)">${t('الموعد المتوقع الحالي','Current ETA')}: Week ${a.endWeek}</div>`;
+    box.querySelectorAll('[data-v93-assist]').forEach(btn=>btn.onclick=()=>{
+      if(toggleAssistant(btn.dataset.v93Assist)) renderResearchCenter();
+    });
+  }
+
+  const renderResearchCenterBaseV93=window.renderResearchCenter||renderResearchCenter;
+  window.renderResearchCenter=renderResearchCenter=function(){
+    const r=renderResearchCenterBaseV93.apply(this,arguments);
+    try{ renderResearchAssistants(); }catch(e){}
+    return r;
+  };
+
+  /* ===================== Employee rest / energy refill ===================== */
+  function restCost(e){ return Math.max(80,Math.round((e.salary||300)*0.5)); }
+  function canRest(e){
+    if(!e) return false;
+    if(e.energy>=92) return false;
+    const week=gameState.company.week;
+    if(e.lastRestWeek&&week-e.lastRestWeek<2) return false;
+    return gameState.company.cash>=restCost(e);
+  }
+  function restEmployee(id){
+    const e=employeeById(id);
+    if(!canRest(e)) return false;
+    const cost=restCost(e);
+    gameState.company.cash-=cost;
+    e.energy=clamp(e.energy+35,0,100);
+    e.lastRestWeek=gameState.company.week;
+    try{ refreshEmployeeMoodFromEnergy(e); }catch(err){}
+    saveGame();
+    return true;
+  }
+  window.restEmployeeV93=restEmployee;
+
+  function renderTeamRestButtons(){
+    const panel=document.getElementById('hiredEmployeePanel');
+    if(!panel) return;
+    const cards=[...panel.querySelectorAll('.employee-card')];
+    const emps=allEmployees();
+    cards.forEach((card,i)=>{
+      const e=emps[i];
+      if(!e) return;
+      let box=card.querySelector('.v93-rest-box');
+      if(!box){ box=document.createElement('div'); box.className='v93-rest-box'; box.style.cssText='margin-top:8px'; card.appendChild(box); }
+      const cost=restCost(e),week=gameState.company.week,cooling=e.lastRestWeek&&week-e.lastRestWeek<2,ok=canRest(e);
+      box.innerHTML=`<button class="btn small full" data-v93-rest="${e.id}" ${ok?'':'disabled'}>🛌 ${t('أرح الموظف','Rest employee')} — ${fmt(cost)}${e.energy>=92?` • ${t('لا حاجة الآن','not needed')}`:cooling?` • ${t('يحتاج وقتًا','on cooldown')}`:''}</button>`;
+      const btn=box.querySelector('[data-v93-rest]');
+      if(btn) btn.onclick=()=>{ if(restEmployee(e.id)) renderTeam(); };
+    });
+  }
+
+  const renderTeamBaseV93=window.renderTeam||renderTeam;
+  window.renderTeam=renderTeam=function(){
+    const r=renderTeamBaseV93.apply(this,arguments);
+    try{ pruneAssistants(); renderTeamRestButtons(); }catch(e){}
+    return r;
+  };
+
+  /* ===================== Passive weekly energy regen ===================== */
+  // finalizeProject is the one reliable "N weeks passed" checkpoint every other
+  // weekly-tick system in this file already keys off (v166Advance runs from
+  // here), so it's also the safest place to apply a delta-weeks-scaled regen.
+  const finalizeProjectBaseV93=window.finalizeProject||finalizeProject;
+  window.finalizeProject=finalizeProject=function(){
+    const was=!!state.finalized,oldWeek=gameState.company.week;
+    const r=finalizeProjectBaseV93.apply(this,arguments);
+    if(!was&&state.finalized){
+      try{
+        const deltaWeeks=Math.max(0,gameState.company.week-oldWeek);
+        const assistIds=assistantIds();
+        allEmployees().forEach(e=>{
+          const isAssistant=assistIds.includes(e.id);
+          const gain=isAssistant?(deltaWeeks*1.2):(deltaWeeks*3.2);
+          e.energy=clamp((e.energy||0)+gain,0,100);
+          try{ refreshEmployeeMoodFromEnergy(e); }catch(err){}
+        });
+        recomputeResearchETA();
+        saveGame();
+      }catch(e){}
+    }
+    return r;
+  };
+})();
+</script>
+
 </body>
 </html>

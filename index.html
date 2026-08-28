@@ -12,6 +12,9 @@
 <meta name="apple-mobile-web-app-title" content="استوديو الحلم">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
 <title>استوديو الحلم V1.9.0 — Traits Release Candidate</title>
 <style>
 :root{
@@ -1878,6 +1881,18 @@ body[data-phase="studio"] .stage{
   <div class="top">
     <div class="brand"><button id="soundToggle" class="sound-toggle" type="button" aria-label="كتم الصوت" title="الصوت">🔊</button><b>🎮 استوديو الحلم</b><small id="stateLabel">مشروعك الأول</small></div>
     <div class="cashbox"><small>الرصيد</small><b id="cashLabel">$4,000</b><small id="dayLabel">جلسة 1</small></div>
+  </div>
+
+  <div class="v92-stagestrip" aria-hidden="true">
+    <div class="v92-stage v92-idea"><span class="v92-dot">💡</span><small>الفكرة</small></div>
+    <div class="v92-stage-line"></div>
+    <div class="v92-stage v92-plan"><span class="v92-dot">📋</span><small>التخطيط</small></div>
+    <div class="v92-stage-line"></div>
+    <div class="v92-stage v92-dev"><span class="v92-dot">&lt;/&gt;</span><small>التطوير</small></div>
+    <div class="v92-stage-line"></div>
+    <div class="v92-stage v92-test"><span class="v92-dot">🧪</span><small>الاختبار</small></div>
+    <div class="v92-stage-line"></div>
+    <div class="v92-stage v92-launch"><span class="v92-dot">🚀</span><small>الإطلاق</small></div>
   </div>
 
   <main class="stage">
@@ -10824,5 +10839,382 @@ body{background:var(--c-canvas)!important;color:var(--c-body)!important}
   try{ensureLoan();}catch(e){}
 })();
 </script>
+<style id="v92StoneHouseIdentity">
+/* ==================================================================
+   V92 — STONE HOUSE GAME STUDIO
+   Arabic Heritage Stone House × Indie Game Studio identity.
+   Overrides the CSS custom-property layers the whole game already
+   consumes (--bg/--card/--accent... and --c-canvas/--c-panel/--c-accent...)
+   so most of the app re-skins automatically, then re-tints the
+   non-variable decorative scene elements (office scene, room, nav).
+   ================================================================== */
+
+:root{
+  /* ---- Environment palette (stone / wood) ---- */
+  --sh-stone:#B89B78;
+  --sh-sand:#D4B68B;
+  --sh-wood-dark:#4A3223;
+  --sh-wood-med:#725038;
+  --sh-cream:#F3E3C7;
+  --sh-deepbrown:#241A14;
+  --sh-charcoal:#171513;
+
+  /* ---- UI palette ---- */
+  --sh-purple:#7346B8;
+  --sh-purple-deep:#4D2C7A;
+  --sh-purple-royal:#8255C9;
+  --sh-gold:#D6A64A;
+  --sh-ui-cream:#F6E7CC;
+  --sh-dark-brown:#211B17;
+  --sh-soft-brown:#3A3028;
+  --sh-green:#58A96A;
+  --sh-red:#C5534D;
+  --sh-blue:#4C83B9;
+
+  /* ---- Legacy naming system #1 (top-of-file :root) ---- */
+  --bg:var(--sh-charcoal);
+  --bg2:var(--sh-dark-brown);
+  --panel:var(--sh-dark-brown);
+  --card:var(--sh-dark-brown);
+  --card2:var(--sh-soft-brown);
+  --line:rgba(214,166,74,.16);
+  --text:var(--sh-ui-cream);
+  --muted:#C9B79C;
+  --accent:var(--sh-purple);
+  --accent-dark:var(--sh-purple-deep);
+  --accent-deep:var(--sh-purple-deep);
+  --accent2:var(--sh-purple-royal);
+  --danger:var(--sh-red);
+  --gold:var(--sh-gold);
+  --blue:var(--sh-blue);
+  --green:var(--sh-green);
+  --success:var(--sh-green);
+  --cyan:var(--sh-purple-royal);
+  --silver:#C9B79C;
+  --bronze:var(--sh-wood-med);
+  --shadow:#0B0906;
+
+  /* ---- Legacy naming system #2 ("Calm Design System") ---- */
+  --c-canvas:var(--sh-charcoal);
+  --c-panel:var(--sh-dark-brown);
+  --c-raised:var(--sh-soft-brown);
+  --c-sunken:var(--sh-deepbrown);
+  --c-line:rgba(214,166,74,.14);
+  --c-line-strong:rgba(214,166,74,.28);
+  --c-ink:var(--sh-ui-cream);
+  --c-body:#D9C7AC;
+  --c-mute:#B09A7C;
+  --c-accent:var(--sh-purple);
+  --c-accent-soft:rgba(115,70,184,.20);
+  --c-accent-line:rgba(130,85,201,.48);
+  --c-pos:var(--sh-green);
+  --c-warn:var(--sh-gold);
+  --c-neg:var(--sh-red);
+
+  /* ---- Office-scene accent (per level, retinted warm) ---- */
+  --office-accent:var(--sh-purple-royal);
+  --office-accent2:var(--sh-gold);
+}
+
+/* ================= Typography ================= */
+html,body,.app,.btn,input,select,textarea{
+  font-family:'Tajawal','IBM Plex Sans Arabic',system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif!important;
+}
+.stage h1,.screen>h1,.card h2,.stage h2,.card h3,.stage h3{font-weight:800!important}
+
+/* ================= Page canvas ================= */
+html{background:var(--sh-charcoal)}
+body{
+  background:
+    radial-gradient(700px 420px at 88% -8%,rgba(130,85,201,.14),transparent 60%),
+    radial-gradient(620px 380px at -10% 12%,rgba(214,166,74,.09),transparent 62%),
+    linear-gradient(180deg,#1B1713 0%,#171310 55%,#120E0B 100%)!important;
+  color:var(--sh-ui-cream)!important;
+}
+
+/* ================= Top HUD ================= */
+.top{gap:8px}
+.brand,.cashbox{
+  background:linear-gradient(180deg,#241D17,#1A1511)!important;
+  border:1px solid rgba(214,166,74,.30)!important;
+  box-shadow:0 10px 22px rgba(8,6,4,.45),inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.brand b{color:var(--sh-ui-cream)}
+.brand small,.cashbox small{color:#B09A7C!important}
+.cashbox b{color:var(--sh-gold)!important;font-weight:900}
+#soundToggle.sound-toggle{background:rgba(214,166,74,.14);border:1px solid rgba(214,166,74,.25)}
+
+/* ================= Stage strip (5-step production stages) ================= */
+.v92-stagestrip{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:2px;margin:0 0 8px;padding:9px 10px;border-radius:16px;
+  background:linear-gradient(180deg,#241D17,#1A1511);
+  border:1px solid rgba(214,166,74,.22);
+  box-shadow:0 8px 18px rgba(8,6,4,.35),inset 0 1px 0 rgba(255,255,255,.03);
+}
+.v92-stage{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:38px}
+.v92-stage .v92-dot{
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-size:14px;font-weight:900;background:rgba(255,255,255,.04);
+  border:1.5px solid rgba(214,166,74,.22);color:#8B7A62;
+  transition:background .2s ease,border-color .2s ease,color .2s ease,transform .2s ease;
+}
+.v92-stage small{font-size:10px;color:#8B7A62;font-weight:700;white-space:nowrap;transition:color .2s ease}
+.v92-stage-line{flex:1;height:2px;background:rgba(214,166,74,.16);margin:0 2px;margin-bottom:15px;border-radius:2px}
+/* Completed = green check style, Current = purple highlight, Upcoming = muted (default above) */
+.v92-stage.v92-done .v92-dot{background:var(--sh-green);border-color:var(--sh-green);color:#0E2216}
+.v92-stage.v92-done small{color:var(--sh-green)}
+.v92-stage.v92-current .v92-dot{
+  background:radial-gradient(circle at 35% 30%,var(--sh-purple-royal),var(--sh-purple-deep) 78%);
+  border-color:var(--sh-purple-royal);color:var(--sh-ui-cream);
+  box-shadow:0 0 0 4px rgba(130,85,201,.20),0 0 16px rgba(130,85,201,.45);
+  transform:scale(1.12);
+}
+.v92-stage.v92-current small{color:var(--sh-ui-cream)}
+
+/* Phase → stage mapping (body[data-phase] is already set by the game's setPhase()) */
+
+/* idea = create/setup */
+body[data-phase="create"] .v92-idea,body[data-phase="setup"] .v92-idea{--v92-cur:1}
+/* explicit current-stage classing per phase */
+body[data-phase="create"] .v92-idea .v92-dot,
+body[data-phase="setup"] .v92-idea .v92-dot{background:radial-gradient(circle at 35% 30%,var(--sh-purple-royal),var(--sh-purple-deep) 78%);border-color:var(--sh-purple-royal);color:var(--sh-ui-cream);box-shadow:0 0 0 4px rgba(130,85,201,.20),0 0 16px rgba(130,85,201,.45);transform:scale(1.12)}
+body[data-phase="create"] .v92-idea small,
+body[data-phase="setup"] .v92-idea small{color:var(--sh-ui-cream)}
+
+body[data-phase="plan"] .v92-idea .v92-dot,
+body[data-phase="preprod"] .v92-idea .v92-dot,
+body[data-phase="production"] .v92-idea .v92-dot,
+body[data-phase="polish"] .v92-idea .v92-dot,
+body[data-phase="review"] .v92-idea .v92-dot,
+body[data-phase="sales"] .v92-idea .v92-dot{background:var(--sh-green);border-color:var(--sh-green);color:#0E2216}
+body[data-phase="plan"] .v92-idea small,
+body[data-phase="preprod"] .v92-idea small,
+body[data-phase="production"] .v92-idea small,
+body[data-phase="polish"] .v92-idea small,
+body[data-phase="review"] .v92-idea small,
+body[data-phase="sales"] .v92-idea small{color:var(--sh-green)}
+
+body[data-phase="plan"] .v92-plan .v92-dot,
+body[data-phase="preprod"] .v92-plan .v92-dot{background:radial-gradient(circle at 35% 30%,var(--sh-purple-royal),var(--sh-purple-deep) 78%);border-color:var(--sh-purple-royal);color:var(--sh-ui-cream);box-shadow:0 0 0 4px rgba(130,85,201,.20),0 0 16px rgba(130,85,201,.45);transform:scale(1.12)}
+body[data-phase="plan"] .v92-plan small,
+body[data-phase="preprod"] .v92-plan small{color:var(--sh-ui-cream)}
+body[data-phase="production"] .v92-plan .v92-dot,
+body[data-phase="polish"] .v92-plan .v92-dot,
+body[data-phase="review"] .v92-plan .v92-dot,
+body[data-phase="sales"] .v92-plan .v92-dot{background:var(--sh-green);border-color:var(--sh-green);color:#0E2216}
+body[data-phase="production"] .v92-plan small,
+body[data-phase="polish"] .v92-plan small,
+body[data-phase="review"] .v92-plan small,
+body[data-phase="sales"] .v92-plan small{color:var(--sh-green)}
+
+body[data-phase="production"] .v92-dev .v92-dot{background:radial-gradient(circle at 35% 30%,var(--sh-purple-royal),var(--sh-purple-deep) 78%);border-color:var(--sh-purple-royal);color:var(--sh-ui-cream);box-shadow:0 0 0 4px rgba(130,85,201,.20),0 0 16px rgba(130,85,201,.45);transform:scale(1.12)}
+body[data-phase="production"] .v92-dev small{color:var(--sh-ui-cream)}
+body[data-phase="polish"] .v92-dev .v92-dot,
+body[data-phase="review"] .v92-dev .v92-dot,
+body[data-phase="sales"] .v92-dev .v92-dot{background:var(--sh-green);border-color:var(--sh-green);color:#0E2216}
+body[data-phase="polish"] .v92-dev small,
+body[data-phase="review"] .v92-dev small,
+body[data-phase="sales"] .v92-dev small{color:var(--sh-green)}
+
+body[data-phase="polish"] .v92-test .v92-dot,
+body[data-phase="review"] .v92-test .v92-dot{background:radial-gradient(circle at 35% 30%,var(--sh-purple-royal),var(--sh-purple-deep) 78%);border-color:var(--sh-purple-royal);color:var(--sh-ui-cream);box-shadow:0 0 0 4px rgba(130,85,201,.20),0 0 16px rgba(130,85,201,.45);transform:scale(1.12)}
+body[data-phase="polish"] .v92-test small,
+body[data-phase="review"] .v92-test small{color:var(--sh-ui-cream)}
+body[data-phase="sales"] .v92-test .v92-dot{background:var(--sh-green);border-color:var(--sh-green);color:#0E2216}
+body[data-phase="sales"] .v92-test small{color:var(--sh-green)}
+
+body[data-phase="sales"] .v92-launch .v92-dot{background:radial-gradient(circle at 35% 30%,var(--sh-purple-royal),var(--sh-purple-deep) 78%);border-color:var(--sh-purple-royal);color:var(--sh-ui-cream);box-shadow:0 0 0 4px rgba(130,85,201,.20),0 0 16px rgba(130,85,201,.45);transform:scale(1.12)}
+body[data-phase="sales"] .v92-launch small{color:var(--sh-ui-cream)}
+
+/* Hide the stage strip when there's no active project (studio/team hub, character creation) */
+body[data-phase="studio"] .v92-stagestrip,
+body[data-phase="team"] .v92-stagestrip,
+body:not([data-phase]) .v92-stagestrip{display:none}
+
+/* ================= Stage container ================= */
+.stage{
+  background:linear-gradient(180deg,rgba(36,29,23,.55),rgba(23,18,14,.65))!important;
+  border:1px solid rgba(214,166,74,.20)!important;
+  box-shadow:0 18px 34px rgba(6,4,3,.45),inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.progress{background:rgba(0,0,0,.35)}
+.progress>i{background:linear-gradient(90deg,var(--sh-purple-royal),var(--sh-purple))!important}
+
+/* ================= Cards: dark (stat/list) ================= */
+.card{
+  background:linear-gradient(180deg,#241D17,#1D1712)!important;
+  border:1px solid rgba(214,166,74,.16)!important;
+  box-shadow:0 3px 0 rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.02)!important;
+}
+.card h2,.card h3,.stage h1,.screen>h1,.card>b{color:var(--sh-ui-cream)!important}
+.card p,.card>small,.note{color:#C9B79C!important}
+.choice{background:var(--sh-dark-brown)!important;border-color:rgba(214,166,74,.20)!important}
+.choice.active{border-color:var(--sh-purple-royal)!important;background:rgba(130,85,201,.14)!important;box-shadow:0 0 0 1px rgba(130,85,201,.35)!important}
+
+/* ================= Cards: paper (project / GDD-style) ================= */
+.last-game,#lastGameCard,.studio-rescue,
+.v90-why-box,.v90-hint-box{
+  background:linear-gradient(180deg,#F6E7CC,#EEDBB4)!important;
+  border:1px solid rgba(74,50,35,.22)!important;
+  border-radius:14px;
+  color:var(--sh-deepbrown)!important;
+  box-shadow:0 8px 18px rgba(20,14,8,.28),inset 0 1px 0 rgba(255,255,255,.35)!important;
+  padding:11px 12px;
+}
+.last-game .last-game-head b,#lastGameCard .last-game-head b{color:var(--sh-deepbrown)!important}
+.last-game small,#lastGameCard small{color:#6E5A3F!important}
+.last-game b,#lastGameCard b{color:var(--sh-purple-deep)!important}
+.last-game-grid>div,#lastGameCard .last-game-grid>div{background:rgba(74,50,35,.06);border-radius:10px;padding:6px 8px}
+
+/* ================= Buttons ================= */
+.btn{
+  background:linear-gradient(180deg,#4A3E32,#3A3028)!important;
+  color:var(--sh-ui-cream)!important;
+  border:1px solid rgba(214,166,74,.18)!important;
+  border-radius:14px!important;
+  box-shadow:0 8px 16px rgba(8,6,4,.30),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.btn:not(.primary):hover{border-color:rgba(130,85,201,.45)!important;color:#fff!important}
+.btn.primary{background:linear-gradient(180deg,var(--sh-purple-royal),var(--sh-purple) 60%,var(--sh-purple-deep))!important;color:var(--sh-ui-cream)!important;box-shadow:0 10px 20px rgba(77,44,122,.34)!important}
+.btn.primary:active{box-shadow:0 4px 10px rgba(77,44,122,.30)!important}
+.btn.warn{background:linear-gradient(180deg,#E3BC66,var(--sh-gold))!important;color:#3A2A0E!important}
+.btn.danger{background:linear-gradient(180deg,#D97772,var(--sh-red))!important;color:#fff!important}
+.btn.blue{background:linear-gradient(180deg,#6FA3D6,var(--sh-blue))!important;color:#0B2338!important}
+.btn:disabled{opacity:.42!important}
+
+.btn-primary-system{
+  background:linear-gradient(180deg,#9E7FDA 0%,var(--sh-purple-royal) 42%,var(--sh-purple-deep) 100%)!important;
+  border:1px solid rgba(214,166,74,.30)!important;
+  box-shadow:0 14px 26px rgba(77,44,122,.32),0 5px 0 rgba(77,44,122,.42),inset 0 1px 0 rgba(255,255,255,.24)!important;
+}
+.btn-primary-system .btn-icon{
+  background:radial-gradient(circle at 30% 30%,#FBF3E2 0%,var(--sh-cream) 46%,var(--sh-sand) 78%,var(--sh-stone) 100%)!important;
+  color:var(--sh-purple-deep)!important;
+}
+.btn-primary-system .btn-title{color:#fff!important}
+.btn.btn-primary-system.full{background:linear-gradient(180deg,#9E7FDA 0%,var(--sh-purple-royal) 42%,var(--sh-purple-deep) 100%)!important}
+
+/* ================= Bottom navigation ================= */
+#v168BottomNav{
+  background:linear-gradient(180deg,#241D17,#171310)!important;
+  border-top:1px solid rgba(214,166,74,.26)!important;
+  box-shadow:0 -8px 20px rgba(8,6,4,.4)!important;
+}
+.v168-nav-btn{color:#8B7A62!important}
+.v168-nav-btn.active,.v168-nav-btn:active{
+  color:var(--sh-ui-cream)!important;
+  background:linear-gradient(180deg,var(--sh-purple-royal),var(--sh-purple))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 16px rgba(115,70,184,.35)!important;
+}
+.v168-nav-btn.active span{filter:drop-shadow(0 0 6px rgba(214,166,74,.55))!important}
+
+/* ================= Studio scene: stone-house re-skin ================= */
+.office-hero-card{
+  background:linear-gradient(180deg,var(--sh-wood-dark),var(--sh-deepbrown))!important;
+  border:1px solid rgba(214,166,74,.28)!important;
+}
+.office-scene{
+  background:
+    linear-gradient(180deg,transparent 0 60%,rgba(58,38,26,.6) 60% 100%),
+    repeating-linear-gradient(90deg,rgba(74,50,35,.35) 0 1px,transparent 1px 64px),
+    repeating-linear-gradient(90deg,rgba(74,50,35,.35) 32px 33px,transparent 33px 96px),
+    repeating-linear-gradient(0deg,var(--sh-stone) 0 25px,#8F7350 25px 27px,var(--sh-sand) 27px 51px,#8F7350 51px 53px)!important;
+}
+/* warm plaster wash + soft vignette over the stone blocks */
+.office-scene::before{
+  background:
+    radial-gradient(circle at 50% -10%,rgba(255,224,168,.24),transparent 52%),
+    linear-gradient(180deg,rgba(243,227,199,.06),rgba(30,21,15,.42) 72%)!important;
+}
+.office-scene::after{
+  background:repeating-linear-gradient(0deg,rgba(74,50,35,.28) 0 3px,transparent 3px 30px)!important;
+}
+/* wood beam along the top edge of the room */
+.office-hero-card::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:10px;z-index:5;
+  background:linear-gradient(180deg,var(--sh-wood-dark),var(--sh-wood-med));
+  box-shadow:0 3px 6px rgba(0,0,0,.35);
+  pointer-events:none;
+}
+/* hide the sci-fi skyline silhouette — doesn't fit a stone house */
+.office-cityline{display:none!important}
+/* warm lantern glow line instead of a neon LED strip */
+.office-led-strip{
+  background:linear-gradient(90deg,transparent,var(--sh-gold),rgba(255,224,168,.9),var(--sh-gold),transparent)!important;
+  box-shadow:0 0 14px var(--sh-gold),0 0 22px rgba(214,166,74,.25)!important;
+  opacity:.55!important;
+}
+/* warm hanging-lantern orb glow instead of a neon orb */
+.office-neon-orb{
+  background:radial-gradient(circle at 32% 28%,rgba(255,238,204,.55),rgba(214,166,74,.30) 40%,transparent 74%)!important;
+  opacity:.8!important;
+}
+/* golden sunlight through the wooden window instead of a cyan sky */
+.office-window{
+  background:linear-gradient(180deg,#F7DFA0,#E8B36B 55%,#C98A46)!important;
+  border-color:var(--sh-wood-med)!important;
+  box-shadow:0 0 24px rgba(247,223,160,.35),0 7px 18px rgba(15,10,6,.35)!important;
+}
+.office-window::before,.office-window::after{background:var(--sh-wood-dark)!important}
+/* wood-plaque studio sign instead of a dark glass chip */
+.office-wall-logo{
+  background:linear-gradient(180deg,var(--sh-wood-med),var(--sh-wood-dark))!important;
+  border:1px solid rgba(214,166,74,.45)!important;
+  color:var(--sh-ui-cream)!important;
+  text-shadow:none!important;
+  box-shadow:0 6px 14px rgba(8,6,4,.35),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+.office-desk,.office-second-desk,.office-extra-desk{
+  background:linear-gradient(180deg,var(--sh-wood-med),var(--sh-wood-dark))!important;
+  box-shadow:0 9px 0 var(--sh-deepbrown),0 15px 18px rgba(2,8,23,.25)!important;
+}
+.office-desk::before,.office-desk::after{background:var(--sh-deepbrown)!important}
+.office-monitor,.office-second-monitor{border-color:var(--sh-deepbrown)!important}
+.office-overlay{
+  background:linear-gradient(180deg,rgba(36,29,23,.92),rgba(23,18,14,.96))!important;
+  border:1px solid rgba(214,166,74,.24)!important;
+}
+.office-overlay h2{color:var(--sh-ui-cream)!important;text-shadow:none!important}
+.office-overlay p{color:#C9B79C!important}
+.office-level-chip{
+  background:linear-gradient(135deg,var(--sh-purple-royal),var(--sh-purple-deep))!important;
+  border:1px solid rgba(214,166,74,.4)!important;
+  color:var(--sh-ui-cream)!important;
+}
+.office-level-0,.office-level-1,.office-level-2,.office-level-3,.office-level-4{
+  --office-accent:var(--sh-purple-royal);--office-accent2:var(--sh-gold);
+}
+.trophy-shelf{filter:none}
+
+/* ================= Secondary room scene (character-creation / non-studio phases) ================= */
+.room{
+  background:
+    linear-gradient(180deg,transparent 0 58%,rgba(74,50,35,.55) 58% 100%),
+    repeating-linear-gradient(0deg,var(--sh-stone) 0 22px,#A88A66 22px 23px)!important;
+  border-color:rgba(214,166,74,.22)!important;
+}
+.window{background:linear-gradient(180deg,#F7DFA0,#E8B36B 60%,#C98A46)!important;border-color:var(--sh-wood-med)!important;box-shadow:0 0 18px rgba(247,223,160,.30)}
+.desk{background:linear-gradient(180deg,var(--sh-wood-med),var(--sh-wood-dark))!important}
+.pc{background:linear-gradient(145deg,var(--sh-purple-royal),var(--sh-purple) 55%,var(--sh-purple-deep))!important;border-color:var(--sh-deepbrown)!important;box-shadow:0 0 14px rgba(130,85,201,.30)!important}
+.roomlabel{background:rgba(23,18,14,.75)!important;border-color:rgba(214,166,74,.24)!important;color:var(--sh-ui-cream)!important}
+.bubble{background:var(--sh-ui-cream)!important;color:var(--sh-deepbrown)!important}
+
+/* ================= Subtle warm-light animation ================= */
+@keyframes v92Lantern{0%,100%{opacity:.55}50%{opacity:.85}}
+.office-led-strip,.office-neon-orb{animation:v92Lantern 3.6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){
+  .office-led-strip,.office-neon-orb{animation:none}
+}
+
+/* ================= Misc surfaces that used the old cool-blue accents ================= */
+.level-pill,.season-pill,#officeLevelChip,.studio-badge{
+  background:linear-gradient(135deg,var(--sh-purple-royal),var(--sh-purple-deep))!important;
+  color:var(--sh-ui-cream)!important;
+  border:1px solid rgba(214,166,74,.35)!important;
+}
+.xp-bar>i,.season-progress>i{background:linear-gradient(90deg,var(--sh-purple-royal),var(--sh-purple))!important}
+</style>
+
 </body>
 </html>

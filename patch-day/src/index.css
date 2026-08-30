@@ -1,0 +1,251 @@
+@font-face {
+  font-family: 'system-arabic';
+  src: local('Tahoma');
+}
+
+:root {
+  color-scheme: light;
+  --paper: #f3e9d2;
+  --paper-dark: #e6d8b8;
+  --ink: #2b2114;
+  --ink-soft: #5b4a34;
+  --brass: #b8862f;
+  --brass-light: #d4af6a;
+  --red-wax: #7c2d2d;
+  --green-ok: #3f6b4a;
+  --line: #c9b98d;
+  --shadow: rgba(43, 33, 20, 0.25);
+
+  font-family: 'Tahoma', 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(circle at 20% 0%, #3a2f22 0%, #1c1710 60%, #120e09 100%);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+h1, h2, h3, h4 {
+  margin: 0 0 0.4em;
+  color: var(--ink);
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.app-shell > * {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* --- diegetic paper primitives --- */
+
+.paper-card {
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-dark) 100%);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 10px 24px var(--shadow), inset 0 0 40px rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  position: relative;
+}
+
+.paper-card::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed rgba(90, 70, 40, 0.25);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.pin {
+  position: absolute;
+  top: -8px;
+  inset-inline-start: 16px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e05c5c, #7c2d2d 70%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.stamp {
+  display: inline-block;
+  border: 2px solid var(--red-wax);
+  color: var(--red-wax);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-weight: 700;
+  transform: rotate(-4deg);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.field input,
+.field select,
+.field textarea {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.btn {
+  background: linear-gradient(180deg, var(--brass-light), var(--brass));
+  border: 1px solid #8a6423;
+  color: #2b2114;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 10px 20px;
+  box-shadow: 0 3px 0 #7a5a1f;
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn:disabled {
+  filter: grayscale(0.6);
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--paper);
+  border-radius: 5px;
+  padding: 8px 16px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 780px) {
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.swatch.selected {
+  border-color: var(--ink);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+
+.chip.selected {
+  background: var(--brass-light);
+  border-color: var(--brass);
+  font-weight: 700;
+}
+
+.nav-locked {
+  opacity: 0.45;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--paper);
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.top-bar .era-tag {
+  font-size: 0.8rem;
+  color: var(--brass-light);
+  border: 1px solid var(--brass);
+  border-radius: 20px;
+  padding: 4px 12px;
+}

@@ -11495,5 +11495,391 @@ body:not([data-phase]) .v92-stagestrip{display:none}
 })();
 </script>
 
+<style id="v94PlaytestPolishStyles">
+/* ==================================================================
+   V94 — Playtest feedback pass
+   1) Pre-warning flash before an event modal interrupts
+   2) Un-occlude the studio scene (its life was hidden behind the caption)
+   3) Mission rows get a real CTA
+   4) Fit % gets a "why this number" explanation
+   5) Production screen de-duplicated and de-accordioned
+   ================================================================== */
+
+/* ---------- 1) Event pre-warning chip ---------- */
+#v94EventWarn{
+  position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-14px);
+  z-index:9998;display:flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:999px;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,#241D17,#1A1511);
+  border:1px solid var(--sh-gold,#D6A64A);
+  box-shadow:0 8px 26px rgba(8,6,4,.55),0 0 20px rgba(214,166,74,.35);
+  color:var(--sh-ui-cream,#F6E7CC);font-size:13.5px;font-weight:800;
+}
+#v94EventWarn .ic{font-size:17px;line-height:1}
+#v94EventWarn.on{animation:v94WarnIn .45s cubic-bezier(.2,1.3,.35,1) forwards}
+@keyframes v94WarnIn{
+  0%{opacity:0;transform:translateX(-50%) translateY(-14px) scale(.9)}
+  25%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.04)}
+  70%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-6px) scale(.98)}
+}
+@media(prefers-reduced-motion:reduce){
+  #v94EventWarn.on{animation:none;opacity:1;transform:translateX(-50%) translateY(0)}
+}
+
+/* ---------- 2) Studio scene: lift the caption out of the artwork ----------
+   The .office-overlay sat absolutely at the bottom of .office-scene with
+   z-index:10, covering the founder avatar, desk, monitor, chair and trophy
+   shelf entirely (measured: overlay 341-435 vs desk 394-407, monitor 347-392,
+   chair 377-423, founder 325-399). The room was never empty — it was hidden.
+   Making the overlay a static bar under the scene reveals the whole room. */
+.office-hero-card .office-overlay{
+  position:static!important;
+  inset:auto!important;
+  border-radius:0!important;
+  border-width:1px 0 0 0!important;
+  backdrop-filter:none!important;
+  box-shadow:none!important;
+  margin:0!important;
+}
+.office-hero-card{display:flex;flex-direction:column}
+
+/* ---------- 3) Mission CTA ---------- */
+.v19-mission{position:relative}
+.v94-mission-cta{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  width:100%;margin-top:7px;padding:7px 10px;border-radius:10px;
+  background:rgba(115,70,184,.16);
+  border:1px solid rgba(130,85,201,.42);
+  color:var(--sh-ui-cream,#F6E7CC);
+  font-size:12.5px;font-weight:800;text-align:start;cursor:pointer;
+  transition:background .16s ease,border-color .16s ease;
+}
+.v94-mission-cta:hover{background:rgba(115,70,184,.28);border-color:rgba(130,85,201,.7)}
+.v94-mission-cta .arw{opacity:.8;font-weight:900}
+.v19-mission.done .v94-mission-cta{display:none}
+
+/* ---------- 4) Fit explanation ---------- */
+.v94-fit-why{
+  margin-top:7px;padding:8px 10px;border-radius:10px;
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--c-line,rgba(214,166,74,.14));
+  font-size:12.5px;line-height:1.65;color:var(--c-body,#D9C7AC);
+}
+.v94-fit-why b{color:var(--c-ink,#F6E7CC)}
+.v94-fit-why .row{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+.v94-fit-why .hi{color:var(--sh-green,#58A96A);font-weight:800}
+.v94-fit-why .lo{color:var(--sh-red,#C5534D);font-weight:800}
+.v94-fit-scale{
+  display:flex;height:6px;border-radius:99px;overflow:hidden;margin:6px 0 5px;
+  background:rgba(0,0,0,.3);
+}
+.v94-fit-scale i{display:block;height:100%}
+.v94-fit-scale .seg-lo{background:rgba(197,83,77,.55)}
+.v94-fit-scale .seg-mid{background:rgba(214,166,74,.55)}
+.v94-fit-scale .seg-hi{background:rgba(88,169,106,.55)}
+.v94-fit-mark{position:relative;height:0}
+.v94-fit-mark i{
+  position:absolute;top:-11px;width:2px;height:12px;border-radius:2px;
+  background:var(--c-ink,#F6E7CC);box-shadow:0 0 6px rgba(0,0,0,.6);
+}
+
+/* ---------- 5) Production screen tidy ---------- */
+/* The 5-step stage strip at the top already states the phase, so the
+   3-chip dev-phase-strip and the "المرحلة N من 3" kicker are duplicates. */
+body[data-phase="production"] #productionScreen .dev-phase-strip,
+body[data-phase="polish"]     #polishScreen     .dev-phase-strip,
+body[data-phase="preprod"]    #preprodScreen    .dev-phase-strip{display:none!important}
+body[data-phase="production"] #productionScreen .phase-kicker>span:first-child,
+body[data-phase="polish"]     #polishScreen     .phase-kicker>span:first-child,
+body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{display:none}
+
+/* Quality bars are the main read-out during production; they should not sit
+   behind a fold the player has to open by hand every session. */
+#productionScreen .v50-fold.v94-open{display:block!important}
+.v94-inline-quality{margin-top:9px}
+.v94-inline-quality .v94-q-head{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--c-mute,#B09A7C);font-weight:700;margin-bottom:5px;
+}
+</style>
+
+<script id="v94PlaytestPolish">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const langV94=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>langV94()==='en'?en:ar;
+
+  /* ================================================================
+     1) Pre-warning flash before an interrupting event modal
+     ================================================================ */
+  function warnChip(){
+    let el=$('v94EventWarn');
+    if(!el){
+      el=document.createElement('div');
+      el.id='v94EventWarn';
+      el.setAttribute('aria-hidden','true');
+      el.innerHTML=`<span class="ic">⚡</span><span>${t('حدث في الاستوديو','Studio event')}</span>`;
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+  function flashWarn(){
+    const el=warnChip();
+    el.classList.remove('on');
+    void el.offsetWidth;           // restart the animation
+    el.classList.add('on');
+  }
+
+  // showDailyDecision is a plain global; its only callers (applyProductionTask
+  // at the base, and the drama wrap) just call saveGame afterwards and never
+  // read modal state synchronously, so deferring the modal is safe.
+  const showDailyDecisionBaseV94=window.showDailyDecision||showDailyDecision;
+  window.showDailyDecision=showDailyDecision=function(decision){
+    try{ flashWarn(); }catch(e){}
+    const args=arguments,self=this;
+    setTimeout(()=>{ try{ showDailyDecisionBaseV94.apply(self,args); }catch(e){} },420);
+  };
+
+  /* ================================================================
+     3) Mission rows get a real CTA
+     ================================================================ */
+  // Missions all resolve through either shipping a game or opening packs.
+  const PACK_MISSIONS=new Set(['packs']);
+
+  function projectInProgress(){
+    try{
+      if(typeof state==='undefined'||!state||state.finalized)return null;
+      const p=state.phase;
+      if(!p||p==='studio'||p==='create'||p==='team')return null;
+      return p;
+    }catch(e){ return null; }
+  }
+  function clickIfPresent(id){
+    const b=$(id);
+    if(b&&!b.disabled&&b.offsetParent!==null){ b.click(); return true; }
+    return false;
+  }
+  function goShip(){
+    const phase=projectInProgress();
+    if(phase){
+      try{
+        if(window.closeAllV168Windows)window.closeAllV168Windows();
+        setPhase(phase);
+        const r={setup:'renderSetup',plan:'renderPlan',preprod:'renderPreprod',
+                 production:'renderProduction',polish:'renderPlaytest',
+                 review:'renderReviews',sales:'renderSales'}[phase];
+        if(r&&typeof window[r]==='function')window[r]();
+        saveGame();
+        return true;
+      }catch(e){}
+    }
+    return clickIfPresent('v168NewGameBtn')||clickIfPresent('newProjectBtn');
+  }
+  function goPacks(){
+    try{
+      if(window.openV168Window){
+        window.openV168Window('discoveryModal',()=>window.renderDiscoveryModal?.());
+        return true;
+      }
+      window.renderDiscoveryModal?.();
+      $('discoveryModal')?.classList.add('show');
+      return true;
+    }catch(e){ return false; }
+  }
+  function ctaFor(missionId){
+    if(PACK_MISSIONS.has(missionId))
+      return {label:t('افتح البكجات','Open packs'), run:goPacks};
+    const phase=projectInProgress();
+    return phase
+      ? {label:t('أكمل مشروعك الحالي','Continue your project'), run:goShip}
+      : {label:t('ابدأ مشروعًا جديدًا','Start a new project'), run:goShip};
+  }
+  function decorateMissions(){
+    document.querySelectorAll('.v19-mission').forEach(row=>{
+      if(row.classList.contains('done')){
+        row.querySelector('.v94-mission-cta')?.remove();
+        return;
+      }
+      // The season hub re-renders wholesale, so re-derive the id each pass
+      // from the mission title text rather than caching a stale handle.
+      const title=(row.querySelector('.bd b')?.textContent||'').trim();
+      const isPacks=/مستكشف|Explorer/i.test(title);
+      const cta=ctaFor(isPacks?'packs':'ship');
+      let btn=row.querySelector('.v94-mission-cta');
+      if(!btn){
+        btn=document.createElement('button');
+        btn.className='v94-mission-cta';
+        btn.type='button';
+        (row.querySelector('.bd')||row).append(btn);
+      }
+      btn.innerHTML=`<span>${cta.label}</span><span class="arw">←</span>`;
+      btn.onclick=e=>{ e.stopPropagation(); cta.run(); };
+    });
+  }
+
+  /* ================================================================
+     4) Explain the fit number instead of just printing it
+     ================================================================ */
+  function fitOf(genreId,topicId){
+    try{
+      const tp=topics?.[topicId];
+      if(tp&&tp.fit&&Number.isFinite(tp.fit[genreId]))return Math.round(tp.fit[genreId]*100);
+    }catch(e){}
+    return null;
+  }
+  function ownedTopicIds(){
+    try{
+      const owned=window.ensureDiscoveryState?.()?.ownedTopics;
+      if(Array.isArray(owned)&&owned.length)return owned.filter(id=>topics?.[id]);
+    }catch(e){}
+    return Object.keys(topics||{});
+  }
+  function explainFit(){
+    const bp=$('v19Blueprint');
+    if(!bp)return;
+    let box=bp.querySelector('.v94-fit-why');
+    const g=(typeof state!=='undefined'&&state)?state.genre:null;
+    const tp=(typeof state!=='undefined'&&state)?state.topic:null;
+    const fit=(g&&tp)?fitOf(g,tp):null;
+    if(fit==null){ box?.remove(); return; }
+    if(!box){
+      box=document.createElement('div');
+      box.className='v94-fit-why';
+      bp.appendChild(box);
+    }
+    const gName=genres?.[g]?.name||g;
+    const tName=topics?.[tp]?.name||tp;
+
+    // Rank this pairing against the other topics the player actually owns,
+    // so the number reads as a choice among real alternatives.
+    const pool=ownedTopicIds()
+      .map(id=>({id,name:topics[id]?.name||id,fit:fitOf(g,id)}))
+      .filter(x=>x.fit!=null)
+      .sort((a,b)=>b.fit-a.fit);
+    const best=pool[0], worst=pool[pool.length-1];
+    const rank=pool.findIndex(x=>x.id===tp)+1;
+
+    // Position the marker on an 70..130 scale
+    const pos=Math.max(0,Math.min(100,(fit-70)/60*100));
+
+    const verdictWord=fit>=110?t('ممتاز','excellent')
+                    :fit>=95 ?t('جيد','good')
+                    :fit>=80 ?t('متوسط','average')
+                    :t('ضعيف','weak');
+    const meaning=fit>=100
+      ? t(`الموضوع يرفع سقف الجودة بنسبة ${fit-100}٪ فوق المعدل.`,
+          `This topic raises your quality ceiling ${fit-100}% above baseline.`)
+      : t(`الموضوع يخفض سقف الجودة بنسبة ${100-fit}٪ تحت المعدل.`,
+          `This topic lowers your quality ceiling ${100-fit}% below baseline.`);
+
+    box.innerHTML=`
+      <div><b>${t('ليش هذا الرقم؟','Why this number?')}</b></div>
+      <div style="margin-top:3px">${t(`«${tName}» مع «${gName}» توافق ${verdictWord}. ${meaning}`,
+        `"${tName}" on "${gName}" is a ${verdictWord} match. ${meaning}`)}</div>
+      <div class="v94-fit-scale">
+        <i class="seg-lo" style="width:25%"></i>
+        <i class="seg-mid" style="width:33%"></i>
+        <i class="seg-hi" style="width:42%"></i>
+      </div>
+      <div class="v94-fit-mark"><i style="inset-inline-start:${pos}%"></i></div>
+      <div class="row" style="margin-top:8px">
+        <span>${t('ترتيبه بين مواضيعك','Rank among your topics')}</span>
+        <b>${rank} / ${pool.length}</b>
+      </div>
+      ${best&&best.id!==tp?`<div class="row">
+        <span>${t('أفضل خيار متاح لك','Your best available')}</span>
+        <span class="hi">${best.name} ${best.fit}%</span></div>`:''}
+      ${worst&&worst.id!==tp&&pool.length>1?`<div class="row">
+        <span>${t('أضعف خيار','Weakest option')}</span>
+        <span class="lo">${worst.name} ${worst.fit}%</span></div>`:''}`;
+  }
+
+  /* ================================================================
+     5) Production screen: de-duplicate and un-fold
+     ================================================================ */
+  // v50OneScreenEngine folds every non-primary card behind a manual toggle.
+  // The quality bars are the core read-out of the production loop, so open
+  // that fold once (the player can still collapse it themselves afterwards).
+  function unfoldQuality(){
+    const bars=$('qualityBars');
+    if(!bars)return;
+
+    // Two independent collapses guard the same bars, created by different
+    // layers on different timers: v22CollapsibleQuality hides the bars
+    // themselves (renderProduction + 40ms), while v50OneScreenEngine folds the
+    // whole card (a 180ms post-click timer, so it can land *after* this runs
+    // and build a fresh, closed fold). Track each one on its own element so a
+    // later-created fold still gets opened, while a fold the player collapsed
+    // by hand is left alone.
+
+    // -- inner collapse: the bars themselves --
+    if(bars.dataset.v22setup==='1'&&bars.dataset.v94QOpen!=='1'){
+      bars.dataset.v94QOpen='1';
+      bars.classList.remove('v22-hidden');
+      const toggle=$('v22QualityToggle');
+      if(toggle){
+        toggle.setAttribute('aria-expanded','true');
+        toggle.textContent='▼ 📊 '+t('تفاصيل الجودة','Quality details');
+      }
+    }
+
+    // -- outer collapse: the card fold --
+    const fold=bars.closest('.v50-fold');
+    if(fold&&fold.dataset.v94FOpen!=='1'){
+      fold.dataset.v94FOpen='1';
+      fold.classList.add('open','v94-open');
+      const chev=fold.parentElement?.querySelector('.v50-foldbtn .chev');
+      if(chev)chev.textContent='⌃';
+    }
+  }
+
+  function tidyProduction(){
+    const screen=$('productionScreen');
+    if(!screen||!screen.classList.contains('active'))return;
+    unfoldQuality();
+  }
+
+  /* ================================================================
+     Hooks
+     ================================================================ */
+  function hook(name,after){
+    const fn=window[name];
+    if(typeof fn!=='function')return false;
+    window[name]=function(){
+      const r=fn.apply(this,arguments);
+      try{ after(); }catch(e){}
+      return r;
+    };
+    return true;
+  }
+
+  function boot(){
+    if(typeof gameState==='undefined'||!gameState){ setTimeout(boot,300); return; }
+    hook('renderStudio',()=>setTimeout(decorateMissions,0));
+    hook('renderSetup',()=>setTimeout(explainFit,0));
+    hook('renderProduction',()=>setTimeout(tidyProduction,90));
+    hook('setPhase',()=>setTimeout(()=>{ decorateMissions(); explainFit(); tidyProduction(); },30));
+    // The season hub and blueprint both re-render on their own cadence; a
+    // light observer keeps the additions attached without re-wrapping them.
+    const app=document.querySelector('.app');
+    if(app){
+      let queued=false;
+      new MutationObserver(()=>{
+        if(queued)return;
+        queued=true;
+        setTimeout(()=>{
+          queued=false;
+          try{ decorateMissions(); explainFit(); tidyProduction(); }catch(e){}
+        },60);
+      }).observe(app,{childList:true,subtree:true});
+    }
+    decorateMissions(); explainFit(); tidyProduction();
+  }
+  boot();
+})();
+</script>
+
 </body>
 </html>

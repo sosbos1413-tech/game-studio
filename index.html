@@ -12526,5 +12526,687 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
 })();
 </script>
 
+<style id="v98EsportsStyles">
+/* ==================================================================
+   V98 — Esports branch
+   Trading-card identity, built from scratch. Deliberately shares no
+   class with .employee-card / .candidate-card.
+   ================================================================== */
+.v98-card{
+  position:relative;width:100%;border-radius:16px;overflow:hidden;
+  background:linear-gradient(170deg,#2A2118 0%,#1A1410 55%,#120E0B 100%);
+  border:1px solid rgba(214,166,74,.30);
+  box-shadow:0 10px 26px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex;flex-direction:column;
+}
+.v98-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.055) 47%,transparent 56%);
+}
+.v98-card.t-gold{border-color:rgba(214,166,74,.75);box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 22px rgba(214,166,74,.22)}
+.v98-card.t-purple{border-color:rgba(130,85,201,.7);box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 22px rgba(130,85,201,.25)}
+.v98-card.t-steel{border-color:rgba(176,154,124,.45)}
+
+.v98-top{display:flex;align-items:flex-start;gap:9px;padding:11px 12px 8px}
+.v98-rating{
+  min-width:46px;height:46px;border-radius:11px;display:grid;place-items:center;
+  background:linear-gradient(160deg,var(--sh-gold,#D6A64A),#A87C2C);
+  color:#2A1C08;font-weight:900;font-size:21px;line-height:1;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+  direction:ltr;unicode-bidi:isolate;
+}
+.v98-card.t-purple .v98-rating{background:linear-gradient(160deg,#A98AE0,var(--sh-purple,#7346B8));color:#fff}
+.v98-card.t-steel .v98-rating{background:linear-gradient(160deg,#C9B79C,#8B7A62);color:#241A14}
+.v98-id{flex:1;min-width:0}
+.v98-id b{display:block;font-size:14px;font-weight:900;color:var(--sh-ui-cream,#F6E7CC);
+  line-height:1.3;overflow-wrap:anywhere;
+  /* the latin nickname is half the identity, so wrap to two lines instead of
+     truncating it away on a narrow two-column grid */
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.v98-pos{display:inline-block;margin-top:3px;padding:2px 8px;border-radius:999px;
+  font-size:10.5px;font-weight:800;background:rgba(115,70,184,.24);
+  border:1px solid rgba(130,85,201,.45);color:var(--sh-ui-cream,#F6E7CC)}
+.v98-trait{
+  margin:0 12px 9px;padding:7px 9px;border-radius:10px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(214,166,74,.18);
+}
+.v98-trait b{display:block;font-size:12px;color:var(--sh-gold,#D6A64A);margin-bottom:2px}
+.v98-trait small{display:block;font-size:11px;line-height:1.55;color:var(--c-body,#D9C7AC)}
+.v98-trait .cost{display:block;margin-top:3px;font-size:10.5px;color:#C08C86}
+.v98-foot{
+  margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px;background:rgba(0,0,0,.28);border-top:1px solid rgba(214,166,74,.14);
+}
+.v98-price{font-size:13px;font-weight:900;color:var(--sh-gold,#D6A64A);
+  direction:ltr;unicode-bidi:isolate}
+.v98-foot .btn{min-height:36px!important;padding:0 14px!important;font-size:12.5px!important}
+.v98-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+@media(max-width:400px){.v98-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .v98-id b{font-size:12.5px}.v98-rating{min-width:40px;height:40px;font-size:18px}}
+
+.v98-num{direction:ltr;unicode-bidi:isolate;font-weight:900}
+.v98-sec{margin-bottom:14px}
+.v98-sec h3{margin:0 0 7px;font-size:15px;color:var(--c-ink,#F6E7CC)}
+.v98-sec>p{margin:0 0 9px;font-size:12.5px;line-height:1.6;color:var(--c-body,#D9C7AC)}
+.v98-game{
+  display:flex;align-items:center;gap:9px;padding:10px 11px;margin-bottom:7px;
+  border-radius:12px;background:var(--c-sunken,#241A14);
+  border:1px solid var(--c-line,rgba(214,166,74,.16));cursor:pointer;
+  font-family:inherit;width:100%;text-align:start;color:var(--c-body,#D9C7AC);
+}
+.v98-game.on{border-color:var(--sh-purple-royal,#8255C9);background:rgba(115,70,184,.14)}
+.v98-game b{display:block;font-size:13.5px;color:var(--c-ink,#F6E7CC)}
+.v98-game small{display:block;font-size:11px;margin-top:2px}
+.v98-game .sc{margin-inline-start:auto;font-size:16px;font-weight:900;
+  color:var(--sh-gold,#D6A64A);direction:ltr;unicode-bidi:isolate}
+.v98-own{font-size:10px;padding:2px 7px;border-radius:999px;
+  background:rgba(88,169,106,.18);border:1px solid rgba(88,169,106,.4);
+  color:var(--sh-green,#58A96A);font-weight:800}
+.v98-offer{
+  padding:11px;border-radius:12px;margin-bottom:8px;
+  background:rgba(214,166,74,.08);border:1px solid rgba(214,166,74,.3);
+}
+.v98-offer .row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.v98-offer b{font-size:13.5px;color:var(--c-ink,#F6E7CC)}
+.v98-offer small{display:block;font-size:11.5px;color:var(--c-body,#D9C7AC);margin-top:3px}
+.v98-offer .acts{display:flex;gap:7px;margin-top:9px}
+.v98-offer .acts .btn{flex:1;min-height:38px!important;font-size:12.5px!important}
+.v98-log{font-size:12px;line-height:1.7;color:var(--c-body,#D9C7AC);
+  padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.03);
+  border:1px solid var(--c-line,rgba(214,166,74,.14));margin-bottom:6px}
+.v98-empty{font-size:12.5px;color:var(--c-mute,#B09A7C);padding:12px;text-align:center;
+  border-radius:12px;background:rgba(255,255,255,.025);
+  border:1px dashed rgba(214,166,74,.22)}
+.v98-locked{opacity:.55}
+</style>
+<script id="v98Esports">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const langV98=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>langV98()==='en'?en:ar;
+  const num=v=>`<span class="v98-num">${v}</span>`;
+
+  /* ---- tunables (set per the studio owner's balance call) ---- */
+  const UNLOCK_LEVEL   = 20;
+  const FOUND_COST     = 1500000;  // one-time branch founding cost
+  const FOUND_REP      = 100;      // reputation is clamp(0,100), so this is the ceiling
+  const PACK_COST      = 40;       // ideaTokens, same economy as every other pack
+  const TOURNEY_WEEKS  = 6;        // weeks from signing window to the final
+  const PRIZE_BASE     = 90000;
+
+  /* ================= 8 esports traits (separate from PEOPLE_TRAITS) ========= */
+  const ESPORTS_TRAITS={
+    clutch:{name:t('حاسم بالنهائيات','Clutch'),
+      gain:t('أداء قوي بالمباريات الحاسمة','Strong in decisive matches'),
+      cost:t('أضعف بمباريات الموسم العادية','Weaker in regular-season games'),
+      mod:c=>c.isFinal?1.28:0.88},
+    crowd:{name:t('يجذب المتابعين','Crowd magnet'),
+      gain:t('يرفع الجمهور والضجيج بغض النظر عن النتيجة','Raises fans and hype regardless of result'),
+      cost:t('ظهوره العالي يسرّع عروض الخطف','High visibility speeds up poaching offers'),
+      mod:()=>1, fansMult:2.2, poachMult:1.9},
+    meta:{name:t('لاعب ميتا','Meta player'),
+      gain:t('قوي جدًا مع النوع الذي يتخصص فيه','Very strong in his own genre'),
+      cost:t('ضعيف بوضوح بأي نوع آخر','Clearly weak in any other genre'),
+      mod:c=>c.sameGenre?1.34:0.66},
+    cool:{name:t('بارد الأعصاب','Ice cold'),
+      gain:t('محصّن من أثر «يوم التحديث» السلبي','Immune to a bad patch day'),
+      cost:t('لا يستفيد من أثره الإيجابي أيضًا','Gains nothing from a good one either'),
+      mod:()=>1, patchImmune:true},
+    rising:{name:t('صاعد واعد','Rising prospect'),
+      gain:t('رخيص جدًا، وسمعته ترتفع أسرع بعد كل فوز','Very cheap, reputation climbs faster per win'),
+      cost:t('يبدأ بسمعة شبه صفر — مخاطرة اكتشاف','Starts near zero reputation — a scouting gamble'),
+      mod:()=>1, priceMult:0.35, repGainMult:2.1, startRep:[4,16]},
+    legend:{name:t('أسطورة بأيامها الأخيرة','Fading legend'),
+      gain:t('سمعة ومهارة عالية جدًا فور التوقيع','Very high reputation and skill immediately'),
+      cost:t('يعتزل تلقائيًا بعد موسم أو اثنين','Retires automatically after a season or two'),
+      mod:()=>1.18, priceMult:1.7, startRep:[74,93], retireIn:[1,2]},
+    spotlight:{name:t('يعشق الأضواء','Spotlight lover'),
+      gain:t('أقوى مع أشهر لعبة بمكتبتك','Stronger on your best-rated game'),
+      cost:t('أضعف بالألعاب الأقل شهرة','Weaker on lesser-known games'),
+      mod:c=>c.isTopGame?1.30:0.82},
+    flex:{name:t('مرن الأدوار','Flex'),
+      gain:t('بلا أي ضعف مع أي نوع لعبة','No weakness on any genre'),
+      cost:t('سقفه الأعلى دائمًا أقل من المتخصص','Ceiling always below a specialist'),
+      mod:()=>1, flatFit:0.97, ceiling:0.90}
+  };
+  const TRAIT_IDS=Object.keys(ESPORTS_TRAITS);
+
+  const FIRST=['فيصل','تركي','ريان','مشعل','نايف','زياد','وليد','بندر','طلال','رعد','سيف','مروان','أنس','هيثم','لؤي'];
+  const NICK =['Falcon','Vortex','Blaze','Nyx','Titan','Quartz','Rogue','Onyx','Volt','Specter','Kite','Draco'];
+
+  /* ================= state ================= */
+  function es(){
+    const c=gameState.company;
+    if(!c.esportsV98||typeof c.esportsV98!=='object'){
+      c.esportsV98={founded:false,foundedWeek:0,contest:null,roster:[],offers:[],log:[],freeAgents:[],seq:1};
+    }
+    const e=c.esportsV98;
+    ['roster','offers','log','freeAgents'].forEach(k=>{if(!Array.isArray(e[k]))e[k]=[]});
+    if(!e.seq)e.seq=1;
+    return e;
+  }
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const ri =(a,b)=>Math.floor(rnd(a,b+1));
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function unlocked(){ try{return progression().level>=UNLOCK_LEVEL}catch(e){return false} }
+  function founded(){ return !!es().founded; }
+
+  function tierOf(rep){ return rep>=80?'t-gold':rep>=55?'t-purple':'t-steel'; }
+
+  /* ================= athletes ================= */
+  function makeAthlete(genre){
+    const e=es();
+    const tid=pick(TRAIT_IDS), tr=ESPORTS_TRAITS[tid];
+    const range=tr.startRep||[22,62];
+    const rep=Math.round(rnd(range[0],range[1]));
+    const base=Math.round((900+rep*rep*2.1)*(tr.priceMult||1));
+    const a={
+      id:'ath_'+(e.seq++),
+      name:pick(FIRST)+' "'+pick(NICK)+'"',
+      genre, rep,
+      trait:tid,
+      price:Math.max(600,Math.round(base/100)*100),
+      salary:Math.max(200,Math.round(base*0.055/50)*50),
+      wins:0, signedYear:seasonYear(gameState.company.week)
+    };
+    if(tr.retireIn)a.retireAfterYear=a.signedYear+ri(tr.retireIn[0],tr.retireIn[1]);
+    return a;
+  }
+  // Reputation drives the asking price, so it is recomputed whenever rep moves.
+  function repriceAthlete(a){
+    const tr=ESPORTS_TRAITS[a.trait]||{};
+    const base=Math.round((900+a.rep*a.rep*2.1)*(tr.priceMult||1));
+    a.price=Math.max(600,Math.round(base/100)*100);
+    return a.price;
+  }
+
+  /* ================= the annual contest ================= */
+  // Top-rated games of the current season year, from the player's own history
+  // and the rival studios' release history, on one normalised 0-10 scale.
+  function topGamesOfYear(year){
+    const out=[];
+    try{
+      (gameState.history||[]).forEach(g=>{
+        const w=g.releaseWeek||0;
+        if(seasonYear(w)!==year)return;
+        out.push({key:'p_'+g.id,name:g.name,genre:g.genre,
+                  rating:Number(g.reviewAverage||0),mine:true});
+      });
+    }catch(e){}
+    try{
+      (normalizeIndustryState().companies||[]).forEach(r=>{
+        (r.releaseHistory||[]).forEach(rel=>{
+          const w=rel.week||0;
+          if(seasonYear(w)!==year)return;
+          out.push({key:'r_'+r.id+'_'+w,name:rel.name,genre:rel.genre,
+                    rating:Number(rel.score||0),mine:false,owner:r.name});
+        });
+      });
+    }catch(e){}
+    return out.sort((a,b)=>b.rating-a.rating).slice(0,5);
+  }
+
+  function openContest(){
+    const e=es(), year=seasonYear(gameState.company.week);
+    if(e.contest&&e.contest.year===year)return e.contest;
+    const games=topGamesOfYear(year);
+    if(!games.length)return null;
+    e.contest={year,games,chosen:[],pools:{},tournaments:[],
+               openedWeek:gameState.company.week,signed:false};
+    return e.contest;
+  }
+
+  function toggleGame(key){
+    const c=es().contest; if(!c||c.signed)return;
+    const i=c.chosen.indexOf(key);
+    if(i>=0){ c.chosen.splice(i,1); delete c.pools[key]; }
+    else{
+      c.chosen.push(key);
+      const g=c.games.find(x=>x.key===key);
+      // a fresh random pool of 1-5 specialists per contested game
+      c.pools[key]=Array.from({length:ri(1,5)},()=>makeAthlete(g?g.genre:'action'));
+    }
+    saveGame();
+  }
+
+  function signAthlete(key,id){
+    const e=es(),c=e.contest; if(!c)return false;
+    const pool=c.pools[key]||[];
+    const idx=pool.findIndex(a=>a.id===id); if(idx<0)return false;
+    const a=pool[idx];
+    if(gameState.company.cash<a.price)return false;
+    gameState.company.cash-=a.price;
+    a.gameKey=key;
+    e.roster.push(a);
+    pool.splice(idx,1);
+    saveGame();
+    return true;
+  }
+
+  /* ================= tournaments ================= */
+  function startTournaments(){
+    const e=es(),c=e.contest;
+    if(!c||c.signed||!c.chosen.length)return false;
+    c.signed=true;
+    c.tournaments=c.chosen.map(key=>{
+      const g=c.games.find(x=>x.key===key);
+      return {key,name:g?g.name:key,genre:g?g.genre:'action',rating:g?g.rating:6,
+              finalWeek:gameState.company.week+TOURNEY_WEEKS,resolved:false};
+    });
+    saveGame();
+    return true;
+  }
+
+  function topGameKey(){
+    const c=es().contest; if(!c)return null;
+    let best=null;
+    c.games.forEach(g=>{if(!best||g.rating>best.rating)best=g});
+    return best?best.key:null;
+  }
+
+  // Power of one athlete for one tournament. The player's own game gets no
+  // special treatment here — the same formula runs for every entrant.
+  function athletePower(a,tn,ctx){
+    const tr=ESPORTS_TRAITS[a.trait]||{};
+    const sameGenre=a.genre===tn.genre;
+    const fit=tr.flatFit!=null?tr.flatFit:(sameGenre?1:0.78);
+    let p=(12+a.rep)*fit;
+    p*= (typeof tr.mod==='function')?tr.mod({isFinal:ctx.isFinal,sameGenre,isTopGame:ctx.isTopGame}):1;
+    if(ctx.patch&&!tr.patchImmune) p*= ctx.patch;
+    if(tr.ceiling) p*=tr.ceiling;
+    return Math.max(1,p);
+  }
+
+  function resolveTournament(tn){
+    const e=es();
+    const squad=e.roster.filter(a=>a.gameKey===tn.key);
+    const isTopGame=tn.key===topGameKey();
+    // a shared "patch day" swing applies to the whole tournament
+    const patch=rnd(0.86,1.14);
+    const ctx={isFinal:true,isTopGame,patch};
+
+    const mine=squad.reduce((s,a)=>s+athletePower(a,tn,ctx),0);
+    // rival squads are generated from the same industry studios that drive the
+    // rest of the simulation, at a strength scaled to the game's own rating
+    let rivals=[];
+    try{
+      rivals=(normalizeIndustryState().companies||[]).slice(0,4).map(r=>({
+        name:r.name,
+        power:(12+clampRep(r.reputation||60))*rnd(0.75,1.25)*ri(1,3)
+      }));
+    }catch(err){ rivals=[{name:'Rival',power:rnd(40,140)}]; }
+
+    const field=[{name:t('فريقك','Your team'),power:mine,mine:true},...rivals]
+      .sort((a,b)=>b.power-a.power);
+    const placeIdx=field.findIndex(x=>x.mine);
+    const place=placeIdx+1;
+    const won=place===1&&squad.length>0;
+
+    let prize=0,fans=0;
+    if(squad.length){
+      prize=Math.round(PRIZE_BASE*(tn.rating/10+0.4)*(place===1?1:place===2?0.45:place===3?0.22:0.08));
+      fans =Math.round(prize/900);
+      let fansMult=1;
+      squad.forEach(a=>{const tr=ESPORTS_TRAITS[a.trait]||{};if(tr.fansMult)fansMult=Math.max(fansMult,tr.fansMult)});
+      fans=Math.round(fans*fansMult);
+      gameState.company.cash+=prize;
+      gameState.company.fans=(gameState.company.fans||0)+fans;
+      // athlete reputation moves with the result, which re-prices them
+      squad.forEach(a=>{
+        const tr=ESPORTS_TRAITS[a.trait]||{};
+        const g=(won?ri(5,9):place<=3?ri(2,5):ri(-2,2))*(tr.repGainMult||1);
+        a.rep=clampRep(a.rep+Math.round(g));
+        if(won)a.wins=(a.wins||0)+1;
+        repriceAthlete(a);
+      });
+    }
+    tn.resolved=true; tn.place=place; tn.prize=prize; tn.fans=fans; tn.squad=squad.length;
+
+    e.log.unshift({week:gameState.company.week,name:tn.name,place,prize,fans,
+                   squad:squad.length,won});
+    e.log=e.log.slice(0,12);
+
+    if(squad.length)generateOffers(squad);
+    retireIfDue();
+    return tn;
+  }
+  function clampRep(v){ return Math.max(0,Math.min(100,Math.round(v))); }
+
+  // Rival studios bid for athletes the player already owns, priced off current
+  // reputation. Accepting pays a transfer fee; refusing keeps him and the bids
+  // return higher as his reputation grows.
+  function generateOffers(squad){
+    const e=es();
+    let rivalNames=['Rival Org'];
+    try{ rivalNames=(normalizeIndustryState().companies||[]).map(r=>r.name).filter(Boolean); }catch(err){}
+    squad.forEach(a=>{
+      const tr=ESPORTS_TRAITS[a.trait]||{};
+      const chance=0.16*(tr.poachMult||1)*(a.rep/50);
+      if(Math.random()>chance)return;
+      if(e.offers.some(o=>o.athleteId===a.id))return;
+      e.offers.push({
+        id:'off_'+(e.seq++), athleteId:a.id, athleteName:a.name,
+        from:pick(rivalNames),
+        fee:Math.round(a.price*rnd(1.15,1.75)/100)*100,
+        week:gameState.company.week
+      });
+    });
+  }
+
+  function acceptOffer(offerId){
+    const e=es();
+    const i=e.offers.findIndex(o=>o.id===offerId); if(i<0)return false;
+    const o=e.offers[i];
+    const ai=e.roster.findIndex(a=>a.id===o.athleteId);
+    if(ai<0){ e.offers.splice(i,1); return false; }
+    gameState.company.cash+=o.fee;
+    const name=e.roster[ai].name;
+    e.roster.splice(ai,1);                       // leaves the squad immediately
+    e.offers.splice(i,1);
+    e.log.unshift({week:gameState.company.week,transfer:true,
+                   text:t(`انتقل ${name} إلى ${o.from} مقابل ${fmt(o.fee)}`,
+                          `${name} transferred to ${o.from} for ${fmt(o.fee)}`)});
+    saveGame();
+    return true;
+  }
+  function rejectOffer(offerId){
+    const e=es();
+    const i=e.offers.findIndex(o=>o.id===offerId); if(i<0)return false;
+    e.offers.splice(i,1);                        // he stays; bids return later
+    saveGame();
+    return true;
+  }
+
+  function retireIfDue(){
+    const e=es(),year=seasonYear(gameState.company.week);
+    for(let i=e.roster.length-1;i>=0;i--){
+      const a=e.roster[i];
+      if(a.retireAfterYear&&year>a.retireAfterYear){
+        e.log.unshift({week:gameState.company.week,transfer:true,
+          text:t(`اعتزل ${a.name} بعد مسيرة قصيرة معك`,`${a.name} retired after a short run with you`)});
+        e.roster.splice(i,1);
+      }
+    }
+  }
+
+  // Idempotent: safe to call from any path that may have moved the clock.
+  function esportsSync(){
+    if(!founded())return;
+    const e=es();
+    let changed=false;
+    (e.contest?.tournaments||[]).forEach(tn=>{
+      if(!tn.resolved&&gameState.company.week>=tn.finalWeek){ resolveTournament(tn); changed=true; }
+    });
+    const year=seasonYear(gameState.company.week);
+    if(!e.contest||(e.contest.year!==year&&(e.contest.tournaments||[]).every(x=>x.resolved))){
+      if(openContest())changed=true;
+    }
+    if(changed){ try{saveGame()}catch(err){} }
+  }
+  window.esportsSyncV98=esportsSync;
+
+  /* ================= founding ================= */
+  function canFound(){
+    const c=gameState.company;
+    return unlocked()&&!founded()&&c.cash>=FOUND_COST&&(c.reputation||0)>=FOUND_REP;
+  }
+  function foundBranch(){
+    if(!canFound())return false;
+    gameState.company.cash-=FOUND_COST;
+    const e=es();
+    e.founded=true; e.foundedWeek=gameState.company.week;
+    openContest();
+    saveGame();
+    return true;
+  }
+  window.foundEsportsV98=foundBranch;
+
+  /* ================= athlete pack (ideaTokens, same economy) ================= */
+  function openEsportsPack(){
+    const d=ensureDiscoveryState();
+    if(!founded())return false;
+    if((d.ideaTokens||0)<PACK_COST)return false;
+    d.ideaTokens-=PACK_COST;
+    const genres_=Object.keys(genres||{action:1});
+    const out=Array.from({length:3},()=>makeAthlete(pick(genres_)));
+    es().freeAgents.push(...out);
+    saveGame();
+    return out;
+  }
+  window.openEsportsPackV98=openEsportsPack;
+
+  function signFreeAgent(id){
+    const e=es();
+    const i=e.freeAgents.findIndex(a=>a.id===id); if(i<0)return false;
+    const a=e.freeAgents[i];
+    if(gameState.company.cash<a.price)return false;
+    gameState.company.cash-=a.price;
+    const c=e.contest;
+    const match=(c?.tournaments||[]).find(tn=>!tn.resolved&&tn.genre===a.genre)
+             || (c?.tournaments||[]).find(tn=>!tn.resolved);
+    a.gameKey=match?match.key:null;
+    e.roster.push(a);
+    e.freeAgents.splice(i,1);
+    saveGame();
+    return true;
+  }
+
+  /* ================= rendering ================= */
+  function athleteCard(a,action){
+    const tr=ESPORTS_TRAITS[a.trait]||{};
+    const g=(genres&&genres[a.genre])||{name:a.genre,icon:'🎮'};
+    return `<div class="v98-card ${tierOf(a.rep)}">
+      <div class="v98-top">
+        <div class="v98-rating">${a.rep}</div>
+        <div class="v98-id"><b>${a.name}</b>
+          <span class="v98-pos">${g.icon||'🎮'} ${g.name||a.genre}</span></div>
+      </div>
+      <div class="v98-trait"><b>${tr.name||a.trait}</b>
+        <small>▲ ${tr.gain||''}</small>
+        <span class="cost">▼ ${tr.cost||''}</span></div>
+      <div class="v98-foot">
+        <span class="v98-price">${fmt(a.price)}</span>
+        ${action||''}
+      </div></div>`;
+  }
+
+  function renderEsports(){
+    const body=$('v98Body'); if(!body)return;
+    const e=es(),c=gameState.company;
+
+    if(!unlocked()){
+      body.innerHTML=`<div class="v98-empty">🔒 ${t(`فرع الإسبورتس يفتح عند المستوى ${UNLOCK_LEVEL}`,`Esports unlocks at level ${UNLOCK_LEVEL}`)} — ${t('حاليًا','now')} ${num(progression().level)}</div>`;
+      return;
+    }
+    if(!founded()){
+      const okCash=c.cash>=FOUND_COST, okRep=(c.reputation||0)>=FOUND_REP;
+      body.innerHTML=`<div class="v98-sec">
+        <h3>🏟️ ${t('تأسيس فرع الإسبورتس','Found the esports branch')}</h3>
+        <p>${t('فرع مستقل ينافس ببطولات على أشهر ألعاب السنة — لك ولمنافسيك.','An independent branch competing in tournaments on the year\'s biggest games — yours and your rivals\'.')}</p>
+        <div class="v98-log">💵 ${t('التكلفة','Cost')}: ${num(fmt(FOUND_COST))} — ${okCash?'✅':'❌ '+t('رصيدك','you have')+' '+fmt(c.cash)}</div>
+        <div class="v98-log">⭐ ${t('السمعة المطلوبة','Reputation required')}: ${num(FOUND_REP+'/100')} — ${okRep?'✅':'❌ '+t('حاليًا','now')+' '+Math.round(c.reputation||0)}</div>
+        <button class="btn primary full" id="v98Found" ${canFound()?'':'disabled'} style="margin-top:10px">🏟️ ${t('تأسيس الفرع','Found branch')}</button>
+      </div>`;
+      const f=$('v98Found'); if(f)f.onclick=()=>{ if(foundBranch()){try{sfx('success')}catch(x){} renderEsports(); } };
+      return;
+    }
+
+    esportsSync();
+    const ct=e.contest;
+    let html='';
+
+    /* --- offers first: they are time-sensitive --- */
+    if(e.offers.length){
+      html+=`<div class="v98-sec"><h3>🔁 ${t('عروض انتقال','Transfer offers')}</h3>`;
+      e.offers.forEach(o=>{
+        html+=`<div class="v98-offer">
+          <div class="row"><b>${o.athleteName}</b><span class="v98-price">${fmt(o.fee)}</span></div>
+          <small>${t('عرض من','Offer from')} ${o.from}</small>
+          <div class="acts">
+            <button class="btn primary" data-v98-acc="${o.id}">${t('قبول وبيع','Accept')}</button>
+            <button class="btn" data-v98-rej="${o.id}">${t('رفض','Refuse')}</button>
+          </div></div>`;
+      });
+      html+='</div>';
+    }
+
+    /* --- contest --- */
+    if(ct){
+      html+=`<div class="v98-sec"><h3>🏆 ${t('منافسة السنة','This year\'s contest')} ${num(ct.year)}</h3>`;
+      if(!ct.signed){
+        html+=`<p>${t('اختر الألعاب التي تريد المنافسة فيها — ليس إجباريًا اختيار كلها.','Pick the games you want to compete in — you do not have to take them all.')}</p>`;
+        ct.games.forEach(g=>{
+          const on=ct.chosen.includes(g.key);
+          html+=`<button class="v98-game ${on?'on':''}" data-v98-game="${g.key}">
+            <span>${on?'✅':'⬜'}</span>
+            <span><b>${g.name}</b><small>${(genres&&genres[g.genre]?genres[g.genre].name:g.genre)}${g.mine?' • <span class="v98-own">'+t('لعبتك','yours')+'</span>':' • '+(g.owner||'')}</small></span>
+            <span class="sc">${g.rating.toFixed(1)}</span></button>`;
+        });
+        ct.chosen.forEach(key=>{
+          const pool=ct.pools[key]||[];
+          const g=ct.games.find(x=>x.key===key);
+          html+=`<div class="v98-sec" style="margin-top:10px"><h3>👥 ${t('مرشحون لـ','Candidates for')} ${g?g.name:key}</h3>`;
+          html+= pool.length
+            ? `<div class="v98-grid">${pool.map(a=>athleteCard(a,`<button class="btn primary" data-v98-sign="${key}|${a.id}" ${gameState.company.cash<a.price?'disabled':''}>${t('تعاقد','Sign')}</button>`)).join('')}</div>`
+            : `<div class="v98-empty">${t('تعاقدت مع كل المرشحين لهذه اللعبة','You signed every candidate for this game')}</div>`;
+          html+='</div>';
+        });
+        html+=`<button class="btn primary full" id="v98Start" ${ct.chosen.length?'':'disabled'} style="margin-top:10px">
+          🚀 ${t('ابدأ الموسم','Start the season')} — ${t('تُحسم بعد','resolves in')} ${num(TOURNEY_WEEKS)} ${t('أسابيع','weeks')}</button>`;
+      }else{
+        (ct.tournaments||[]).forEach(tn=>{
+          const left=Math.max(0,tn.finalWeek-gameState.company.week);
+          html+=`<div class="v98-log">${tn.resolved
+            ? `🏁 <b>${tn.name}</b> — ${t('المركز','Place')} ${num(tn.place)} • ${t('جائزة','Prize')} ${num(fmt(tn.prize))}`
+            : `⏳ <b>${tn.name}</b> — ${t('النهائي بعد','final in')} ${num(left)} ${t('أسبوع','week(s)')}`}</div>`;
+        });
+        if((ct.tournaments||[]).every(x=>x.resolved))
+          html+=`<div class="v98-empty">${t('انتهى الموسم — منافسة السنة القادمة تفتح مع تقدّم الوقت','Season over — next year\'s contest opens as time advances')}</div>`;
+      }
+      html+='</div>';
+    }
+
+    /* --- roster --- */
+    html+=`<div class="v98-sec"><h3>🎽 ${t('فريقك','Your roster')} ${num(e.roster.length)}</h3>`;
+    html+= e.roster.length
+      ? `<div class="v98-grid">${e.roster.map(a=>athleteCard(a,`<span class="v98-price" style="font-size:11px">${t('فوز','W')} ${a.wins||0}</span>`)).join('')}</div>`
+      : `<div class="v98-empty">${t('لا يوجد رياضيون بعد','No athletes yet')}</div>`;
+    html+='</div>';
+
+    /* --- athlete pack + free agents --- */
+    const d=ensureDiscoveryState();
+    html+=`<div class="v98-sec"><h3>🎴 ${t('بكج الرياضيين','Athlete pack')}</h3>
+      <p>${t('ثلاثة مرشحين عشوائيين — يدخلون قائمة الأحرار وتوقّع منهم متى شئت.','Three random prospects — they join your free agents to sign whenever you like.')}</p>
+      <button class="btn primary full" id="v98Pack" ${(d.ideaTokens||0)<PACK_COST?'disabled':''}>
+        🎴 ${t('افتح بكج رياضيين','Open athlete pack')} — ${num(PACK_COST)} 💡</button>`;
+    if(e.freeAgents.length)
+      html+=`<div class="v98-grid" style="margin-top:10px">${e.freeAgents.map(a=>athleteCard(a,`<button class="btn primary" data-v98-fa="${a.id}" ${gameState.company.cash<a.price?'disabled':''}>${t('تعاقد','Sign')}</button>`)).join('')}</div>`;
+    html+='</div>';
+
+    if(e.log.length){
+      html+=`<div class="v98-sec"><h3>📜 ${t('السجل','Log')}</h3>`;
+      e.log.slice(0,6).forEach(l=>{
+        html+=`<div class="v98-log">${l.transfer?l.text:
+          `${l.won?'🥇':'📊'} <b>${l.name}</b> — ${t('المركز','Place')} ${num(l.place)}${l.prize?` • +${fmt(l.prize)}`:''}${l.fans?` • +${l.fans} 👥`:''}`}</div>`;
+      });
+      html+='</div>';
+    }
+
+    body.innerHTML=html;
+    body.querySelectorAll('[data-v98-game]').forEach(b=>b.onclick=()=>{toggleGame(b.dataset.v98Game);renderEsports()});
+    body.querySelectorAll('[data-v98-sign]').forEach(b=>b.onclick=()=>{
+      const [k,id]=b.dataset.v98Sign.split('|');
+      if(signAthlete(k,id)){try{sfx('success')}catch(x){} renderEsports();}
+    });
+    body.querySelectorAll('[data-v98-fa]').forEach(b=>b.onclick=()=>{
+      if(signFreeAgent(b.dataset.v98Fa)){try{sfx('success')}catch(x){} renderEsports();}
+    });
+    body.querySelectorAll('[data-v98-acc]').forEach(b=>b.onclick=()=>{if(acceptOffer(b.dataset.v98Acc)){try{sfx('success')}catch(x){} renderEsports()}});
+    body.querySelectorAll('[data-v98-rej]').forEach(b=>b.onclick=()=>{if(rejectOffer(b.dataset.v98Rej))renderEsports()});
+    const st=$('v98Start'); if(st)st.onclick=()=>{if(startTournaments()){try{sfx('success')}catch(x){} renderEsports()}};
+    const pk=$('v98Pack'); if(pk)pk.onclick=()=>{if(openEsportsPack()){try{sfx('success')}catch(x){} renderEsports()}};
+  }
+  window.renderEsportsV98=renderEsports;
+
+  /* ================= modal + studio entry ================= */
+  function ensureModal(){
+    let m=$('v98Modal');
+    if(m)return m;
+    m=document.createElement('div');
+    m.className='career-modal';
+    m.id='v98Modal';
+    m.innerHTML=`<div class="career-box v167-box">
+      <div class="row-spread" style="margin-bottom:10px">
+        <div><h2 style="margin:0">🏟️ ${t('فرع الإسبورتس','Esports branch')}</h2>
+          <p style="margin:3px 0 0;font-size:12.5px;color:var(--c-mute,#B09A7C)">${t('بطولات على أشهر ألعاب السنة','Tournaments on the year\'s biggest games')}</p></div>
+        <button class="btn" id="v98Close">${t('إغلاق','Close')}</button>
+      </div>
+      <div id="v98Body"></div>
+    </div>`;
+    document.body.appendChild(m);
+    $('v98Close').onclick=()=>m.classList.remove('show');
+    m.onclick=ev=>{if(ev.target===m)m.classList.remove('show')};
+    return m;
+  }
+  function openEsports(){
+    const m=ensureModal();
+    renderEsports();
+    m.classList.add('show');
+  }
+  window.openEsportsV98=openEsports;
+
+  function renderStudioEntry(){
+    const grid=document.querySelector('#studioSystemsGrid .future-grid');
+    if(!grid)return;
+    let btn=$('v98Goal');
+    if(!unlocked()){ btn?.remove(); return; }
+    if(!btn){
+      btn=document.createElement('button');
+      btn.className='future-card';
+      btn.id='v98Goal';
+      btn.type='button';
+      grid.appendChild(btn);
+      btn.onclick=openEsports;
+    }
+    const e=es();
+    btn.classList.add('ready');
+    const pending=(e.contest?.tournaments||[]).filter(x=>!x.resolved).length;
+    btn.innerHTML=`<b>🏟️ ${t('فرع الإسبورتس','Esports')}</b><small>${
+      !founded()? t('غير مؤسس — افتح للتفاصيل','Not founded — open for details')
+      : pending? t(`${pending} بطولة جارية • ${e.roster.length} رياضي`,`${pending} live • ${e.roster.length} athletes`)
+      : t(`${e.roster.length} رياضي • منافسة جديدة متاحة`,`${e.roster.length} athletes • new contest`)}</small>`;
+  }
+
+  /* ================= hooks ================= */
+  // Extend, never replace: each wrap calls the previous version first.
+  function wrap(name,after){
+    const fn=window[name];
+    if(typeof fn!=='function')return false;
+    window[name]=function(){
+      const r=fn.apply(this,arguments);
+      try{ after(); }catch(e){}
+      return r;
+    };
+    return true;
+  }
+
+  function boot(){
+    if(typeof gameState==='undefined'||!gameState){ setTimeout(boot,300); return; }
+    try{ es(); }catch(e){}
+
+    // any path that can move the clock re-checks pending tournaments
+    wrap('advanceWeeksV96',()=>{ esportsSync(); renderStudioEntry(); });
+    wrap('finalizeProject',()=>{ esportsSync(); renderStudioEntry(); });
+    wrap('renderStudio',()=>{ try{esportsSync()}catch(e){} renderStudioEntry(); });
+    // saves made before this version get the container on load
+    wrap('normalizeLoadedGame',()=>{ try{es()}catch(e){} });
+
+    renderStudioEntry();
+  }
+  boot();
+})();
+</script>
+
 </body>
 </html>

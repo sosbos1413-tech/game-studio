@@ -12397,5 +12397,134 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
 })();
 </script>
 
+<style id="v97PackClarityStyles">
+/* ==================================================================
+   V97 — Pack clarity
+   No logic change. Verified by test: the unified pack already yields
+   staff at ~17% over 180 cards and they reach the hiring pool. What was
+   missing was any on-screen statement of WHICH pack contains staff, and
+   why an unlocked staff member is not yet hireable.
+   ================================================================== */
+.v97-tag{
+  display:inline-block;margin-top:6px;padding:3px 9px;border-radius:999px;
+  font-size:10.5px;font-weight:800;line-height:1.5;
+  direction:rtl;
+}
+.v97-tag.has-staff{
+  background:rgba(88,169,106,.18);border:1px solid rgba(88,169,106,.45);
+  color:var(--sh-green,#58A96A);
+}
+.v97-tag.no-staff{
+  background:rgba(176,154,124,.12);border:1px solid rgba(176,154,124,.3);
+  color:var(--c-mute,#B09A7C);
+}
+#openTopicPackBtn .v97-tag,#openTechPackBtn .v97-tag{display:block;width:fit-content}
+
+/* hiring-gate explainer, shown only when it actually blocks the player */
+.v97-gate{
+  margin-top:9px;padding:10px 12px;border-radius:12px;
+  background:rgba(214,166,74,.10);
+  border:1px solid rgba(214,166,74,.32);
+  font-size:12.5px;line-height:1.65;color:var(--c-body,#D9C7AC);
+}
+.v97-gate b{color:var(--sh-gold,#D6A64A)}
+/* mixed Arabic + latin/number values must not reorder under BIDI */
+.v97-gate .v97-req{
+  display:inline-block;direction:ltr;unicode-bidi:isolate;font-weight:900;
+  color:var(--c-ink,#F6E7CC);
+}
+</style>
+
+<script id="v97PackClarity">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const langV97=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>langV97()==='en'?en:ar;
+
+  function tag(cls,txt){
+    const s=document.createElement('span');
+    s.className='v97-tag '+cls;
+    s.textContent=txt;
+    return s;
+  }
+
+  // The two legacy buttons are single-category by design (openCardPack('topic')
+  // / ('tech')), so they can never contain staff. Say so rather than leaving the
+  // player to infer it from repeated pulls.
+  function markLegacyPacks(){
+    [['openTopicPackBtn',t('مواضيع فقط — بدون موظفين','Topics only — no staff')],
+     ['openTechPackBtn', t('تقنيات فقط — بدون موظفين','Tech only — no staff')]
+    ].forEach(([id,txt])=>{
+      const b=$(id);
+      if(!b||b.querySelector('.v97-tag'))return;
+      b.appendChild(tag('no-staff',txt));
+    });
+  }
+
+  // In the pack hub, name the one pack that can actually produce staff.
+  function markHubPacks(){
+    document.querySelectorAll('[data-v178-pack]').forEach(b=>{
+      if(b.querySelector('.v97-tag'))return;
+      const id=b.dataset.v178Pack;
+      if(id==='unified')      b.appendChild(tag('has-staff',t('👤 الوحيد الذي يضم موظفين','👤 The only pack containing staff')));
+      else if(id==='prestige')b.appendChild(tag('no-staff',t('مواضيع وتقنيات نادرة — بدون موظفين','Rare topics & tech — no staff')));
+    });
+  }
+
+  // Staff unlocked from packs join the hiring pool immediately, but the team
+  // system itself stays locked until Level 3 + 2 released games, which reads as
+  // "the pack gave me nothing". Show the real reason, only while it applies.
+  function showHiringGate(){
+    const panel=$('hiredEmployeePanel')||$('candidateGrid');
+    if(!panel)return;
+    const host=panel.parentElement||panel;
+    let box=host.querySelector('.v97-gate');
+    let unlocked=true,lvl=0,games=0,unlockedStaff=0;
+    try{
+      lvl=progression().level; games=gameState.company.gamesReleased||0;
+      unlocked=(typeof teamUnlocked==='function')?teamUnlocked():true;
+      unlockedStaff=(typeof window.v30Candidates==='function')?window.v30Candidates().length:0;
+    }catch(e){ return; }
+    if(unlocked||!unlockedStaff){ box?.remove(); return; }
+    if(!box){
+      box=document.createElement('div');
+      box.className='v97-gate';
+      host.insertBefore(box,panel);
+    }
+    box.innerHTML=`<b>👤 ${t('لديك موظفون من البكجات بانتظار التوظيف','You have pack staff waiting to be hired')}</b><br>
+      ${t(`انفتح لك <b>${unlockedStaff}</b> موظف من البكجات ودخلوا قائمة المرشحين بالفعل، لكن نظام الفريق نفسه يفتح عند `,
+          `<b>${unlockedStaff}</b> staff unlocked from packs and already joined the candidate list, but the team system unlocks at `)}
+      <span class="v97-req">Level 3</span> ${t('و','and')} <span class="v97-req">2</span> ${t('لعبتين منشورتين','released games')}.<br>
+      ${t('حاليًا','Currently')}: <span class="v97-req">Level ${lvl}</span> • <span class="v97-req">${games}/2</span> ${t('ألعاب','games')}`;
+  }
+
+  function refresh(){
+    try{ markLegacyPacks(); }catch(e){}
+    try{ markHubPacks(); }catch(e){}
+    try{ showHiringGate(); }catch(e){}
+  }
+
+  function hook(name){
+    const fn=window[name];
+    if(typeof fn!=='function')return;
+    window[name]=function(){const r=fn.apply(this,arguments);setTimeout(refresh,0);return r};
+  }
+  function boot(){
+    if(typeof gameState==='undefined'||!gameState){setTimeout(boot,300);return}
+    ['renderDiscoveryModal','renderTeam','renderStudio'].forEach(hook);
+    // the pack hub renders on its own cadence inside the discovery modal
+    const modal=$('discoveryModal');
+    if(modal){
+      let q=false;
+      new MutationObserver(()=>{if(q)return;q=true;setTimeout(()=>{q=false;refresh()},60)})
+        .observe(modal,{childList:true,subtree:true});
+    }
+    refresh();
+  }
+  boot();
+})();
+</script>
+
 </body>
 </html>

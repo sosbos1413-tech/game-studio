@@ -11881,5 +11881,272 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
 })();
 </script>
 
+<style id="v95ReleaseCinematicStyles">
+/* ==================================================================
+   V95 — Release cinematic
+   A pure presentation layer that plays after release() has already
+   finished all of its own work. Built on the same shape as the
+   existing .v178-pack-stage full-screen reveal, using only the
+   palette tokens already defined in :root.
+   ================================================================== */
+#v95Cine{
+  position:fixed;inset:0;z-index:9999;
+  display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 50% 32%,rgba(130,85,201,.26),transparent 56%),
+    radial-gradient(circle at 50% 80%,rgba(214,166,74,.12),transparent 58%),
+    #0A0705;
+  backdrop-filter:blur(14px);
+  animation:v95In .28s ease;
+  overflow:hidden;
+}
+@keyframes v95In{from{opacity:0}to{opacity:1}}
+#v95Cine.v95-out{animation:v95Out .3s ease forwards}
+@keyframes v95Out{to{opacity:0}}
+
+/* letterbox bars */
+#v95Cine .v95-bar{
+  position:absolute;left:0;right:0;height:11vh;min-height:52px;
+  background:#000;z-index:3;pointer-events:none;
+}
+#v95Cine .v95-bar.top{top:0;border-bottom:1px solid rgba(214,166,74,.16)}
+#v95Cine .v95-bar.bot{bottom:0;border-top:1px solid rgba(214,166,74,.16)}
+
+#v95Cine .v95-stage{
+  position:relative;z-index:2;width:100%;max-width:440px;
+  padding:0 22px;text-align:center;
+  color:var(--sh-ui-cream,#F6E7CC);
+}
+
+/* one shot at a time */
+#v95Cine .v95-shot{display:none}
+#v95Cine .v95-shot.on{display:block;animation:v95Shot .55s cubic-bezier(.2,.9,.25,1)}
+@keyframes v95Shot{
+  from{opacity:0;transform:scale(.93)}
+  to{opacity:1;transform:scale(1)}
+}
+
+/* shot 1 — glowing cover */
+#v95Cine .v95-cover{
+  width:118px;height:118px;margin:0 auto;border-radius:26px;
+  display:grid;place-items:center;font-size:56px;
+  background:linear-gradient(160deg,var(--sh-wood-med,#725038),var(--sh-wood-dark,#4A3223));
+  border:2px solid rgba(214,166,74,.5);
+  box-shadow:0 0 0 6px rgba(130,85,201,.10),0 18px 44px rgba(0,0,0,.6);
+  animation:v95Pulse 1.5s ease-in-out infinite;
+}
+@keyframes v95Pulse{
+  0%,100%{box-shadow:0 0 0 6px rgba(130,85,201,.10),0 0 26px rgba(214,166,74,.22),0 18px 44px rgba(0,0,0,.6)}
+  50%{box-shadow:0 0 0 12px rgba(130,85,201,.16),0 0 52px rgba(214,166,74,.5),0 18px 44px rgba(0,0,0,.6)}
+}
+#v95Cine .v95-kicker{
+  margin-top:20px;font-size:12.5px;font-weight:800;letter-spacing:2px;
+  color:var(--sh-gold,#D6A64A);
+}
+
+/* shot 2 — title */
+#v95Cine .v95-title{
+  font-size:34px;line-height:1.22;font-weight:900;margin:0;
+  text-shadow:0 4px 26px rgba(130,85,201,.45);
+}
+#v95Cine .v95-genre{
+  display:inline-block;margin-top:14px;padding:7px 16px;border-radius:999px;
+  background:rgba(115,70,184,.24);border:1px solid rgba(130,85,201,.5);
+  font-size:14px;font-weight:800;
+}
+
+/* shot 3 — stats */
+#v95Cine .v95-stats{display:grid;gap:9px}
+#v95Cine .v95-stat{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 16px;border-radius:14px;
+  background:linear-gradient(180deg,rgba(36,29,23,.96),rgba(26,21,17,.96));
+  border:1px solid rgba(214,166,74,.24);
+  animation:v95Fly .5s cubic-bezier(.2,.9,.25,1) backwards;
+}
+#v95Cine .v95-stat:nth-child(1){animation-delay:.05s}
+#v95Cine .v95-stat:nth-child(2){animation-delay:.19s}
+#v95Cine .v95-stat:nth-child(3){animation-delay:.33s}
+@keyframes v95Fly{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
+}
+#v95Cine .v95-stat small{font-size:13px;color:var(--sh-gold,#D6A64A);font-weight:700}
+#v95Cine .v95-stat b{font-size:21px;font-weight:900}
+
+/* shot 4 — outro */
+#v95Cine .v95-outro{font-size:23px;font-weight:900;line-height:1.5}
+#v95Cine .v95-outro span{display:block;margin-top:10px;font-size:14px;font-weight:700;color:var(--sh-gold,#D6A64A)}
+
+/* skip — always reachable, sits above the letterbox */
+#v95Skip{
+  position:absolute;z-index:5;top:calc(11vh + 12px);inset-inline-end:14px;
+  padding:9px 17px;border-radius:999px;cursor:pointer;
+  background:rgba(36,29,23,.92);
+  border:1px solid rgba(214,166,74,.42);
+  color:var(--sh-ui-cream,#F6E7CC);
+  font-size:13px;font-weight:800;
+  font-family:'Tajawal','IBM Plex Sans Arabic',system-ui,sans-serif;
+}
+#v95Skip:hover{background:rgba(58,48,40,.96);border-color:rgba(214,166,74,.7)}
+
+/* progress pips */
+#v95Cine .v95-pips{
+  position:absolute;z-index:5;bottom:calc(11vh + 14px);left:0;right:0;
+  display:flex;justify-content:center;gap:6px;pointer-events:none;
+}
+#v95Cine .v95-pips i{width:22px;height:3px;border-radius:99px;background:rgba(246,231,204,.22)}
+#v95Cine .v95-pips i.on{background:var(--sh-gold,#D6A64A)}
+
+@media(max-width:380px){
+  #v95Cine .v95-title{font-size:27px}
+  #v95Cine .v95-cover{width:96px;height:96px;font-size:46px}
+  #v95Cine .v95-stat b{font-size:18px}
+  #v95Cine .v95-outro{font-size:19px}
+}
+@media(prefers-reduced-motion:reduce){
+  #v95Cine,#v95Cine .v95-shot.on,#v95Cine .v95-cover,#v95Cine .v95-stat{animation:none!important}
+  #v95Cine.v95-out{animation:none!important;opacity:0}
+}
+</style>
+
+<script id="v95ReleaseCinematic">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const langV95=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>langV95()==='en'?en:ar;
+
+  // While a cinematic is on screen the review reveal must not run behind it:
+  // renderReviews() kicks off a 700ms + 4x900ms chain that would burn the
+  // game's own suspense beat while the player is looking at the overlay.
+  let holding=false;
+
+  const renderReviewsBaseV95=window.renderReviews||renderReviews;
+  window.renderReviews=renderReviews=function(){
+    if(holding)return;                    // deferred until the cinematic ends
+    return renderReviewsBaseV95.apply(this,arguments);
+  };
+
+  function releaseReviews(){
+    if(!holding)return;
+    holding=false;
+    try{ renderReviews(); }catch(e){}
+  }
+
+  /* ---------- shot content, built from the real project ---------- */
+  function shots(){
+    const p=state;
+    const g=(typeof genres!=='undefined'&&genres&&genres[p.genre])||null;
+    const icon=g?.icon||'🎮';
+    const gName=g?.name||p.genre||'';
+    const name=p.name||t('مشروع بلا اسم','Untitled project');
+
+    // Deliberately NOT the review average: the review screen reveals four
+    // critics one at a time and keeps the average hidden until they land.
+    const hype=Math.round(p.hype||0);
+    const bugs=Number(p.bugs||0).toFixed(1);
+    let topKey=null,topVal=-1;
+    try{
+      focusKeys.forEach(k=>{const v=p.quality?.[k]||0;if(v>topVal){topVal=v;topKey=k}});
+    }catch(e){}
+    const topName=(topKey&&typeof focusNames!=='undefined'&&focusNames[topKey])||'—';
+
+    return [
+      {ms:1500,html:`
+        <div class="v95-cover">${icon}</div>
+        <div class="v95-kicker">${t('الإصدار','NOW SHIPPING')}</div>`},
+      {ms:1800,html:`
+        <h2 class="v95-title">${name}</h2>
+        <div class="v95-genre">${icon} ${gName}</div>`},
+      {ms:1800,html:`
+        <div class="v95-stats">
+          <div class="v95-stat"><small>${t('الضجيج عند الإطلاق','Hype at launch')}</small><b>${hype}%</b></div>
+          <div class="v95-stat"><small>${t('أقوى جانب','Strongest pillar')}</small><b>${topName} ${Math.round(topVal)}</b></div>
+          <div class="v95-stat"><small>${t('الأخطاء المتبقية','Remaining bugs')}</small><b>${bugs}</b></div>
+        </div>`},
+      {ms:1100,html:`
+        <div class="v95-outro">${t('النتائج الكاملة تنتظرك','The full results are waiting')}
+          <span>${t('النقاد ينشرون تقييماتهم الآن…','Critics are publishing now…')}</span>
+        </div>`}
+    ];
+  }
+
+  /* ---------- playback ---------- */
+  let timer=null,guard=null;
+
+  function teardown(){
+    if(timer){clearTimeout(timer);timer=null}
+    if(guard){clearTimeout(guard);guard=null}
+    const el=$('v95Cine');
+    if(el){
+      el.classList.add('v95-out');
+      setTimeout(()=>el.remove(),300);
+    }
+    releaseReviews();
+  }
+
+  function play(){
+    if($('v95Cine'))return;
+    const list=shots();
+
+    const box=document.createElement('div');
+    box.id='v95Cine';
+    box.setAttribute('role','dialog');
+    box.setAttribute('aria-label',t('مشهد الإصدار','Release cinematic'));
+    box.innerHTML=
+      `<div class="v95-bar top"></div><div class="v95-bar bot"></div>`+
+      `<button type="button" id="v95Skip">${t('تخطي ⏭','Skip ⏭')}</button>`+
+      `<div class="v95-stage">${list.map((s,i)=>`<div class="v95-shot" data-v95-shot="${i}">${s.html}</div>`).join('')}</div>`+
+      `<div class="v95-pips">${list.map(()=>'<i></i>').join('')}</div>`;
+    document.body.appendChild(box);
+
+    $('v95Skip').onclick=()=>{ try{sfx('select')}catch(e){} teardown(); };
+
+    const shotEls=[...box.querySelectorAll('[data-v95-shot]')];
+    const pips=[...box.querySelectorAll('.v95-pips i')];
+
+    // Hard stop: if anything above misbehaves the review screen must never be
+    // left empty, so force the handoff shortly after the longest possible run.
+    const total=list.reduce((a,s)=>a+s.ms,0);
+    guard=setTimeout(teardown,total+2500);
+
+    let i=0;
+    const step=()=>{
+      shotEls.forEach(el=>el.classList.remove('on'));
+      pips.forEach((p,n)=>p.classList.toggle('on',n<=i));
+      if(i>=list.length){ teardown(); return; }
+      shotEls[i].classList.add('on');
+      try{ sfx(i===list.length-1?'success':'select'); }catch(e){}
+      const ms=list[i].ms;
+      i++;
+      timer=setTimeout(step,ms);
+    };
+    step();
+  }
+
+  /* ---------- the wrapper: base first, presentation after ---------- */
+  const releaseBaseV95=window.release||release;
+  window.release=release=function(){
+    holding=true;                                  // suppress the reveal chain
+    let r;
+    try{
+      r=releaseBaseV95.apply(this,arguments);       // all real work happens here
+    }catch(e){
+      releaseReviews();                             // never strand the screen
+      throw e;
+    }
+    // v19ReleaseBlocked() makes the base bail without advancing; only play
+    // the cinematic when the release actually went through.
+    if(state&&state.phase==='review'){
+      try{ play(); }catch(e){ releaseReviews(); }
+    }else{
+      releaseReviews();
+    }
+    return r;
+  };
+})();
+</script>
+
 </body>
 </html>

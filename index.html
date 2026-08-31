@@ -12148,5 +12148,254 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
 })();
 </script>
 
+<style id="v96TimeAdvanceStyles">
+/* ==================================================================
+   V96 — Time advance + research-point rebalance
+   ================================================================== */
+#v96TimeCard{margin-bottom:9px}
+#v96TimeCard .v96-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+#v96TimeCard .v96-head b{font-size:15px;color:var(--c-ink,#F6E7CC)}
+#v96TimeCard .v96-week{
+  padding:4px 11px;border-radius:999px;font-size:12px;font-weight:900;
+  background:rgba(115,70,184,.22);border:1px solid rgba(130,85,201,.45);
+  color:var(--sh-ui-cream,#F6E7CC);
+}
+#v96TimeCard p{margin:0 0 9px;font-size:12.5px;line-height:1.6;color:var(--c-body,#D9C7AC)}
+#v96TimeCard .v96-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+#v96TimeCard .v96-opt{
+  padding:11px 6px;border-radius:12px;cursor:pointer;text-align:center;
+  background:var(--c-sunken,#241A14);
+  border:1px solid var(--c-line,rgba(214,166,74,.16));
+  color:var(--c-body,#D9C7AC);
+  font-family:inherit;transition:border-color .16s ease,background .16s ease;
+}
+#v96TimeCard .v96-opt:hover{border-color:rgba(130,85,201,.55);background:rgba(115,70,184,.12)}
+#v96TimeCard .v96-opt.on{
+  background:linear-gradient(180deg,var(--sh-purple-royal,#8255C9),var(--sh-purple,#7346B8));
+  border-color:var(--sh-purple-royal,#8255C9);color:#fff;
+}
+#v96TimeCard .v96-opt b{display:block;font-size:17px;font-weight:900}
+#v96TimeCard .v96-opt small{display:block;font-size:10.5px;margin-top:2px;opacity:.85}
+#v96TimeCard .v96-go{width:100%;margin-top:9px}
+#v96TimeCard .v96-cost{
+  margin-top:7px;font-size:11.5px;text-align:center;color:var(--c-mute,#B09A7C);
+}
+
+/* result summary */
+#v96Report{position:fixed;inset:0;z-index:9997;display:grid;place-items:center;padding:18px;
+  background:rgba(10,7,5,.86);backdrop-filter:blur(6px)}
+#v96Report .v96-box{
+  width:100%;max-width:360px;padding:18px;border-radius:18px;
+  background:linear-gradient(180deg,#241D17,#1A1511);
+  border:1px solid rgba(214,166,74,.34);
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+  color:var(--sh-ui-cream,#F6E7CC);
+}
+#v96Report h3{margin:0 0 3px;font-size:18px}
+#v96Report .v96-sub{font-size:12.5px;color:var(--c-mute,#B09A7C);margin-bottom:12px}
+#v96Report .v96-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 11px;margin-bottom:6px;border-radius:11px;
+  background:rgba(255,255,255,.035);border:1px solid rgba(214,166,74,.15);
+  font-size:13px;
+}
+#v96Report .v96-row b{font-weight:900}
+#v96Report .pos{color:var(--sh-green,#58A96A)}
+#v96Report .neg{color:var(--sh-red,#C5534D)}
+#v96Report .v96-note{font-size:12px;line-height:1.6;color:var(--c-body,#D9C7AC);
+  padding:9px 11px;border-radius:11px;background:rgba(115,70,184,.12);
+  border:1px solid rgba(130,85,201,.3);margin-bottom:6px}
+</style>
+
+<script id="v96TimeAdvanceAndRP">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const langV96=()=>(window.gameLanguage?.()||document.documentElement.lang||'ar');
+  const t=(ar,en)=>langV96()==='en'?en:ar;
+
+  /* ---- tunables, named so balance is easy to find and change ---- */
+  const RP_PER_SKIPPED_WEEK   = 5;   // research points granted per week skipped
+  const REP_COST_PER_WEEK     = 1;   // "cost of stagnation" — see note below
+  const PROJECT_RP_AWARD      = 50;  // flat RP for finishing any project
+  const WEEK_CHOICES          = [1,2,4];
+
+  // Reputation is a 0-100 stat that feeds hype and sales, so the stagnation
+  // cost is deliberately 1/week rather than 2: the longest skip (4 weeks)
+  // costs 4 points, which is felt but recoverable, and stays well below what
+  // a single mediocre release swings. At 2/week a 4-week wait for one piece
+  // of research would cost more reputation than shipping a bad game.
+
+  let chosen=2;
+
+  /* ================= 1) Time advance ================= */
+
+  // True only when nothing is mid-development, so the skip can never be used
+  // to fast-forward past an in-flight project.
+  function idleInStudio(){
+    try{
+      if(typeof state==='undefined'||!state)return false;
+      if(state.phase!=='studio')return false;
+      if(!state.finalized && ['setup','plan','preprod','production','polish','review','sales'].includes(state.phase))return false;
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function living(){ try{ return window.ensureLivingStudioState?.(); }catch(e){ return null; } }
+
+  function researchSnapshot(){
+    // research.active is a single object or null in this codebase (verified:
+    // it is assigned an object, cleared to null, and startResearch refuses a
+    // second one) — not an array of parallel slots.
+    const l=living(); const a=l&&l.research?l.research.active:null;
+    return {
+      techId:a?a.techId:null,
+      endWeek:a?a.endWeek:null,
+      completed:l&&l.research&&Array.isArray(l.research.completed)?l.research.completed.length:0
+    };
+  }
+
+  function advanceWeeks(n){
+    if(!idleInStudio()||!(n>0))return null;
+    const c=gameState.company;
+    const oldWeek=c.week;
+    const cashBefore=c.cash||0;
+    const fansBefore=c.fans||0;
+    const repBefore=c.reputation||0;
+    const resBefore=researchSnapshot();
+
+    c.week=oldWeek+n;
+
+    // Reuse the existing weekly engines rather than re-implementing them.
+    // Both are already exposed on window and both carry their own
+    // lastProcessedWeek guard, so they cannot double-process a week.
+    try{ window.advanceLivingStudio?.(oldWeek,c.week); }catch(e){}   // research + engines + passive income
+    try{ window.advanceIndustryV170?.(oldWeek,c.week); }catch(e){}   // rival studios simulation
+    // finalizeProject resolves award years whenever it moves the clock; the
+    // skip moves the same clock, so it has to settle them too or a skipped
+    // year-boundary would never award.
+    try{ resolveCompletedAwardSeasons(oldWeek,c.week); }catch(e){}
+
+    c.researchPoints=(c.researchPoints||0)+n*RP_PER_SKIPPED_WEEK;
+    c.reputation=clamp((c.reputation||0)-n*REP_COST_PER_WEEK,0,100);
+
+    const resAfter=researchSnapshot();
+    const report={
+      weeks:n, fromWeek:oldWeek, toWeek:c.week,
+      cash:Math.round((c.cash||0)-cashBefore),
+      fans:Math.round((c.fans||0)-fansBefore),
+      rp:n*RP_PER_SKIPPED_WEEK,
+      rep:Math.round((c.reputation||0)-repBefore),
+      researchFinished:resAfter.completed>resBefore.completed,
+      researchName:resBefore.techId?(TECH_CARD_DEFS?.[resBefore.techId]?.name||resBefore.techId):null,
+      researchLeft:resAfter.techId?Math.max(0,(resAfter.endWeek||0)-c.week):null
+    };
+
+    try{ saveGame(); }catch(e){}
+    try{ renderStudio(); }catch(e){}   // also refreshes the season hub + missions
+    return report;
+  }
+  window.advanceWeeksV96=advanceWeeks;
+
+  function showReport(r){
+    if(!r)return;
+    $('v96Report')?.remove();
+    const box=document.createElement('div');
+    box.id='v96Report';
+    const rows=[];
+    rows.push(`<div class="v96-row"><span>🗓️ ${t('الأسابيع','Weeks')}</span><b>${r.fromWeek} → ${r.toWeek}</b></div>`);
+    if(r.cash>0)  rows.push(`<div class="v96-row"><span>💰 ${t('دخل الألعاب المنشورة','Income from live games')}</span><b class="pos">+${fmt(r.cash)}</b></div>`);
+    if(r.fans>0)  rows.push(`<div class="v96-row"><span>👥 ${t('معجبون جدد','New fans')}</span><b class="pos">+${r.fans.toLocaleString('en-US')}</b></div>`);
+    rows.push(`<div class="v96-row"><span>🔬 ${t('نقاط بحث','Research points')}</span><b class="pos">+${r.rp}</b></div>`);
+    if(r.rep!==0) rows.push(`<div class="v96-row"><span>⭐ ${t('السمعة (ثمن الركود)','Reputation (stagnation cost)')}</span><b class="neg">${r.rep}</b></div>`);
+
+    let note='';
+    if(r.researchFinished) note=`<div class="v96-note">✅ ${t('اكتمل البحث','Research complete')}${r.researchName?`: <b>${r.researchName}</b>`:''}</div>`;
+    else if(r.researchLeft!=null) note=`<div class="v96-note">⏳ ${t('البحث الجاري يحتاج','Active research needs')} <b>${r.researchLeft}</b> ${t('أسبوع إضافي','more week(s)')}</div>`;
+    else if(r.cash===0&&r.fans===0) note=`<div class="v96-note">💡 ${t('لا توجد ألعاب منشورة تدرّ دخلًا بعد — أصدر لعبة ليصير للوقت قيمة.','No live games generating income yet — ship a game to make time pay off.')}</div>`;
+
+    box.innerHTML=`<div class="v96-box">
+      <h3>⏭️ ${t('تقدّم بالوقت','Time advanced')}</h3>
+      <div class="v96-sub">${t(`مرّت ${r.weeks} أسابيع في الاستوديو`,`${r.weeks} week(s) passed at the studio`)}</div>
+      ${note}${rows.join('')}
+      <button class="btn primary full" id="v96ReportClose" style="margin-top:10px">${t('متابعة','Continue')}</button>
+    </div>`;
+    document.body.appendChild(box);
+    $('v96ReportClose').onclick=()=>box.remove();
+    box.onclick=e=>{ if(e.target===box)box.remove(); };
+  }
+
+  function renderTimeCard(){
+    const screen=$('studioScreen');
+    if(!screen)return;
+    let card=$('v96TimeCard');
+    if(!idleInStudio()){ card?.remove(); return; }
+    if(!card){
+      card=document.createElement('div');
+      card.id='v96TimeCard';
+      card.className='card';
+      const anchor=$('newProjectBtn');
+      if(anchor)anchor.insertAdjacentElement('afterend',card);
+      else screen.appendChild(card);
+    }
+    const c=gameState.company;
+    card.innerHTML=`
+      <div class="v96-head"><b>⏭️ ${t('تقدّم بالوقت','Advance time')}</b>
+        <span class="v96-week">${t('الأسبوع','WEEK')} ${c.week}</span></div>
+      <p>${t('انتظر بين المشاريع: يتقدّم البحث وبناء المحركات، وتستمر ألعابك المنشورة بجني الأرباح.','Wait between projects: research and engine builds progress, and your live games keep earning.')}</p>
+      <div class="v96-opts">
+        ${WEEK_CHOICES.map(n=>`<button type="button" class="v96-opt ${chosen===n?'on':''}" data-v96-w="${n}">
+          <b>${n}</b><small>${t(n===1?'أسبوع':'أسابيع',n===1?'week':'weeks')}</small></button>`).join('')}
+      </div>
+      <button class="btn primary full v96-go" id="v96Go">⏭️ ${t('تقدّم','Advance')} ${chosen} ${t(chosen===1?'أسبوع':'أسابيع',chosen===1?'week':'weeks')}</button>
+      <div class="v96-cost">+${chosen*RP_PER_SKIPPED_WEEK} 🔬 ${t('نقطة بحث','RP')} • −${chosen*REP_COST_PER_WEEK} ⭐ ${t('سمعة','reputation')}</div>`;
+
+    card.querySelectorAll('[data-v96-w]').forEach(b=>b.onclick=()=>{
+      chosen=+b.dataset.v96W; renderTimeCard();
+    });
+    $('v96Go').onclick=()=>{
+      const rep=advanceWeeks(chosen);
+      try{ sfx('select'); }catch(e){}
+      showReport(rep);
+    };
+  }
+
+  /* ================= 2) Flat 50 RP per finished project ================= */
+  // applyDiscoveryProjectRewards is the single place project RP is granted.
+  // It currently pays 4 + floor(innovation/20), x1.6 with the st_dana trait,
+  // plus a +2 from a later layer. Normalise all of that to a flat 50 by
+  // subtracting exactly what the project path attributed to itself
+  // (project.researchPointsGained) and adding the flat award — this leaves
+  // unrelated RP granted in the same call (pack milestones via
+  // syncPackRewards) untouched.
+  const rewardBaseV96=window.applyDiscoveryProjectRewards||applyDiscoveryProjectRewards;
+  window.applyDiscoveryProjectRewards=applyDiscoveryProjectRewards=function(project=state){
+    const ok=rewardBaseV96.apply(this,arguments);
+    if(!ok)return ok;                                  // already paid for this project
+    try{
+      const granted=project.researchPointsGained||0;
+      gameState.company.researchPoints=Math.max(0,(gameState.company.researchPoints||0)-granted+PROJECT_RP_AWARD);
+      project.researchPointsGained=PROJECT_RP_AWARD;
+    }catch(e){}
+    return ok;
+  };
+
+  /* ================= hooks ================= */
+  function hook(name,after){
+    const fn=window[name];
+    if(typeof fn!=='function')return false;
+    window[name]=function(){const r=fn.apply(this,arguments);try{after()}catch(e){}return r};
+    return true;
+  }
+  function boot(){
+    if(typeof gameState==='undefined'||!gameState){ setTimeout(boot,300); return; }
+    hook('renderStudio',()=>setTimeout(renderTimeCard,0));
+    hook('setPhase',()=>setTimeout(renderTimeCard,30));
+    renderTimeCard();
+  }
+  boot();
+})();
+</script>
+
 </body>
 </html>

@@ -13208,5 +13208,497 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
 })();
 </script>
 
+<style id="v99Studio3DStyles">
+/* ==================================================================
+   V99 — Real-time 3D studio: an Arabic stone tower on a floating island.
+   Progressive enhancement. The CSS scene built in v92/v92b stays in the
+   DOM and stays visible until the 3D canvas has actually rendered a
+   frame, so a device without WebGL — or an offline load that somehow
+   misses the vendored library — simply keeps the 2D scene.
+   ================================================================== */
+#v99Canvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  display:block;z-index:1;opacity:0;
+  transition:opacity .6s ease;
+}
+#v99Canvas.on{opacity:1}
+/* once 3D is live the painted props would double up behind it */
+.office-scene.v99-live>*:not(#v99Canvas):not(.office-overlay){display:none!important}
+.office-scene.v99-live{background:#0b0a12!important}
+.office-scene.v99-live::before,.office-scene.v99-live::after{display:none!important}
+
+#v99Badge{
+  position:absolute;z-index:2;top:8px;inset-inline-start:8px;
+  padding:4px 10px;border-radius:999px;pointer-events:none;
+  background:rgba(20,14,10,.6);border:1px solid rgba(214,166,74,.35);
+  color:var(--sh-ui-cream,#F6E7CC);font-size:10.5px;font-weight:800;
+  opacity:0;transition:opacity .5s ease;
+}
+#v99Badge.on{opacity:.9}
+</style>
+
+<script src="./three.min.js"></script>
+<script id="v99Studio3D">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+
+  // ---- palette, taken from the Stone House identity already in :root ----
+  const C={
+    stone:0xB89B78, stoneDark:0x8F7350, sand:0xD4B68B,
+    woodDark:0x4A3223, woodMed:0x725038, deep:0x241A14,
+    cream:0xF6E7CC, gold:0xD6A64A, purple:0x7346B8, royal:0x8255C9,
+    green:0x58A96A
+  };
+
+  let R=null,scene=null,cam=null,root=null,raf=0,started=false,live=false;
+  let lanterns=[],screens=[],motes=null,clock=0,builtLevel=-1,builtCrew=-1;
+
+  const ok=()=>typeof THREE!=='undefined'&&THREE&&typeof THREE.WebGLRenderer==='function';
+  function host(){ return document.querySelector('#studioOfficeHero .office-scene'); }
+
+  /* ---------------- materials ---------------- */
+  const M={};
+  function mats(){
+    if(M.stone)return M;
+    M.stone   = new THREE.MeshStandardMaterial({color:C.stone,roughness:.94,metalness:0});
+    M.stone2  = new THREE.MeshStandardMaterial({color:C.stoneDark,roughness:.96,metalness:0});
+    M.woodD   = new THREE.MeshStandardMaterial({color:C.woodDark,roughness:.8,metalness:.02});
+    M.woodM   = new THREE.MeshStandardMaterial({color:C.woodMed,roughness:.75,metalness:.02});
+    M.deep    = new THREE.MeshStandardMaterial({color:C.deep,roughness:.85});
+    M.gold    = new THREE.MeshStandardMaterial({color:C.gold,roughness:.35,metalness:.75});
+    return M;
+  }
+
+  /* ---------------- sky seen through the arch ---------------- */
+  function skyTexture(){
+    const c=document.createElement('canvas');c.width=64;c.height=256;
+    const g=c.getContext('2d'),grd=g.createLinearGradient(0,0,0,256);
+    grd.addColorStop(0,'#4E3A9E');      // magic dusk, high above
+    grd.addColorStop(.34,'#A05FB4');
+    grd.addColorStop(.58,'#FF9E6B');
+    grd.addColorStop(.80,'#FFD08A');
+    grd.addColorStop(1,'#FFF0C4');       // glow at the horizon
+    g.fillStyle=grd;g.fillRect(0,0,64,256);
+    const t=new THREE.CanvasTexture(c);
+    t.colorSpace=THREE.SRGBColorSpace;
+    return t;
+  }
+
+  /* ---------------- building blocks ---------------- */
+  function stoneWall(w,h,d,x,y,z,rotY){
+    // stacked blocks with slight offsets read as masonry under raking light
+    const g=new THREE.Group();
+    const rows=Math.max(2,Math.round(h/0.42)), bw=0.62;
+    for(let r=0;r<rows;r++){
+      const cols=Math.ceil(w/bw)+1, off=(r%2)?bw/2:0;
+      for(let i=0;i<cols;i++){
+        const px=-w/2+i*bw-off+bw/2;
+        if(px<-w/2-bw*.5||px>w/2+bw*.5)continue;
+        const jitter=((i*7+r*13)%5)/100;
+        const b=new THREE.Mesh(
+          new THREE.BoxGeometry(bw*.94,0.42*.9,d*(1+jitter)),
+          (i+r)%3===0?mats().stone2:mats().stone
+        );
+        b.position.set(px,-h/2+r*0.42+0.21,0);
+        b.castShadow=false;b.receiveShadow=true;
+        g.add(b);
+      }
+    }
+    g.position.set(x,y,z); if(rotY)g.rotation.y=rotY;
+    return g;
+  }
+
+  function beam(x,y,z,len,rotY){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(len,.22,.26),mats().woodD);
+    m.position.set(x,y,z); if(rotY)m.rotation.y=rotY;
+    m.castShadow=true;m.receiveShadow=true;
+    return m;
+  }
+
+  function lantern(x,y,z){
+    const g=new THREE.Group();
+    const chain=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.55,5),mats().woodD);
+    chain.position.y=.42;g.add(chain);
+    const body=new THREE.Mesh(new THREE.CylinderGeometry(.10,.13,.26,6),mats().gold);
+    body.castShadow=true;g.add(body);
+    const glass=new THREE.Mesh(new THREE.CylinderGeometry(.075,.10,.20,6),
+      new THREE.MeshStandardMaterial({color:0xFFE0A8,emissive:0xFFAE4D,emissiveIntensity:2.4,
+        transparent:true,opacity:.92}));
+    g.add(glass);
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(.14,.11,6),mats().gold);
+    cap.position.y=.17;g.add(cap);
+    const L=new THREE.PointLight(0xFFB25E,2.4,4.2,2);
+    L.position.y=0;g.add(L);
+    g.position.set(x,y,z);
+    lanterns.push({light:L,glass,seed:Math.random()*10});
+    return g;
+  }
+
+  function desk(x,z,rotY,withScreens){
+    const g=new THREE.Group();
+    const top=new THREE.Mesh(new THREE.BoxGeometry(1.5,.07,.66),mats().woodM);
+    top.position.y=.62;top.castShadow=true;top.receiveShadow=true;g.add(top);
+    [[-.66,-.24],[.66,-.24],[-.66,.24],[.66,.24]].forEach(([lx,lz])=>{
+      const leg=new THREE.Mesh(new THREE.BoxGeometry(.07,.62,.07),mats().woodD);
+      leg.position.set(lx,.31,lz);leg.castShadow=true;g.add(leg);
+    });
+    if(withScreens){
+      for(let i=0;i<2;i++){
+        const sx=-.32+i*.64;
+        const bez=new THREE.Mesh(new THREE.BoxGeometry(.56,.34,.03),mats().deep);
+        bez.position.set(sx,.86,-.16);bez.castShadow=true;g.add(bez);
+        const scr=new THREE.Mesh(new THREE.PlaneGeometry(.50,.28),
+          new THREE.MeshStandardMaterial({color:0x2A2340,
+            emissive:i?C.royal:0x3FA9C9,emissiveIntensity:1.5}));
+        scr.position.set(sx,.86,-.143);g.add(scr);
+        screens.push(scr);
+        const st=new THREE.Mesh(new THREE.BoxGeometry(.07,.14,.07),mats().deep);
+        st.position.set(sx,.72,-.16);g.add(st);
+      }
+      const kb=new THREE.Mesh(new THREE.BoxGeometry(.52,.02,.16),mats().deep);
+      kb.position.set(0,.665,.12);g.add(kb);
+      const mug=new THREE.Mesh(new THREE.CylinderGeometry(.045,.04,.09,8),
+        new THREE.MeshStandardMaterial({color:C.cream,roughness:.5}));
+      mug.position.set(.56,.70,.14);mug.castShadow=true;g.add(mug);
+    }
+    g.position.set(x,0,z); if(rotY)g.rotation.y=rotY;
+    return g;
+  }
+
+  function chair(x,z){
+    const g=new THREE.Group();
+    const seat=new THREE.Mesh(new THREE.BoxGeometry(.42,.08,.42),mats().deep);
+    seat.position.y=.46;seat.castShadow=true;g.add(seat);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(.42,.46,.07),mats().deep);
+    back.position.set(0,.71,.19);back.castShadow=true;g.add(back);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.44,7),mats().woodD);
+    pole.position.y=.23;g.add(pole);
+    g.position.set(x,0,z);
+    return g;
+  }
+
+  function person(x,z,shirt,rotY){
+    const g=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.CapsuleGeometry(.16,.34,4,8),
+      new THREE.MeshStandardMaterial({color:shirt,roughness:.72}));
+    body.position.y=.72;body.castShadow=true;g.add(body);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.135,16,14),
+      new THREE.MeshStandardMaterial({color:0xC98D63,roughness:.68}));
+    head.position.y=1.09;head.castShadow=true;g.add(head);
+    const hair=new THREE.Mesh(new THREE.SphereGeometry(.142,16,12,0,Math.PI*2,0,Math.PI*.62),
+      new THREE.MeshStandardMaterial({color:0x2A1C14,roughness:.9}));
+    hair.position.y=1.11;g.add(hair);
+    g.position.set(x,0,z); if(rotY)g.rotation.y=rotY;
+    g.userData.bob=Math.random()*6;
+    return g;
+  }
+
+  /* ---------------- the world ---------------- */
+  function build(level,crew){
+    if(root){ scene.remove(root); disposeTree(root); }
+    lanterns=[];screens=[];
+    root=new THREE.Group();
+    const m=mats();
+
+    // floor + oriental rug
+    const floor=new THREE.Mesh(new THREE.BoxGeometry(9,.2,7),m.woodD);
+    floor.position.set(0,-.1,0);floor.receiveShadow=true;root.add(floor);
+    const rug=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2.2),
+      new THREE.MeshStandardMaterial({color:0x8C2F2A,roughness:.95}));
+    rug.rotation.x=-Math.PI/2;rug.position.set(.2,.005,.9);rug.receiveShadow=true;root.add(rug);
+    const rugIn=new THREE.Mesh(new THREE.PlaneGeometry(2.9,1.7),
+      new THREE.MeshStandardMaterial({color:0x6E2320,roughness:.95}));
+    rugIn.rotation.x=-Math.PI/2;rugIn.position.set(.2,.008,.9);root.add(rugIn);
+
+    // walls: back + right, with the arch cut into the left
+    root.add(stoneWall(9,3.2,.34,0,1.6,-2.7,0));
+    root.add(stoneWall(6.4,3.2,.34,4.4,1.6,.4,Math.PI/2));
+
+    // left wall in two pieces, leaving an arched window gap
+    root.add(stoneWall(1.5,3.2,.34,-4.4,1.6,-2.0,Math.PI/2));
+    root.add(stoneWall(1.4,3.2,.34,-4.4,1.6,2.35,Math.PI/2));
+    root.add(stoneWall(3.4,.7,.34,-4.4,2.85,.25,Math.PI/2));
+
+    // ---- the arch: sky, island, mashrabiya lattice ----
+    const sky=new THREE.Mesh(new THREE.PlaneGeometry(16,11),
+      new THREE.MeshBasicMaterial({map:skyTexture(),fog:false}));
+    sky.rotation.y=Math.PI/2;sky.position.set(-8.5,2.2,.25);root.add(sky);
+
+    // floating islands drifting outside — the fantasy read
+    const rockMat=new THREE.MeshStandardMaterial({color:0x6B5642,roughness:1});
+    const grassMat=new THREE.MeshStandardMaterial({color:0x4E7A46,roughness:.95});
+    [[-7.4,.55,1.35,.42],[-8.0,2.55,-.35,.30],[-7.0,2.05,1.95,.22],[-8.6,.95,.35,.26]].forEach(([px,py,pz,s])=>{
+      const isl=new THREE.Group();
+      const rock=new THREE.Mesh(new THREE.ConeGeometry(.6*s*2,1.1*s*2,6),rockMat);
+      rock.rotation.x=Math.PI;isl.add(rock);
+      const cap=new THREE.Mesh(new THREE.CylinderGeometry(.62*s*2,.58*s*2,.16,6),grassMat);
+      cap.position.y=.5*s*2;isl.add(cap);
+      isl.position.set(px,py,pz);isl.userData.drift=Math.random()*6;
+      isl.userData.baseY=py;
+      root.add(isl);
+    });
+
+    // arch frame + lattice
+    const frame=new THREE.Mesh(new THREE.TorusGeometry(1.32,.10,8,22,Math.PI),m.woodM);
+    frame.rotation.y=Math.PI/2;frame.position.set(-4.36,2.18,.25);root.add(frame);
+    for(let i=0;i<3;i++){
+      const bar=new THREE.Mesh(new THREE.BoxGeometry(.055,2.5,.055),m.woodM);
+      bar.position.set(-4.36,1.25,-.75+i*.75);root.add(bar);
+    }
+    const sill=new THREE.Mesh(new THREE.BoxGeometry(.30,.12,2.6),m.woodM);
+    sill.position.set(-4.34,.02,.25);sill.castShadow=true;root.add(sill);
+
+    // ceiling beams
+    for(let i=0;i<5;i++) root.add(beam(-3.2+i*1.7,3.05,.2,6.6,Math.PI/2));
+
+    // lanterns — the warm heart of the room
+    root.add(lantern(-2.4,2.35,-1.4));
+    root.add(lantern(1.9,2.35,-1.1));
+    if(level>=2) root.add(lantern(2.6,2.35,1.9));
+
+    // shelf with books
+    const shelf=new THREE.Group();
+    for(let r=0;r<3;r++){
+      const board=new THREE.Mesh(new THREE.BoxGeometry(1.6,.06,.3),m.woodM);
+      board.position.y=r*.42;board.castShadow=true;shelf.add(board);
+      for(let i=0;i<9;i++){
+        const bk=new THREE.Mesh(new THREE.BoxGeometry(.075,.24+((i*7+r)%5)*.02,.2),
+          new THREE.MeshStandardMaterial({
+            color:[0x8C2F2A,0x4D2C7A,0x2F5D50,0xA8752B,0x3A3028][(i+r)%5],roughness:.85}));
+        bk.position.set(-.72+i*.17,.16,0);bk.castShadow=true;shelf.add(bk);
+      }
+    }
+    shelf.position.set(2.7,1.35,-2.45);root.add(shelf);
+
+    // hanging plant
+    const pot=new THREE.Mesh(new THREE.CylinderGeometry(.16,.12,.2,8),m.woodM);
+    pot.position.set(-2.9,2.05,-2.3);pot.castShadow=true;root.add(pot);
+    for(let i=0;i<7;i++){
+      const leaf=new THREE.Mesh(new THREE.SphereGeometry(.11,7,6),grassMat);
+      leaf.position.set(-2.9+Math.cos(i*1.4)*.2,2.16-((i%3)*.12),-2.3+Math.sin(i*1.4)*.15);
+      leaf.scale.set(1,.6,1);root.add(leaf);
+    }
+
+    // oud leaning on the wall — one heritage note, not a museum
+    const oud=new THREE.Group();
+    const bowl=new THREE.Mesh(new THREE.SphereGeometry(.24,14,12),m.woodM);
+    bowl.scale.set(1,1.25,.55);bowl.castShadow=true;oud.add(bowl);
+    const neck=new THREE.Mesh(new THREE.BoxGeometry(.07,.62,.05),m.woodD);
+    neck.position.y=.5;oud.add(neck);
+    oud.position.set(3.8,.32,-1.4);oud.rotation.z=.22;root.add(oud);
+
+    // desks / crew scale with the office level
+    const desks=level>=3?3:level>=1?2:1;
+    const spots=[[-1.55,.35,.30],[1.75,-.55,-.40],[-2.35,-1.55,.55]];
+    for(let i=0;i<desks;i++){
+      const [dx,dz,ry]=spots[i];
+      root.add(desk(dx,dz,ry,true));
+      root.add(chair(dx+Math.sin(ry+Math.PI)*.85,dz+Math.cos(ry+Math.PI)*.85));
+    }
+    // founder always at the main desk, staff fill the rest
+    root.add(person(-1.05,1.25,C.purple,Math.PI*.86));
+    const extra=Math.max(0,Math.min(crew,desks-1));
+    for(let i=0;i<extra;i++){
+      const [dx,dz,ry]=spots[i+1];
+      root.add(person(dx+Math.sin(ry+Math.PI)*.8,dz+Math.cos(ry+Math.PI)*.8,
+        [0x2F5D50,0x8C4A2F,0x3A5A8C][i%3],ry+Math.PI));
+    }
+
+    // dust motes drifting in the window light
+    const pts=new THREE.BufferGeometry();
+    const N=90,arr=new Float32Array(N*3);
+    for(let i=0;i<N;i++){arr[i*3]=-4+Math.random()*7;arr[i*3+1]=Math.random()*3;arr[i*3+2]=-2.4+Math.random()*4.6}
+    pts.setAttribute('position',new THREE.BufferAttribute(arr,3));
+    motes=new THREE.Points(pts,new THREE.PointsMaterial({color:0xFFD9A0,size:.035,
+      transparent:true,opacity:.55,depthWrite:false}));
+    root.add(motes);
+
+    scene.add(root);
+    builtLevel=level;builtCrew=crew;
+  }
+
+  function disposeTree(o){
+    o.traverse(n=>{
+      if(n.geometry)n.geometry.dispose();
+      if(n.material){ (Array.isArray(n.material)?n.material:[n.material]).forEach(mm=>{
+        if(mm.map)mm.map.dispose(); mm.dispose();
+      }); }
+    });
+  }
+
+  /* ---------------- renderer / lighting / camera ---------------- */
+  function init(){
+    const h=host();
+    if(started||!h||!ok())return false;
+    started=true;
+
+    let canvas=$('v99Canvas');
+    if(!canvas){
+      canvas=document.createElement('canvas');
+      canvas.id='v99Canvas';
+      h.appendChild(canvas);
+    }
+
+    const mobile=Math.min(innerWidth,innerHeight)<520;
+    try{
+      R=new THREE.WebGLRenderer({canvas,antialias:!mobile,alpha:false,
+        powerPreference:'high-performance'});
+    }catch(e){ started=false; return false; }
+    if(!R.getContext()){ started=false; return false; }
+
+    // a phone does not need 3x pixels of a 250px-tall scene
+    R.setPixelRatio(Math.min(devicePixelRatio||1,mobile?1.5:2));
+    R.shadowMap.enabled=true;
+    R.shadowMap.type=THREE.PCFSoftShadowMap;
+    R.outputColorSpace=THREE.SRGBColorSpace;
+    R.toneMapping=THREE.ACESFilmicToneMapping;
+    R.toneMappingExposure=1.42;
+
+    scene=new THREE.Scene();
+    scene.background=new THREE.Color(0x140E0A);
+    scene.fog=new THREE.Fog(0x1C1410,9,22);
+
+    cam=new THREE.PerspectiveCamera(46,1.6,.1,60);
+
+    // warm golden shaft through the arch — the key light
+    const sun=new THREE.DirectionalLight(0xFFD8A0,3.4);
+    sun.position.set(-7,4.2,1.6);
+    sun.castShadow=true;
+    sun.shadow.mapSize.set(mobile?512:1024,mobile?512:1024);
+    sun.shadow.camera.near=.5;sun.shadow.camera.far=20;
+    sun.shadow.camera.left=-6;sun.shadow.camera.right=6;
+    sun.shadow.camera.top=5;sun.shadow.camera.bottom=-3;
+    sun.shadow.bias=-.0016;
+    scene.add(sun);
+    // cool bounce so the shadow side is not dead black
+    scene.add(new THREE.HemisphereLight(0x9FB4E0,0x4A3A28,.95));
+    // fills the floating islands outside the arch, which the key light backlit
+    const outside=new THREE.DirectionalLight(0xFFCF9E,1.9);
+    outside.position.set(2,2.4,1.2);outside.target.position.set(-8,1.2,.4);
+    scene.add(outside);scene.add(outside.target);
+    scene.add(new THREE.AmbientLight(0xFFE2BC,.42));
+
+    build(0,0);
+    resize();
+    addEventListener('resize',resize,{passive:true});
+
+    // only burn frames when the scene is actually on screen
+    try{
+      new IntersectionObserver(es=>{
+        es.forEach(e=>{ visible=e.isIntersecting; pump(); });
+      },{threshold:.02}).observe(h);
+    }catch(e){ visible=true; }
+    document.addEventListener('visibilitychange',()=>pump());
+
+    live=true;
+    h.classList.add('v99-live');
+    canvas.classList.add('on');
+    const badge=document.createElement('div');
+    badge.id='v99Badge';badge.textContent='3D';
+    h.appendChild(badge);
+    requestAnimationFrame(()=>badge.classList.add('on'));
+    pump();
+    return true;
+  }
+
+  let visible=true;
+  function resize(){
+    const h=host(); if(!h||!R)return;
+    const w=Math.max(1,h.clientWidth), ht=Math.max(1,h.clientHeight);
+    R.setSize(w,ht,false);
+    cam.aspect=w/ht; cam.updateProjectionMatrix();
+  }
+
+  function running(){
+    return live&&visible&&!document.hidden&&
+      document.body.dataset.phase==='studio';
+  }
+  function pump(){
+    if(running()){ if(!raf)raf=requestAnimationFrame(tick); }
+    else if(raf){ cancelAnimationFrame(raf); raf=0; }
+  }
+
+  function tick(){
+    raf=0;
+    if(!running())return;
+    clock+=1/60;
+
+    // slow cinematic drift, never a full orbit — the desk stays framed
+    // the arch, the sky and the islands are the point of the shot, so the
+    // camera sits right-of-centre and looks back across the room into the light
+    const a=Math.sin(clock*.075)*.16;
+    cam.position.set(2.35+Math.sin(a)*1.5, 1.95+Math.sin(clock*.13)*.09, 3.05+Math.cos(a)*.9);
+    cam.lookAt(-2.15,1.30,-.35);
+
+    // lantern flicker, each on its own phase
+    lanterns.forEach(L=>{
+      const f=.82+Math.sin(clock*3.1+L.seed)*.06+Math.sin(clock*7.7+L.seed*2)*.035;
+      L.light.intensity=2.4*f;
+      if(L.glass.material)L.glass.material.emissiveIntensity=2.4*f;
+    });
+    // monitors breathe
+    screens.forEach((s,i)=>{
+      if(s.material)s.material.emissiveIntensity=1.35+Math.sin(clock*1.7+i*1.3)*.28;
+    });
+    // dust drifts upward through the light
+    if(motes){
+      const p=motes.geometry.attributes.position;
+      for(let i=0;i<p.count;i++){
+        let y=p.getY(i)+.0022;
+        if(y>3.1)y=0;
+        p.setY(i,y);
+      }
+      p.needsUpdate=true;
+    }
+    // islands and people bob
+    if(root)root.children.forEach(ch=>{
+      if(ch.userData&&ch.userData.baseY!==undefined)
+        ch.position.y=ch.userData.baseY+Math.sin(clock*.5+ch.userData.drift)*.09;
+      if(ch.userData&&ch.userData.bob!==undefined)
+        ch.position.y=Math.sin(clock*2.1+ch.userData.bob)*.012;
+    });
+
+    R.render(scene,cam);
+    raf=requestAnimationFrame(tick);
+  }
+
+  /* ---------------- keep the room in step with the game ---------------- */
+  function sync(){
+    if(!live)return;
+    let lv=0,crew=0;
+    try{ lv=(typeof officeLevel==='function')?officeLevel():0; }catch(e){}
+    try{ crew=(gameState.company.employees||[]).length; }catch(e){}
+    if(lv!==builtLevel||crew!==builtCrew) build(lv,crew);
+    resize();
+    pump();
+  }
+
+  function wrap(name,after){
+    const fn=window[name];
+    if(typeof fn!=='function')return false;
+    window[name]=function(){const r=fn.apply(this,arguments);try{after()}catch(e){}return r};
+    return true;
+  }
+
+  function boot(){
+    if(typeof gameState==='undefined'||!gameState){ setTimeout(boot,300); return; }
+    if(!ok()){
+      // no library, no WebGL — the 2D scene simply stays. Not an error.
+      return;
+    }
+    if(!host()){ setTimeout(boot,300); return; }
+    if(!init())return;
+    wrap('renderOfficeHero',sync);
+    wrap('renderStudio',sync);
+    wrap('setPhase',()=>setTimeout(pump,40));
+    sync();
+  }
+  if(document.readyState==='loading')
+    addEventListener('DOMContentLoaded',()=>setTimeout(boot,600),{once:true});
+  else setTimeout(boot,600);
+})();
+</script>
+
 </body>
 </html>

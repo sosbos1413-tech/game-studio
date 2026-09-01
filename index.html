@@ -13253,6 +13253,8 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
 
   let R=null,scene=null,cam=null,root=null,raf=0,started=false,live=false;
   let lanterns=[],screens=[],motes=null,clock=0,builtLevel=-1,builtCrew=-1;
+  // camera framing, recomputed by build() so the shot widens with the office
+  let camRig={x:2.35,y:1.95,z:3.05,lx:-2.15,ly:1.30,lz:-.35};
 
   const ok=()=>typeof THREE!=='undefined'&&THREE&&typeof THREE.WebGLRenderer==='function';
   function host(){ return document.querySelector('#studioOfficeHero .office-scene'); }
@@ -13401,82 +13403,120 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
     root=new THREE.Group();
     const m=mats();
 
+    // ---- the room grows with the office level ------------------------
+    // Every office tier changes the actual footprint, not just the props:
+    // a wider floor, a deeper back wall, more ceiling beams, more lanterns,
+    // more desks, and tier-gated furniture (meeting table, trophy wall,
+    // playtest corner). The camera in tick() reads camRig, set below, so
+    // the shot opens up as the studio does instead of staying pinned to
+    // the founder's desk.
+    const lv=Math.max(0,Math.min(4,level|0));
+    const W=9+lv*1.35, D=7+lv*0.85, HX=W/2, HZ=D/2, LX=-HX;
+    const gapA=-1.25, gapB=1.65;               // the arched window opening (in z)
+    // The room has no front wall — the camera sits inside it, near the front.
+    // Floor, ceiling and the two side walls therefore run FZ further forward
+    // than the room proper, past the camera, so a wide lens never catches the
+    // open edge and renders it as a black wedge.
+    const FZ=6;
+
     // floor + oriental rug
-    const floor=new THREE.Mesh(new THREE.BoxGeometry(9,.2,7),m.woodD);
-    floor.position.set(0,-.1,0);floor.receiveShadow=true;root.add(floor);
-    const rug=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2.2),
+    const floor=new THREE.Mesh(new THREE.BoxGeometry(W,.2,D+FZ),m.woodD);
+    floor.position.set(0,-.1,FZ/2);floor.receiveShadow=true;root.add(floor);
+    const rugW=3.4+lv*.35, rugD=2.2+lv*.2;
+    const rug=new THREE.Mesh(new THREE.PlaneGeometry(rugW,rugD),
       new THREE.MeshStandardMaterial({color:0x8C2F2A,roughness:.95}));
     rug.rotation.x=-Math.PI/2;rug.position.set(.2,.005,.9);rug.receiveShadow=true;root.add(rug);
-    const rugIn=new THREE.Mesh(new THREE.PlaneGeometry(2.9,1.7),
+    const rugIn=new THREE.Mesh(new THREE.PlaneGeometry(rugW-.5,rugD-.5),
       new THREE.MeshStandardMaterial({color:0x6E2320,roughness:.95}));
     rugIn.rotation.x=-Math.PI/2;rugIn.position.set(.2,.008,.9);root.add(rugIn);
 
     // walls: back + right, with the arch cut into the left
-    root.add(stoneWall(9,3.2,.34,0,1.6,-2.7,0));
-    root.add(stoneWall(6.4,3.2,.34,4.4,1.6,.4,Math.PI/2));
+    root.add(stoneWall(W,3.2,.34,0,1.6,-HZ,0));
+    root.add(stoneWall(D+FZ,3.2,.34,HX,1.6,FZ/2,Math.PI/2));
 
     // left wall in two pieces, leaving an arched window gap
-    root.add(stoneWall(1.5,3.2,.34,-4.4,1.6,-2.0,Math.PI/2));
-    root.add(stoneWall(1.4,3.2,.34,-4.4,1.6,2.35,Math.PI/2));
-    root.add(stoneWall(3.4,.7,.34,-4.4,2.85,.25,Math.PI/2));
+    root.add(stoneWall(Math.max(1,gapA+HZ),3.2,.34,LX,1.6,(-HZ+gapA)/2,Math.PI/2));
+    root.add(stoneWall(Math.max(1,HZ+FZ-gapB),3.2,.34,LX,1.6,(gapB+HZ+FZ)/2,Math.PI/2));
+    root.add(stoneWall(3.4,.7,.34,LX,2.85,.2,Math.PI/2));
 
     // ---- the arch: sky, island, mashrabiya lattice ----
-    const sky=new THREE.Mesh(new THREE.PlaneGeometry(16,11),
+    // sized to the arch opening, not the horizon: a bigger plane starts
+    // showing over the wall tops once the camera pulls back for a big office
+    const sky=new THREE.Mesh(new THREE.PlaneGeometry(8,5),
       new THREE.MeshBasicMaterial({map:skyTexture(),fog:false}));
-    sky.rotation.y=Math.PI/2;sky.position.set(-8.5,2.2,.25);root.add(sky);
+    sky.rotation.y=Math.PI/2;sky.position.set(LX-4.1,1.35,.25);root.add(sky);
 
     // floating islands drifting outside — the fantasy read
     const rockMat=new THREE.MeshStandardMaterial({color:0x6B5642,roughness:1});
     const grassMat=new THREE.MeshStandardMaterial({color:0x4E7A46,roughness:.95});
-    [[-7.4,.55,1.35,.42],[-8.0,2.55,-.35,.30],[-7.0,2.05,1.95,.22],[-8.6,.95,.35,.26]].forEach(([px,py,pz,s])=>{
+    [[-3.0,.55,1.35,.42],[-3.6,2.55,-.35,.30],[-2.6,2.05,1.95,.22],[-4.2,.95,.35,.26]].forEach(([ox,py,pz,s])=>{
       const isl=new THREE.Group();
       const rock=new THREE.Mesh(new THREE.ConeGeometry(.6*s*2,1.1*s*2,6),rockMat);
       rock.rotation.x=Math.PI;isl.add(rock);
       const cap=new THREE.Mesh(new THREE.CylinderGeometry(.62*s*2,.58*s*2,.16,6),grassMat);
       cap.position.y=.5*s*2;isl.add(cap);
-      isl.position.set(px,py,pz);isl.userData.drift=Math.random()*6;
+      isl.position.set(LX+ox,py,pz);isl.userData.drift=Math.random()*6;
       isl.userData.baseY=py;
       root.add(isl);
     });
 
     // arch frame + lattice
     const frame=new THREE.Mesh(new THREE.TorusGeometry(1.32,.10,8,22,Math.PI),m.woodM);
-    frame.rotation.y=Math.PI/2;frame.position.set(-4.36,2.18,.25);root.add(frame);
+    frame.rotation.y=Math.PI/2;frame.position.set(LX+.04,2.18,.25);root.add(frame);
     for(let i=0;i<3;i++){
       const bar=new THREE.Mesh(new THREE.BoxGeometry(.055,2.5,.055),m.woodM);
-      bar.position.set(-4.36,1.25,-.75+i*.75);root.add(bar);
+      bar.position.set(LX+.04,1.25,-.75+i*.75);root.add(bar);
     }
     const sill=new THREE.Mesh(new THREE.BoxGeometry(.30,.12,2.6),m.woodM);
-    sill.position.set(-4.34,.02,.25);sill.castShadow=true;root.add(sill);
+    sill.position.set(LX+.06,.02,.25);sill.castShadow=true;root.add(sill);
 
-    // ceiling beams
-    for(let i=0;i<5;i++) root.add(beam(-3.2+i*1.7,3.05,.2,6.6,Math.PI/2));
+    // ceiling — a bigger room pulls the camera back far enough to see over
+    // the walls, so the room needs a lid or the corner reads as a black void
+    const ceil=new THREE.Mesh(new THREE.BoxGeometry(W+.7,.18,D+FZ+.7),m.woodD);
+    ceil.position.set(0,3.25,FZ/2);ceil.receiveShadow=true;root.add(ceil);
 
-    // lanterns — the warm heart of the room
-    root.add(lantern(-2.4,2.35,-1.4));
-    root.add(lantern(1.9,2.35,-1.1));
-    if(level>=2) root.add(lantern(2.6,2.35,1.9));
+    // ceiling beams — count follows the width, so a bigger room reads bigger
+    const beams=Math.max(5,Math.round(W/1.55));
+    for(let i=0;i<beams;i++) root.add(beam(-W/2+.9+i*((W-1.8)/(beams-1)),3.05,0,D-.4,Math.PI/2));
+
+    // lanterns — the warm heart of the room, one more per office tier
+    // all kept at z<=0.5, i.e. behind the desks: a lantern near the camera's
+    // near plane fills a quarter of the frame with a gold blur
+    const lanternSpots=[[-2.4,-1.4],[1.9,-1.1],[LX+1.9,-HZ+1.2],[HX-1.9,-HZ+1.2],[-.2,.4],[HX-2.6,-1.9]];
+    for(let i=0;i<Math.min(2+lv,lanternSpots.length);i++)
+      root.add(lantern(lanternSpots[i][0],2.35,lanternSpots[i][1]));
+
+    // a big room outruns the lanterns' 4.2-unit reach, so the far corners
+    // get a soft bounce that scales with the footprint
+    if(lv>=2){
+      const fill=new THREE.PointLight(0xFFD2A0,1.5+lv*.35,W*1.3,2);
+      fill.position.set(0,2.9,-HZ*.35);root.add(fill);
+    }
 
     // shelf with books
-    const shelf=new THREE.Group();
-    for(let r=0;r<3;r++){
-      const board=new THREE.Mesh(new THREE.BoxGeometry(1.6,.06,.3),m.woodM);
-      board.position.y=r*.42;board.castShadow=true;shelf.add(board);
-      for(let i=0;i<9;i++){
-        const bk=new THREE.Mesh(new THREE.BoxGeometry(.075,.24+((i*7+r)%5)*.02,.2),
-          new THREE.MeshStandardMaterial({
-            color:[0x8C2F2A,0x4D2C7A,0x2F5D50,0xA8752B,0x3A3028][(i+r)%5],roughness:.85}));
-        bk.position.set(-.72+i*.17,.16,0);bk.castShadow=true;shelf.add(bk);
+    function bookshelf(px,pz,shelves){
+      const shelf=new THREE.Group();
+      for(let r=0;r<shelves;r++){
+        const board=new THREE.Mesh(new THREE.BoxGeometry(1.6,.06,.3),m.woodM);
+        board.position.y=r*.42;board.castShadow=true;shelf.add(board);
+        for(let i=0;i<9;i++){
+          const bk=new THREE.Mesh(new THREE.BoxGeometry(.075,.24+((i*7+r)%5)*.02,.2),
+            new THREE.MeshStandardMaterial({
+              color:[0x8C2F2A,0x4D2C7A,0x2F5D50,0xA8752B,0x3A3028][(i+r)%5],roughness:.85}));
+          bk.position.set(-.72+i*.17,.16,0);bk.castShadow=true;shelf.add(bk);
+        }
       }
+      shelf.position.set(px,1.35,pz);root.add(shelf);
     }
-    shelf.position.set(2.7,1.35,-2.45);root.add(shelf);
+    bookshelf(HX-1.8,-HZ+.25,3);
+    if(lv>=2) bookshelf(HX-3.7,-HZ+.25,2);
 
     // hanging plant
     const pot=new THREE.Mesh(new THREE.CylinderGeometry(.16,.12,.2,8),m.woodM);
-    pot.position.set(-2.9,2.05,-2.3);pot.castShadow=true;root.add(pot);
+    pot.position.set(-2.9,2.05,-HZ+.4);pot.castShadow=true;root.add(pot);
     for(let i=0;i<7;i++){
       const leaf=new THREE.Mesh(new THREE.SphereGeometry(.11,7,6),grassMat);
-      leaf.position.set(-2.9+Math.cos(i*1.4)*.2,2.16-((i%3)*.12),-2.3+Math.sin(i*1.4)*.15);
+      leaf.position.set(-2.9+Math.cos(i*1.4)*.2,2.16-((i%3)*.12),-HZ+.4+Math.sin(i*1.4)*.15);
       leaf.scale.set(1,.6,1);root.add(leaf);
     }
 
@@ -13486,29 +13526,108 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
     bowl.scale.set(1,1.25,.55);bowl.castShadow=true;oud.add(bowl);
     const neck=new THREE.Mesh(new THREE.BoxGeometry(.07,.62,.05),m.woodD);
     neck.position.y=.5;oud.add(neck);
-    oud.position.set(3.8,.32,-1.4);oud.rotation.z=.22;root.add(oud);
+    oud.position.set(HX-.7,.32,-1.4);oud.rotation.z=.22;root.add(oud);
 
-    // desks / crew scale with the office level
-    const desks=level>=3?3:level>=1?2:1;
-    const spots=[[-1.55,.35,.30],[1.75,-.55,-.40],[-2.35,-1.55,.55]];
-    for(let i=0;i<desks;i++){
-      const [dx,dz,ry]=spots[i];
+    // ---- tier-gated furniture: each upgrade brings something new in ----
+    if(lv>=1){ // a standing whiteboard against the back wall
+      const wb=new THREE.Mesh(new THREE.BoxGeometry(1.5,.95,.06),
+        new THREE.MeshStandardMaterial({color:0xE9DCC2,roughness:.7}));
+      wb.position.set(-W/2+1.7,1.55,-HZ+.28);wb.castShadow=true;root.add(wb);
+      const wbf=new THREE.Mesh(new THREE.BoxGeometry(1.62,1.07,.04),m.woodM);
+      wbf.position.set(-W/2+1.7,1.55,-HZ+.24);root.add(wbf);
+    }
+    if(lv>=2){ // round meeting table with stools
+      const tbl=new THREE.Mesh(new THREE.CylinderGeometry(.62,.58,.08,16),m.woodM);
+      tbl.position.set(HX-2.1,.68,HZ-1.7);tbl.castShadow=true;root.add(tbl);
+      const ped=new THREE.Mesh(new THREE.CylinderGeometry(.12,.26,.62,10),m.woodD);
+      ped.position.set(HX-2.1,.33,HZ-1.7);root.add(ped);
+      for(let i=0;i<4;i++){
+        const st=new THREE.Mesh(new THREE.CylinderGeometry(.19,.17,.42,10),m.deep);
+        st.position.set(HX-2.1+Math.cos(i*Math.PI/2)*1.05,.21,HZ-1.7+Math.sin(i*Math.PI/2)*1.05);
+        st.castShadow=true;root.add(st);
+      }
+    }
+    if(lv>=3){ // trophy shelf on the back wall — the studio's own history
+      const ts=new THREE.Mesh(new THREE.BoxGeometry(1.8,.07,.26),m.woodM);
+      ts.position.set(.4,2.05,-HZ+.3);ts.castShadow=true;root.add(ts);
+      for(let i=0;i<4;i++){
+        const cup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.05,.2,8),m.gold);
+        cup.position.set(-.28+i*.45,2.19,-HZ+.3);cup.castShadow=true;root.add(cup);
+        const base=new THREE.Mesh(new THREE.BoxGeometry(.14,.05,.14),m.woodD);
+        base.position.set(-.28+i*.45,2.11,-HZ+.3);root.add(base);
+      }
+    }
+    if(lv>=4){ // playtest corner: couch facing a big wall screen
+      const couch=new THREE.Group();
+      const seat=new THREE.Mesh(new THREE.BoxGeometry(1.9,.34,.8),
+        new THREE.MeshStandardMaterial({color:0x4D2C7A,roughness:.85}));
+      seat.position.y=.34;seat.castShadow=true;couch.add(seat);
+      const back=new THREE.Mesh(new THREE.BoxGeometry(1.9,.6,.22),
+        new THREE.MeshStandardMaterial({color:0x593386,roughness:.85}));
+      back.position.set(0,.72,-.30);back.castShadow=true;couch.add(back);
+      couch.position.set(-HX+2.3,0,HZ-1.5);couch.rotation.y=.35;root.add(couch);
+      const tvBez=new THREE.Mesh(new THREE.BoxGeometry(.06,1.02,1.72),m.deep);
+      tvBez.position.set(HX-.28,1.75,HZ-2.0);root.add(tvBez);
+      const tv=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.92),
+        new THREE.MeshStandardMaterial({color:0x2A2340,emissive:C.royal,emissiveIntensity:1.5}));
+      tv.rotation.y=-Math.PI/2;tv.position.set(HX-.32,1.75,HZ-2.0);root.add(tv);
+      screens.push(tv);
+    }
+
+    // ---- desks / crew scale with the office level -------------------
+    // 1 → 2 → 3 → 4 → 6 workstations, laid out in rows of three inside the
+    // room's actual footprint so every added desk lands in frame.
+    const desks=[1,2,3,4,6][lv];
+    const spots=[];
+    const rows=Math.ceil(desks/3);
+    for(let r=0;r<rows;r++){
+      const inRow=Math.min(3,desks-r*3), z=.75-r*2.15, usable=HX-2.3;
+      for(let i=0;i<inRow;i++){
+        const x=inRow===1?-1.45:(-usable+i*(2*usable/(inRow-1)));
+        spots.push([x,z,0]);
+      }
+    }
+    spots.forEach(([dx,dz,ry])=>{
       root.add(desk(dx,dz,ry,true));
       root.add(chair(dx+Math.sin(ry+Math.PI)*.85,dz+Math.cos(ry+Math.PI)*.85));
-    }
-    // founder always at the main desk, staff fill the rest
-    root.add(person(-1.05,1.25,C.purple,Math.PI*.86));
+    });
+    // founder always at the first desk, staff fill the rest
+    const shirts=[0x2F5D50,0x8C4A2F,0x3A5A8C,0xA8752B,0x6E2320];
+    root.add(person(spots[0][0]+.5,spots[0][1]+.9,C.purple,Math.PI*.86));
     const extra=Math.max(0,Math.min(crew,desks-1));
     for(let i=0;i<extra;i++){
       const [dx,dz,ry]=spots[i+1];
       root.add(person(dx+Math.sin(ry+Math.PI)*.8,dz+Math.cos(ry+Math.PI)*.8,
-        [0x2F5D50,0x8C4A2F,0x3A5A8C][i%3],ry+Math.PI));
+        shirts[i%shirts.length],ry+Math.PI));
     }
+    // crew beyond the desks still show up — standing around the room
+    const standing=Math.max(0,Math.min(crew-extra,4));
+    for(let i=0;i<standing;i++)
+      root.add(person(-HX+1.6+i*1.15,HZ-1.0,shirts[(i+extra)%shirts.length],Math.PI*.9));
+
+    // the shot opens up as the studio does
+    // pull back and swing right, but keep looking LEFT into the arch — the
+    // window is the key light and the fantasy read, it must stay in frame
+    // The drift in tick() adds up to ±1.5 in x and ±0.9 in z, so the rig is
+    // clamped with that margin: a camera that leaves the room shows the
+    // unlit underside of the floor and the sky over the wall tops.
+    // Widening the lens does most of the work: pulling the camera back far
+    // enough to frame a 6-desk room would put it outside the walls, so the
+    // rig stays close (bright, detailed) and the FOV opens instead. The
+    // look target also swings left so the arch — the key light and the
+    // fantasy read — stays at the edge of frame at every tier.
+    camRig={x:Math.min(2.35+lv*.55,HX-1.9),
+            y:1.95+lv*.14,
+            z:Math.min(3.05+lv*.85,HZ-1.1),
+            lx:-2.15-lv*.35,ly:1.30+lv*.05,lz:-.35-lv*.16,
+            fov:46+lv*4.5};
+    if(cam){ cam.fov=camRig.fov; cam.updateProjectionMatrix(); }
+    if(scene.fog){ scene.fog.near=9+lv*1.2; scene.fog.far=22+lv*3.2; }
 
     // dust motes drifting in the window light
     const pts=new THREE.BufferGeometry();
     const N=90,arr=new Float32Array(N*3);
-    for(let i=0;i<N;i++){arr[i*3]=-4+Math.random()*7;arr[i*3+1]=Math.random()*3;arr[i*3+2]=-2.4+Math.random()*4.6}
+    for(let i=0;i<N;i++){arr[i*3]=LX+.4+Math.random()*(W-.8);arr[i*3+1]=Math.random()*3;arr[i*3+2]=-HZ+.3+Math.random()*(D-.6)}
     pts.setAttribute('position',new THREE.BufferAttribute(arr,3));
     motes=new THREE.Points(pts,new THREE.PointsMaterial({color:0xFFD9A0,size:.035,
       transparent:true,opacity:.55,depthWrite:false}));
@@ -13628,8 +13747,8 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
     // the arch, the sky and the islands are the point of the shot, so the
     // camera sits right-of-centre and looks back across the room into the light
     const a=Math.sin(clock*.075)*.16;
-    cam.position.set(2.35+Math.sin(a)*1.5, 1.95+Math.sin(clock*.13)*.09, 3.05+Math.cos(a)*.9);
-    cam.lookAt(-2.15,1.30,-.35);
+    cam.position.set(camRig.x+Math.sin(a)*1.5, camRig.y+Math.sin(clock*.13)*.09, camRig.z+Math.cos(a)*.9);
+    cam.lookAt(camRig.lx,camRig.ly,camRig.lz);
 
     // lantern flicker, each on its own phase
     lanterns.forEach(L=>{
@@ -13697,6 +13816,131 @@ body[data-phase="preprod"]    #preprodScreen    .phase-kicker>span:first-child{d
   if(document.readyState==='loading')
     addEventListener('DOMContentLoaded',()=>setTimeout(boot,600),{once:true});
   else setTimeout(boot,600);
+})();
+</script>
+
+
+
+<style id="v100Styles">
+.v100-why{display:block;width:100%;margin-top:4px}
+.v100-open{color:#58A96A;font-weight:700}
+.v100-bound{color:#D6A64A;font-weight:700}
+.v100-office-note b{color:var(--accent,#D6A64A)}
+</style>
+<script id="v100OfficeCapacityMeaning">
+/* ==================================================================
+   V100 — Make office capacity mean something, and say which limit binds.
+
+   Reported: "upgraded the office and nothing changed" + a team screen
+   reading "الفريق 4/4" next to "🪑 مقاعد موظفين متبقية 11".
+
+   Both were real. maxEmployeesByLevel() stopped at 4 from Level 14
+   onwards, while OFFICE_LEVELS tops out at 16 stations (15 employee
+   seats) — so past Level 14 every office upgrade bought seats that
+   could never be filled, and the team screen honestly printed two
+   numbers that could never meet.
+
+   Fix, in two parts:
+   1) The level ladder keeps climbing to Level 20, so office capacity
+      and career level trade off as the binding limit instead of one
+      of them being permanently dead.
+   2) The team screen names which of the two is actually stopping you,
+      rather than printing both and letting the player guess.
+   ================================================================== */
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+
+  /* ---- 1. the ladder now runs the full length of the level curve ----
+     Paired against OFFICE_LEVELS employee seats (1/2/4/9/15) so that
+     neither limit is redundant: at L5 and L7 the office is the wall,
+     from L10 onwards the level is.                                    */
+  const LADDER=[[20,10],[19,9],[17,8],[15,7],[13,6],[11,5],[9,4],[7,3],[5,2],[3,1]];
+  window.maxEmployeesByLevel=maxEmployeesByLevel=function(){
+    const l=progression().level;
+    for(const [need,cap] of LADDER) if(l>=need) return cap;
+    return 0;
+  };
+
+  function nextLevelForSeat(){
+    const l=progression().level;
+    const climbing=[...LADDER].reverse();          // ascending by level
+    const cur=maxEmployeesByLevel();
+    const step=climbing.find(([need,cap])=>cap>cur&&need>l);
+    return step?{level:step[0],cap:step[1]}:null;
+  }
+
+  /* ---- 2. the team screen states the binding limit --------------- */
+  function renderCapacityLine(){
+    const line=$('teamCapacityLine'); if(!line)return;
+    const employees=allEmployees();
+    const levelCap=maxEmployeesByLevel();
+    const officeCap=officeEmployeeCapacity();
+    const stations=officeInfo()?.capacity||1;
+    const cap=Math.min(levelCap,officeCap);
+    const free=Math.max(0,cap-employees.length);
+    // which wall is actually in front of the player right now
+    const bound=levelCap<=officeCap?'level':'office';
+    const next=nextLevelForSeat(), nextOffice=nextOfficeInfo();
+
+    let why;
+    if(employees.length<cap){
+      why=`<span class="v100-open">✅ تقدر توظف ${free} ${free===1?'موظف':'موظفين'} الآن</span>`;
+    }else if(bound==='level'){
+      why=next
+        ?`<span class="v100-bound">⛔ الحد الآن من <b>Level</b> — المقعد التالي عند Level ${next.level}</span>`
+        :`<span class="v100-bound">⛔ وصلت أعلى حد وظيفي في هذه النسخة</span>`;
+    }else{
+      why=nextOffice
+        ?`<span class="v100-bound">⛔ الحد الآن من <b>المكتب</b> — طوّر إلى ${nextOffice.short} لفتح مقاعد</span>`
+        :`<span class="v100-bound">⛔ وصلت أعلى مكتب متاح</span>`;
+    }
+
+    line.innerHTML=
+      `<span>👥 الفريق ${employees.length}/${cap}</span>`+
+      `<span>🏢 المكتب ${stations} محطات → ${officeCap} مقعد موظف</span>`+
+      `<span>⭐ حد Level ${levelCap} مقعد</span>`+
+      `<span class="v100-why">${why}</span>`;
+
+    const badge=$('teamStatusBadge');
+    if(badge) badge.textContent=`الفريق ${employees.length}/${cap}`;
+
+    const intro=$('teamIntro');
+    if(intro&&employees.length){
+      intro.textContent=`فريقك الآن يضم ${employees.length} موظف`+
+        (next?` • التوسعة التالية عند Level ${next.level} (${next.cap} مقاعد) إذا كان المكتب يتسع لها.`
+             :' • وصلت إلى أعلى حد وظيفي في هذه النسخة.');
+    }
+  }
+
+  const renderTeamBaseV100=window.renderTeam||renderTeam;
+  window.renderTeam=renderTeam=function(){
+    const r=renderTeamBaseV100.apply(this,arguments);
+    try{ renderCapacityLine(); }catch(e){}
+    return r;
+  };
+
+  /* ---- 3. the office modal shows the seats the upgrade really adds ---- */
+  const renderOfficeModalBaseV100=window.renderOfficeModal||renderOfficeModal;
+  window.renderOfficeModal=renderOfficeModal=function(){
+    const r=renderOfficeModalBaseV100.apply(this,arguments);
+    try{
+      const next=nextOfficeInfo(); if(!next)return r;
+      const box=$('officeUpgradePreview'); if(!box)return r;
+      const nowSeats=officeEmployeeCapacity(), newSeats=Math.max(0,next.capacity-1);
+      const levelCap=maxEmployeesByLevel();
+      const usableNow=Math.min(levelCap,nowSeats), usableNew=Math.min(levelCap,newSeats);
+      const gain=usableNew-usableNow;
+      const note=document.createElement('div');
+      note.className='note v100-office-note';
+      note.style.cssText='margin-top:8px';
+      note.innerHTML=gain>0
+        ?`🪑 هذه الترقية تفتح <b>+${gain}</b> مقعد توظيف فعلي الآن (${usableNow} → ${usableNew}).`
+        :`🪑 المقاعد ترتفع إلى ${newSeats}، لكن حد Level الحالي (${levelCap}) هو الذي يحدّ التوظيف — ارفع Level للاستفادة الكاملة.`;
+      box.appendChild(note);
+    }catch(e){}
+    return r;
+  };
 })();
 </script>
 

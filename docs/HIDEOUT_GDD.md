@@ -199,11 +199,19 @@ priority kept alive first): **Defense → Support → Economy → Tech → Produ
 Utility**. Powered-down rooms render dim (`inactive` class), stop producing/healing, and fight
 at half effectiveness in a raid (`roomDefenseWeight`).
 
-**Backlog:** a full player-facing priority *override* UI (brief §14: "Priority 1 Security,
-Priority 2 Clinic...") — right now priority is a fixed category order, not player-editable.
-Battery Room exists as a room and participates in the Generator+Battery synergy entry, but the
-"store power for N seconds during an outage" buffer mechanic itself is not simulated yet — it's
-a clear, isolated next step (give Battery a `storedPower` field, drain it before rooms shut off).
+**Player-set priority (§14) is implemented:** every room carries a `priority` of
+high / normal / low, set from its info sheet. Shutdown order is the player's tier first,
+category order only as a tiebreak, so "keep Security alive, drop the Workshop" is a real
+instruction the player gives rather than a fixed rule.
+
+**Battery buffer (§15) is implemented:** `batteryCharge` banks surplus power (10 per Battery
+Room) and is drained to keep rooms alive through a deficit, which is what buys the player time
+after a generator dies or a Power Surge lands. Charging/draining happens exactly once per cycle
+in `runEconomyTick()` — `applyPowerPriority()` is a pure view computation, so re-rendering can
+never silently burn stored power.
+
+Traps also draw power, and an unpowered trap does nothing — a defensive layout that outruns its
+generator quietly stops defending.
 
 ---
 
@@ -221,10 +229,30 @@ raid possible without a full door/hallway editor:
   the strategic layout tension in the brief's §17 example (a Vault directly behind the entrance
   is undefended; a Vault behind Security → Hallway → Guard Room is genuinely safer).
 
-**Backlog:** an explicit door/trap object placed *on a connection* rather than folded into the
-room's own weight (Security Door, Alarm, Barricade, EMP, Decoy Room from §53) would let door
-placement be a decision independent of room placement — a natural v2 once the base loop is
-validated with players.
+### Traps (§53) — shipped
+
+Six traps install onto a placed room (max 2 per room), each with a cash cost, a power draw and
+a cooldown analogue (one-shot traps are consumed once they fire):
+
+| Trap | Effect |
+|---|---|
+| Security Door 🚪 | permanent extra resistance, small damage |
+| Alarm 🔔 | +1 tactical command every raid |
+| Smoke System 💨 | −35% attacker damage inside that room |
+| Barricade 🧱 | resistance with no power draw, but consumed on use |
+| EMP Device 📡 | heavy one-shot hit when attackers enter |
+| Decoy Room 🎭 | **negative** path weight — lures attackers in, then hurts them |
+
+The Decoy is the interesting one: `weight` feeds the attacker's pathfinding, so a positive
+weight makes a room look dangerous and routes attackers *around* it, while the Decoy's negative
+weight makes a wing look abandoned and pulls them *in*. A decoy projects an "aura" onto
+adjacent rooms as well — without that, the detour through a decoy always costs an extra hop and
+no attacker would ever take the bait, making the trap decorative. Verified in a headless test:
+with two separated wings, the raid path flips from the left wing to the trapped right wing the
+moment a Decoy is installed, and the EMP then fires for real damage.
+
+**Still backlog:** traps attach to a *room*, not to a specific *connection* between two rooms.
+Per-door placement would let door choice be independent of room choice — a natural v2.
 
 ---
 
@@ -282,9 +310,15 @@ real, if simplified, combat effect (`useTactical()`), spendable live during the 
 resolution, matching the brief's "≈80% auto-combat, ≈20% tactical" ratio: commands blunt or
 delay, they never substitute for a good layout.
 
+Raids run as **multiple independent squads** (`RAID.squads`), each with its own entry point,
+HP pool, path and progress. A single squad is the normal case; the structure exists because
+some bosses breach from two directions at once. Any squad reaching the objective ends the raid
+as a breach; the defenders only win by destroying *all* squads.
+
 **Threat Preview** (§36) gates information behind Intel/Surveillance/War Room presence — a
 base with no Intel Room only sees "something is coming," a well-built one sees the objective
-and rough attacker strength.
+and rough attacker strength. From the preview the player can jump straight to the Path overlay
+to inspect the route before committing.
 
 **Loss states** are graded, not binary: partial loss on defeat (stolen cash / disabled
 generator / drained intel, scaled by objective) vs. a `checkGameOver()` run-ending state only
@@ -307,12 +341,28 @@ intent directly rather than as a pure penalty.
 
 `DISTRICTS` implements the six named zones (Old Block → Neon District → Industrial Zone →
 Docks → Downtown → The Heights) as a light, functional structure: each carries a threat level
-that scales raid difficulty/reward and a cycle-count gate, shown in a City tab list. Full
-per-district enemy rosters, unique room unlocks, and named bosses per district (§45–51) are
-**backlog** — the prototype implements one generic boss modifier (every 5th cycle is marked a
-Boss raid with a damage/HP multiplier and a distinct preview banner) as a proof of the "boss
-changes the rules, not just HP" intent, rather than the four fully-distinct named boss kits
-(The Grid / The Twins / The Ghost / Breaker / The Collector) from §47–51.
+that scales raid difficulty/reward and a cycle-count gate, shown in a City tab list.
+
+### Bosses (§47–51) — shipped
+
+A boss appears every 5th cycle and rotates through five kits. Each one **changes a rule**
+rather than just carrying more HP:
+
+| Boss | Rule it changes |
+|---|---|
+| BREAKER 🔨 | forces the objective to the Generator — power itself is the target |
+| THE TWINS 👥 | two squads breach from two different points at once (front door + the least-defended rear room) |
+| THE GRID 🕸️ | a Power Surge every 3 ticks knocks rooms offline mid-raid |
+| THE GHOST 👻 | defeats the Threat Preview entirely — no path, no objective, no Intel |
+| THE COLLECTOR 🎩 | ignores objective types and walks to the single most valuable room you own |
+
+Verified by driving each kit directly in a headless test: Breaker retargets the generator, the
+Twins spawn two squads with distinct entry labels and path lengths, the Grid logs real surges
+and takes rooms offline, and the Collector correctly picks the highest-value room by
+cost × rarity × level.
+
+**Still backlog:** per-district enemy rosters, unique room unlocks and a district-specific boss
+roster (each district currently draws from the same five kits).
 
 ---
 
@@ -337,10 +387,23 @@ Implemented: rotate-before-placing in Build Mode, room/crew bottom-sheet inspect
 synergy/penalty badges on room cards, toast feedback for every meaningful action, autosave to
 `localStorage` after every state-mutating action (`save()`), resize-responsive grid sizing.
 
-Backlog from §60: full Undo stack during Build Mode, Auto-Sort *suggestion* (explicitly not an
-auto-solver, per the brief), side-by-side item Compare, item Lock in the shop, and dedicated
-Power/Path/Threat map overlays (today the raid path is shown implicitly via the raid-clear
-outline sequence, not a persistent overlay toggle).
+**Overlays (§60) — shipped.** Three toggles on the left edge of the hideout view:
+
+- **⚡ Power** — per-room draw/output and priority tier, dim for anything shut off, with a
+  produced/used/battery readout in the HUD.
+- **🧭 Path** — draws the numbered route attackers would actually take through the current
+  layout, with the objective marked in red and off-path rooms dimmed. This is the single most
+  important screen in the game: it teaches the core pillar ("a Vault one step from the door is
+  not a Vault") without a word of tutorial text, and it is reachable straight from the Threat
+  Preview so the player can inspect the route *before* committing to the raid.
+- **⚠️ Threat** — flags concrete weaknesses: a Vault too close to the entrance, a Defense room
+  with no power, a room on the attack path with neither crew nor traps.
+
+**Build-mode Undo (§60) — shipped:** a 12-deep snapshot stack covering room placement, trap
+installation and expansions.
+
+Still backlog from §60: Auto-Sort *suggestion* (explicitly not an auto-solver, per the brief),
+side-by-side item Compare, and item Lock/Freeze in the shop.
 
 ---
 
@@ -349,22 +412,36 @@ outline sequence, not a persistent overlay toggle).
 **Shipped in `hideout.html` (playable now):**
 Portrait mobile shell · resource bar · grid hideout with irregular room shapes & rotation ·
 validated expansion-shape offers · 28-room catalog across all 7 categories · adjacency synergy
-& penalty system with visual feedback · power grid with priority shutdown · living crew with
-roles/traits/flaws/morale/loyalty · room/crew inspector sheets · Shop with reroll & rarity
-weighting · full Shop→Build→Crew→Event→Threat→Raid→Reward cycle loop · 7 random events with
-branching choices · Dijkstra pathfinded raid combat that respects player layout · 7 tactical
-commands usable live during a raid · graded win/partial-loss/run-ending outcomes · Heat
-risk/reward meter · 4-currency economy · 6-district City structure with cycle-gated unlocks ·
-periodic boss-modifier raids · Leader/Front-Business run setup · cross-run Legacy
-meta-progression · full localStorage autosave/resume.
+& penalty system with visual feedback · power grid with player-set priority tiers and a battery
+buffer · 6 traps incl. a path-luring Decoy Room · living crew with roles/traits/flaws/morale/
+loyalty · room/crew inspector sheets · Shop with reroll & rarity weighting · full
+Shop→Build→Crew→Event→Threat→Raid→Reward cycle loop · 7 random events with branching choices ·
+Dijkstra pathfinded, multi-squad raid combat that respects player layout · 7 tactical commands
+usable live during a raid · 5 distinct rule-changing boss kits · graded win/partial-loss/
+run-ending outcomes · Power/Path/Threat overlays · build-mode undo · Heat risk/reward meter ·
+4-currency economy · 6-district City structure with cycle-gated unlocks · Leader/Front-Business
+run setup · cross-run Legacy meta-progression · full localStorage autosave/resume with
+migration of older saves.
 
 **Explicitly deferred (clear next milestones, not forgotten):** final diorama art & character
 animation (current build uses a functional emoji/color placeholder), sound design & music,
-equipment/inventory slots on individual crew members, the four named distinct boss kits,
-per-district unique content (enemies/rooms/events), an explicit door/trap object layer separate
-from room adjacency, relationship graph between crew members, Codex/Collection screen, and
-Android packaging (the repo already has a `build-android.yml` pattern from its other game that
+equipment/inventory slots on individual crew members, per-district unique content
+(enemies/rooms/events) and per-district boss rosters, traps attached to individual doors rather
+than rooms, relationship graph between crew members, Codex/Collection screen, and Android
+packaging (the repo already has a `build-android.yml` pattern from its other game that
 `hideout.html` can reuse once art/content are further along).
+
+## 21. Verification
+
+The prototype is exercised by headless-browser tests rather than by eyeball alone:
+
+- a 5-cycle full-loop run (buy → place rooms and traps → expand → assign crew → event → raid
+  with tactical commands → reward), ending with a page reload to confirm the save resumes;
+- a boss harness that drives all five kits directly and asserts each one changes its rule;
+- a trap harness with two separated wings that asserts the Decoy Room actually flips the
+  attacker's chosen route and that its payload fires.
+
+All three run clean with zero console/page errors.
 
 ---
 

@@ -116,6 +116,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   background:linear-gradient(180deg,#3FDE8F,#22B06A);color:#08150E;font-weight:900;font-size:13px;
   padding:11px 22px;border-radius:30px;box-shadow:0 8px 18px rgba(63,222,143,.35);letter-spacing:.3px}
 #phaseBtn:active{transform:translateX(-50%) scale(.96)}
+/* In build mode the tray owns the bottom edge — lift the phase button clear of it so
+   inventory cards underneath stay tappable. */
+.buildmode #phaseBtn{bottom:84px}
 #buildBar{position:absolute;left:0;right:0;bottom:0;z-index:54;background:linear-gradient(0deg,rgba(10,14,22,.97),rgba(10,14,22,.85));
   border-top:1px solid var(--line2);padding:8px 8px 10px;display:none;gap:6px;overflow-x:auto;align-items:center}
 .buildmode #buildBar{display:flex}
@@ -126,6 +129,23 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 #buildExit{position:absolute;top:6px;right:6px;z-index:56;background:rgba(10,14,22,.88);border:1px solid var(--line2);
   border-radius:16px;padding:6px 12px;font-size:11px;font-weight:800;display:none}
 .buildmode #buildExit{display:block}
+
+/* ---------- OVERLAYS (power / path / threat) ---------- */
+#overlayBar{position:absolute;left:6px;bottom:10px;z-index:56;display:flex;flex-direction:column;gap:5px}
+#overlayBar button{width:34px;height:34px;border-radius:10px;background:rgba(10,14,22,.85);
+  border:1px solid var(--line2);font-size:15px;backdrop-filter:blur(3px)}
+#overlayBar button.on{border-color:var(--cyan);background:rgba(63,215,224,.2);box-shadow:0 0 10px rgba(63,215,224,.3)}
+.buildmode #overlayBar{display:none}
+.ovlbadge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;
+  background:rgba(8,12,20,.9);border-radius:8px;padding:2px 6px;font-size:10px;font-weight:900;
+  border:1px solid var(--line2);white-space:nowrap}
+.ovlbadge.step{background:var(--red);color:#fff;border-color:#fff;border-radius:50%;width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;padding:0}
+.room.ovl-danger{outline:2px solid var(--red);outline-offset:-1px}
+.room.ovl-warn{outline:2px solid var(--orange);outline-offset:-1px}
+.room.ovl-ok{outline:2px solid var(--green);outline-offset:-1px}
+.room.ovl-dim{opacity:.45}
+.trapdot{position:absolute;top:2px;left:3px;font-size:9px;z-index:5;filter:drop-shadow(0 1px 1px #000)}
 
 /* ---------- BOTTOM NAV ---------- */
 #bottomnav{display:flex;flex-shrink:0;padding:6px 8px 10px;gap:4px}
@@ -237,6 +257,7 @@ p.sdesc{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 10px}
   <div id="stage">
     <div id="hud">
       <div class="chip">🌆 <span id="hudDistrict">Old Block</span></div>
+      <div class="chip" id="hudExtra" style="display:none"></div>
       <div class="chip">دورة <span id="hudCycle">1</span></div>
     </div>
     <div id="viewport">
@@ -245,6 +266,11 @@ p.sdesc{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 10px}
       </div>
     </div>
     <button id="buildExit">✕ إنهاء البناء</button>
+    <div id="overlayBar">
+      <button data-ovl="power" title="طبقة الطاقة">⚡</button>
+      <button data-ovl="path" title="مسار الهجوم المتوقع">🧭</button>
+      <button data-ovl="threat" title="نقاط الضعف">⚠️</button>
+    </div>
     <div id="buildBar"></div>
     <button id="phaseBtn">ابدأ ▶</button>
     <div id="toast"></div>
@@ -376,6 +402,45 @@ const SYN = [
   {a:"front_business",b:"lounge",kind:"bonus",label:"أجواء جيدة",pct:15,stat:"cash"},
 ];
 
+/* ---------------------------------- TRAPS / DOORS ----------------------------------
+   Attached to a placed room (max TRAPS_PER_ROOM). Every trap carries a cost, a power
+   requirement and a cooldown analogue (oneShot traps are spent for the rest of the raid),
+   per the design brief: few traps, each a real decision — never a tower-defense grid.
+   `weight` feeds the attacker's pathfinding: positive = looks dangerous, the raid routes
+   around it; NEGATIVE (Decoy Room) = looks weak, the raid is *lured* into it.            */
+const TRAPS_PER_ROOM = 2;
+const TRAPS = [
+  {id:"security_door",nameAr:"باب أمني",icon:"🚪",cost:60,power:1,weight:3,dmg:4,oneShot:false,
+    desc:"يبطئ المهاجمين ويرفع مقاومة الغرفة بشكل دائم."},
+  {id:"alarm",nameAr:"إنذار",icon:"🔔",cost:40,power:1,weight:0.5,dmg:0,oneShot:false,cmdBonus:1,
+    desc:"+1 أمر تكتيكي في كل مداهمة."},
+  {id:"smoke",nameAr:"نظام الدخان",icon:"💨",cost:55,power:1,weight:1,dmg:0,oneShot:false,dmgReduce:0.35,
+    desc:"يقلل ضرر المهاجمين داخل هذه الغرفة بنسبة 35%."},
+  {id:"barricade",nameAr:"متراس",icon:"🧱",cost:35,power:0,weight:2,dmg:6,oneShot:true,
+    desc:"مقاومة إضافية بلا طاقة، لكنه يُستهلك بعد استخدامه."},
+  {id:"emp",nameAr:"جهاز EMP",icon:"📡",cost:90,power:2,weight:2,dmg:18,oneShot:true,
+    desc:"ضربة قوية لمرة واحدة عند دخول المهاجمين للغرفة."},
+  {id:"decoy_room",nameAr:"غرفة خداع",icon:"🎭",cost:70,power:1,weight:-3,dmg:8,oneShot:false,
+    desc:"تبدو ضعيفة فتجذب المهاجمين إليها — ثم تؤذيهم. أداة توجيه مسار."},
+];
+const TRAPBYID = Object.fromEntries(TRAPS.map(t=>[t.id,t]));
+
+/* ---------------------------------- BOSSES ----------------------------------
+   A boss must change the RULES of the encounter, not just carry more HP.        */
+const BOSSES = [
+  {id:"breaker",name:"BREAKER",nameAr:"الكاسر",icon:"🔨",
+    desc:"يقصد المولد أولًا ويحطمه قبل أي شيء آخر.",forceObjective:"generator",hpMult:1.7,dmgMult:1.0},
+  {id:"twins",name:"THE TWINS",nameAr:"التوأمان",icon:"👥",
+    desc:"يدخلان من نقطتين مختلفتين في وقت واحد.",squads:2,hpMult:0.95,dmgMult:0.85},
+  {id:"grid",name:"THE GRID",nameAr:"الشبكة",icon:"🕸️",
+    desc:"كل عدة لحظات يضرب المخبأ Power Surge فتتوقف غرف مؤقتًا.",powerSurge:3,hpMult:1.5,dmgMult:1.0},
+  {id:"ghost",name:"THE GHOST",nameAr:"الشبح",icon:"👻",
+    desc:"لا يكشف مساره ولا هدفه مسبقًا — المعاينة عديمة الفائدة ضده.",hidePreview:true,hpMult:1.4,dmgMult:1.1},
+  {id:"collector",name:"THE COLLECTOR",nameAr:"الجامع",icon:"🎩",
+    desc:"يتجه دائمًا إلى أغلى غرفة في مخبأك.",targetMostValuable:true,hpMult:1.6,dmgMult:1.0},
+];
+function bossForCycle(cycle){ return BOSSES[(Math.floor(cycle/5)-1+BOSSES.length*10) % BOSSES.length]; }
+
 /* ---------------------------------- ROLES / CREW TEMPLATES ---------------------------------- */
 const ROLES = {
   ENFORCER:{icon:"🥊",name:"Enforcer",nameAr:"منفّذ"},
@@ -498,14 +563,15 @@ function freshRun(leader, business){
     cycle:1, phase:"hideout", heat:5, districtIdx:0, expansions:2, tacticalBonus:0,
     resources:{cash:150,respect:10,intel:5,parts:60},
     unlocked: Array.from(unlocked),
-    rooms: [], // {uid, defId, anchor:{c,r}, cells:[[c,r]], level, active, crew:[uid]}
+    rooms: [], // {uid, defId, cells:[[c,r]], level, active, traps:[], priority}
     crew: [],
-    inventory: [], // {kind:'room', defId, rot}
+    inventory: [], // {kind:'room'|'trap', defId, rot}
     shop: null,
     frozen: [],
     log: [],
     lastRaid: null,
     gameover:false,
+    batteryCharge: 0, // stored power, filled by surplus, drained during a deficit
   };
   // leader
   const L = LEADERS.find(l=>l.id===leader) || LEADERS[0];
@@ -528,7 +594,18 @@ function freshRun(leader, business){
 }
 
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
-function load(){ try{ const raw=localStorage.getItem(SAVE_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+function load(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    const st = JSON.parse(raw);
+    // migrate/repair saves written by older builds
+    if(!Array.isArray(st.raidClearedUids)) st.raidClearedUids = [];
+    if(typeof st.batteryCharge!=="number") st.batteryCharge = 0;
+    (st.rooms||[]).forEach(r=>{ if(!Array.isArray(r.traps)) r.traps=[]; if(!r.priority) r.priority="normal"; });
+    return st;
+  }catch(e){ return null; }
+}
 
 /* ============================================================================================
    GRID HELPERS
@@ -619,25 +696,48 @@ function computePower(){
   });
   return {produced:Math.round(produced), required:Math.round(required)};
 }
-function applyPowerPriority(){
-  const pwr = computePower();
-  S.rooms.forEach(r=>r.active=true);
-  if(pwr.produced >= pwr.required){ return pwr; }
-  // shut off lowest-priority (defense highest priority, then support, then production/economy/tech/utility)
-  const PRIORITY = {DEFENSE:1,SUPPORT:2,ECONOMY:3,TECH:4,PRODUCTION:5,SPECIAL:6,UTILITY:7};
-  const consumers = S.rooms.filter(r=>ROOMBYID[r.defId].power<0)
-    .sort((a,b)=>PRIORITY[ROOMBYID[b.defId].cat]-PRIORITY[ROOMBYID[a.defId].cat]);
-  let budget = pwr.produced;
-  consumers.forEach(r=>{ // reset then reapply lowest priority first shut off
-  });
-  // recompute: keep shutting off from the END (lowest priority) until fits
+function batteryCapacity(){ return S.rooms.filter(r=>r.defId==="battery").length * 10; }
+function roomPowerNeed(rm){
+  const def = ROOMBYID[rm.defId];
+  let need = def.power<0 ? Math.abs(def.power) : 0;
+  (rm.traps||[]).forEach(tid=>{ need += (TRAPBYID[tid] ? TRAPBYID[tid].power : 0); });
+  return need;
+}
+// Lower rank = keeps its power longer. The player's per-room tier wins; category order
+// (Defense > Support > Economy > Tech > Production > Special > Utility) breaks ties.
+function powerPriorityRank(rm){
+  const TIER = {high:0, normal:1, low:2};
+  const CAT = {DEFENSE:1,SUPPORT:2,ECONOMY:3,TECH:4,PRODUCTION:5,SPECIAL:6,UTILITY:7};
+  return (TIER[rm.priority||"normal"]||1)*10 + (CAT[ROOMBYID[rm.defId].cat]||9);
+}
+// Pure view computation — never mutates the battery. Charging/draining happens once per
+// cycle in runEconomyTick(), so re-rendering can't quietly burn stored power.
+function applyPowerPriority(synInfo){
+  const pwr = computePowerFull(synInfo);
+  const consumers = S.rooms.filter(r=>roomPowerNeed(r)>0).sort((a,b)=>powerPriorityRank(a)-powerPriorityRank(b));
+  const supply = pwr.produced + Math.max(0, Math.floor(S.batteryCharge||0));
   let used = 0;
-  const sortedHighFirst = consumers.slice(); // already high->low priority order due to sort desc
-  for(const r of sortedHighFirst){
-    const need = Math.abs(ROOMBYID[r.defId].power);
-    if(used+need<=pwr.produced){ used+=need; r.active=true; } else { r.active=false; }
+  S.rooms.forEach(r=>r.active=true);
+  for(const r of consumers){
+    const need = roomPowerNeed(r);
+    if(used+need<=supply){ used+=need; r.active=true; } else r.active=false;
   }
+  pwr.used = used;
+  pwr.deficit = Math.max(0, used - pwr.produced); // covered this cycle by the battery
   return pwr;
+}
+function computePowerFull(synInfo){
+  let produced=0, required=0;
+  S.rooms.forEach(rm=>{
+    const def = ROOMBYID[rm.defId];
+    if(def.power>0){
+      const m = synInfo ? ((synInfo.get(rm.uid)||{}).mult||{}).power||0 : 0; // Maintenance adjacency
+      produced += def.power * (1+(rm.level-1)*0.25) * (1+m);
+    }
+    required += roomPowerNeed(rm);
+  });
+  return {produced:Math.round(produced), required:Math.round(required),
+          capacity:batteryCapacity(), charge:Math.round(S.batteryCharge||0)};
 }
 
 /* ============================================================================================
@@ -680,14 +780,15 @@ function render(){
 
   // synergy/power info
   const synInfo = computeRoomState();
-  applyPowerPriority();
+  const powerState = applyPowerPriority(synInfo);
+  const ovl = computeOverlayData();
 
   S.rooms.forEach(rm=>{
     const def = ROOMBYID[rm.defId];
     const minC=Math.min(...rm.cells.map(p=>p[0])), minR=Math.min(...rm.cells.map(p=>p[1]));
     const maxC=Math.max(...rm.cells.map(p=>p[0])), maxR=Math.max(...rm.cells.map(p=>p[1]));
     const div = document.createElement("div");
-    div.className = "room"+(rm.active?"":" inactive")+(S.raidTargetUid===rm.uid?" raid-target":"")+(S.raidClearedUids&&S.raidClearedUids.has(rm.uid)?" raid-clear":"");
+    div.className = "room"+(rm.active?"":" inactive")+(S.raidTargetUid===rm.uid?" raid-target":"")+((S.raidClearedUids||[]).indexOf(rm.uid)>=0?" raid-clear":"");
     div.style.setProperty("--rc", def.color);
     div.style.setProperty("--rc2", def.color+"22");
     div.style.left=(minC*cellPx)+"px"; div.style.top=(minR*cellPx)+"px";
@@ -702,6 +803,15 @@ function render(){
       <div class="pwr ${rm.active?"on":"off"}">${def.power>0?("+"+Math.round(def.power*(1+(rm.level-1)*0.25))+"⚡"):(rm.active?"":"⛔")}</div>`;
     if(nBonus) div.querySelector(".rhead").innerHTML += ` <span style="color:var(--green);font-size:9px">▲${nBonus}</span>`;
     if(nPen) div.querySelector(".rhead").innerHTML += ` <span style="color:var(--red);font-size:9px">▼${nPen}</span>`;
+    // installed traps show as small icons in the corner
+    (rm.traps||[]).forEach((tid,ti)=>{
+      const t = TRAPBYID[tid]; if(!t) return;
+      const dot = document.createElement("div");
+      dot.className = "trapdot"; dot.style.left = (3+ti*11)+"px";
+      dot.textContent = t.icon; dot.title = t.nameAr;
+      div.appendChild(dot);
+    });
+    applyOverlayToRoom(div, rm, ovl, powerState);
     div.addEventListener("click",()=>openRoomSheet(rm.uid));
     grid.appendChild(div);
     // crew tokens inside
@@ -720,9 +830,91 @@ function render(){
     });
   });
 
-  document.getElementById("grid").className = document.getElementById("stage").classList.contains("buildmode")?"":"";
   renderTop();
   renderBuildBar();
+  renderOverlayBar(powerState);
+}
+
+/* ---------------------------------- OVERLAYS ----------------------------------
+   Power / Path / Threat map layers. The Path layer is the important one: it draws the
+   route attackers would actually take through the layout the player just built, which is
+   how the game teaches its core pillar (placement beats raw stats) without a tutorial.  */
+let OVERLAY = "none";
+function setOverlay(mode){
+  OVERLAY = (OVERLAY===mode) ? "none" : mode;
+  render();
+  if(OVERLAY==="path" && !S.rooms.length) toast("ابنِ غرفًا أولًا لرؤية المسار");
+}
+function computeOverlayData(){
+  const data = {mode:OVERLAY, pathIdx:{}, entryUid:null};
+  if(OVERLAY!=="path" && OVERLAY!=="threat") return data;
+  const objective = S._pendingObjective || pickObjective();
+  const target = resolveTargetRoom(objective);
+  if(!target) return data;
+  const path = findPath(target.uid);
+  if(path){
+    let step = 0;
+    path.forEach(n=>{ if(n!=="entrance"){ step++; data.pathIdx[n]=step; } });
+    data.entryUid = path.find(n=>n!=="entrance") || null;
+  }
+  data.targetUid = target.uid;
+  return data;
+}
+function applyOverlayToRoom(div, rm, ovl, powerState){
+  if(ovl.mode==="none") return;
+  const def = ROOMBYID[rm.defId];
+  const badge = document.createElement("div");
+  badge.className = "ovlbadge";
+  if(ovl.mode==="power"){
+    const need = roomPowerNeed(rm);
+    if(def.power>0){ badge.textContent = "+"+Math.round(def.power*(1+(rm.level-1)*0.25))+"⚡"; div.classList.add("ovl-ok"); }
+    else if(need>0){
+      badge.textContent = "-"+need+"⚡ · "+({high:"↑",normal:"•",low:"↓"}[rm.priority||"normal"]);
+      div.classList.add(rm.active?"ovl-warn":"ovl-danger");
+      if(!rm.active) div.classList.add("ovl-dim");
+    } else { badge.textContent = "0⚡"; }
+    div.appendChild(badge);
+  } else if(ovl.mode==="path"){
+    const step = ovl.pathIdx[rm.uid];
+    if(step!==undefined){
+      badge.className = "ovlbadge step";
+      badge.textContent = step;
+      div.classList.add(rm.uid===ovl.targetUid?"ovl-danger":"ovl-warn");
+      div.appendChild(badge);
+    } else div.classList.add("ovl-dim");
+  } else if(ovl.mode==="threat"){
+    const onPath = ovl.pathIdx[rm.uid]!==undefined;
+    const defenders = S.crew.filter(c=>c.room===rm.uid).length;
+    const depth = distFromEntrance(rm);
+    let label = null, cls = null;
+    if((rm.defId==="vault"||rm.defId==="secret_vault") && depth<3){ label = "⚠️ خزنة قريبة من المدخل"; cls="ovl-danger"; }
+    else if(def.cat==="DEFENSE" && !rm.active){ label = "⛔ دفاع بلا طاقة"; cls="ovl-danger"; }
+    else if(onPath && defenders===0 && !(rm.traps||[]).length){ label = "⚠️ على المسار بلا حماية"; cls="ovl-warn"; }
+    else if(onPath){ label = "🛡️ محمي"; cls="ovl-ok"; }
+    if(label){ badge.textContent = label; div.classList.add(cls); div.appendChild(badge); }
+    else div.classList.add("ovl-dim");
+  }
+}
+function renderOverlayBar(powerState){
+  document.querySelectorAll("#overlayBar button").forEach(b=>{
+    b.classList.toggle("on", b.dataset.ovl===OVERLAY);
+  });
+  const chip = document.getElementById("hudExtra");
+  if(!chip) return;
+  if(OVERLAY==="power"){
+    const p = powerState;
+    chip.style.display = "flex";
+    chip.innerHTML = `⚡ ${p.produced}/${p.used||p.required}${p.capacity?` · 🔋${p.charge}/${p.capacity}`:""}`;
+    chip.style.color = (p.used>p.produced) ? "var(--red)" : "var(--yellow)";
+  } else if(OVERLAY==="path"){
+    chip.style.display = "flex";
+    chip.innerHTML = "🧭 المسار المتوقع للمهاجمين";
+    chip.style.color = "var(--red)";
+  } else if(OVERLAY==="threat"){
+    chip.style.display = "flex";
+    chip.innerHTML = "⚠️ نقاط الضعف";
+    chip.style.color = "var(--orange)";
+  } else chip.style.display = "none";
 }
 
 function renderTop(){
@@ -758,16 +950,21 @@ function renderBuildBar(){
   bar.innerHTML = "";
   if(!document.getElementById("stage").classList.contains("buildmode")) return;
   S.inventory.forEach((it,idx)=>{
-    const def = ROOMBYID[it.defId];
+    const isTrap = it.kind==="trap";
+    const def = isTrap ? TRAPBYID[it.defId] : ROOMBYID[it.defId];
+    if(!def) return;
     const card = document.createElement("div");
     card.className = "invcard"+(armedItem&&armedItem.index===idx?" armed":"");
-    card.style.setProperty("--rc", def.color);
+    card.style.setProperty("--rc", isTrap?"#FF5E67":def.color);
     card.innerHTML = `<div class="ic2">${def.icon}</div>${def.nameAr}`;
     card.addEventListener("click",()=>{
-      if(armedItem && armedItem.index===idx){ armedItem.rot=(armedItem.rot+1)%4; renderBuildBar(); return; }
-      armedItem = {index:idx, defId:it.defId, rot:it.rot||0};
+      if(armedItem && armedItem.index===idx){
+        if(isTrap){ armedItem=null; renderBuildBar(); return; }
+        armedItem.rot=(armedItem.rot+1)%4; renderBuildBar(); return;
+      }
+      armedItem = {index:idx, defId:it.defId, rot:it.rot||0, kind:isTrap?"trap":"room"};
       renderBuildBar();
-      toast("اضغط على الشبكة للوضع • اضغط البطاقة مجددًا للتدوير");
+      toast(isTrap ? "اضغط على غرفة لتركيب الفخ" : "اضغط على الشبكة للوضع • اضغط البطاقة مجددًا للتدوير");
     });
     bar.appendChild(card);
   });
@@ -776,11 +973,40 @@ function renderBuildBar(){
   exp.innerHTML = `<div class="ic2">🧩</div>توسعة (${S.expansions})`;
   exp.addEventListener("click", ()=>{ if(S.expansions>0) openExpansionPicker(); else toast("لا توجد توسعات متاحة"); });
   bar.appendChild(exp);
+  const undo = document.createElement("div");
+  undo.className="invcard"; undo.style.setProperty("--rc","#8CA0C2");
+  undo.style.opacity = UNDO.length?1:.4;
+  undo.innerHTML = `<div class="ic2">↺</div>تراجع`;
+  undo.addEventListener("click", undoBuild);
+  bar.appendChild(undo);
+}
+
+/* ---- Build-mode undo: snapshot the parts of the run a build action can change ---- */
+let UNDO = [];
+function pushUndo(){
+  UNDO.push(JSON.stringify({rooms:S.rooms, inventory:S.inventory, unlocked:S.unlocked, expansions:S.expansions,
+    crewRooms:S.crew.map(c=>({uid:c.uid, room:c.room}))}));
+  if(UNDO.length>12) UNDO.shift();
+}
+function undoBuild(){
+  if(!UNDO.length){ toast("لا يوجد ما يمكن التراجع عنه"); return; }
+  const snap = JSON.parse(UNDO.pop());
+  S.rooms = snap.rooms; S.inventory = snap.inventory; S.unlocked = snap.unlocked; S.expansions = snap.expansions;
+  snap.crewRooms.forEach(cr=>{ const c=S.crew.find(x=>x.uid===cr.uid); if(c) c.room=cr.room; });
+  armedItem = null;
+  save(); render();
+  toast("تم التراجع");
 }
 
 document.getElementById("grid").addEventListener("click",(e)=>{
   if(!document.getElementById("stage").classList.contains("buildmode")) return;
   if(!armedItem) return;
+  if(armedItem.kind==="trap"){
+    const roomEl = e.target.closest(".room");
+    if(!roomEl){ toast("اختر غرفة لتركيب الفخ"); return; }
+    tryPlaceTrap(roomEl.dataset.uid);
+    return;
+  }
   const cellEl = e.target.closest(".cell");
   if(!cellEl) return;
   const c = parseInt(cellEl.dataset.c), r = parseInt(cellEl.dataset.r);
@@ -789,15 +1015,33 @@ document.getElementById("grid").addEventListener("click",(e)=>{
 function tryPlace(anchorC, anchorR){
   const shape = rotN(SHAPES[ROOMBYID[armedItem.defId].shape], armedItem.rot);
   if(!canPlace(shape, anchorC, anchorR, unlockedSet(), occupiedMap())){ toast("لا يمكن الوضع هنا"); return; }
+  pushUndo();
   const cells = shape.map(([dc,dr])=>[anchorC+dc, anchorR+dr]);
-  const rm = {uid:"r"+(++UID), defId:armedItem.defId, cells, level:1, active:true, crew:[]};
+  const rm = {uid:"r"+(++UID), defId:armedItem.defId, cells, level:1, active:true, crew:[], traps:[], priority:"normal"};
   S.rooms.push(rm);
   S.inventory.splice(armedItem.index,1);
   armedItem = null;
   save(); render();
   toast("تم بناء "+ROOMBYID[rm.defId].nameAr);
 }
+function tryPlaceTrap(uid){
+  const rm = S.rooms.find(r=>r.uid===uid);
+  if(!rm){ return; }
+  rm.traps = rm.traps || [];
+  if(rm.traps.length>=TRAPS_PER_ROOM){ toast("هذه الغرفة ممتلئة بالفخاخ"); return; }
+  const t = TRAPBYID[armedItem.defId];
+  if(rm.traps.includes(t.id)){ toast("هذا الفخ مركّب هنا بالفعل"); return; }
+  pushUndo();
+  rm.traps.push(t.id);
+  S.inventory.splice(armedItem.index,1);
+  armedItem = null;
+  save(); render();
+  toast(`${t.icon} رُكّب في ${ROOMBYID[rm.defId].nameAr}`);
+}
 document.getElementById("buildExit").addEventListener("click", exitBuildMode);
+document.querySelectorAll("#overlayBar button").forEach(b=>{
+  b.addEventListener("click",()=>setOverlay(b.dataset.ovl));
+});
 
 /* Expansion picker: choose 1 of 3 shapes, then a valid anchor */
 function openExpansionPicker(){
@@ -859,6 +1103,7 @@ function expansionClickHandler(e){
     });
   }
   if(!ok || !touches){ toast("موقع غير صالح"); return; }
+  pushUndo();
   targetCells.forEach(([cc,rr])=>S.unlocked.push(cellKey(cc,rr)));
   S.expansions--;
   armedExpansion = null;
@@ -902,6 +1147,11 @@ function openRoomSheet(uid){
       <div class="pill">👥 ${assigned.length}/${def.crewCap}</div>
       ${bonusHtml}${penHtml}${vaultHtml}
     </div>
+    ${(rm.traps&&rm.traps.length)?`<h4 style="font-size:11px;color:var(--muted);margin:10px 0 5px">الفخاخ المركّبة</h4>
+    <div class="wrap">${rm.traps.map(tid=>{const t=TRAPBYID[tid];return t?`<div class="pill" style="color:var(--red)">${t.icon} ${t.nameAr}${t.oneShot?" (لمرة واحدة)":""} <button data-rmtrap="${tid}" style="color:var(--red);font-weight:900">✕</button></div>`:"";}).join("")}</div>`:""}
+    <h4 style="font-size:11px;color:var(--muted);margin:10px 0 5px">أولوية الطاقة</h4>
+    <div class="wrap">${["high","normal","low"].map(t=>`<button class="btn ${(rm.priority||"normal")===t?"primary":"ghost"}" data-prio="${t}" style="padding:6px 12px;font-size:11px">${({high:"عالية ↑",normal:"عادية •",low:"منخفضة ↓"})[t]}</button>`).join("")}</div>
+    <p class="sdesc" style="margin-top:6px;font-size:10.5px">عند نقص الطاقة تُطفأ الغرف ذات الأولوية المنخفضة أولًا.</p>
     <h4 style="font-size:11px;color:var(--muted);margin:10px 0 5px">الطاقم في الغرفة</h4>
     <div class="wrap">${assigned.map(c=>`<div class="pill">${ROLES[c.role].icon} ${c.name} <button data-un="${c.uid}" style="color:var(--red);font-weight:900">✕</button></div>`).join("")||'<span style="color:var(--muted);font-size:11px">لا أحد</span>'}</div>
     ${free.length && assigned.length<def.crewCap ? `<h4 style="font-size:11px;color:var(--muted);margin:10px 0 5px">تعيين عضو</h4>
@@ -913,6 +1163,14 @@ function openRoomSheet(uid){
   openSheet(body);
   document.querySelectorAll("[data-as]").forEach(b=>b.addEventListener("click",()=>{ assignCrew(b.dataset.as, uid); openRoomSheet(uid); render(); }));
   document.querySelectorAll("[data-un]").forEach(b=>b.addEventListener("click",()=>{ unassignCrew(b.dataset.un); openRoomSheet(uid); render(); }));
+  document.querySelectorAll("[data-prio]").forEach(b=>b.addEventListener("click",()=>{
+    rm.priority = b.dataset.prio; save(); render(); openRoomSheet(uid);
+  }));
+  document.querySelectorAll("[data-rmtrap]").forEach(b=>b.addEventListener("click",()=>{
+    const tid = b.dataset.rmtrap;
+    const idx = (rm.traps||[]).indexOf(tid);
+    if(idx>=0){ rm.traps.splice(idx,1); S.resources.cash += Math.round((TRAPBYID[tid]||{cost:0}).cost*0.4); save(); render(); openRoomSheet(uid); toast("تم فك الفخ"); }
+  }));
   document.getElementById("upgradeRoomBtn").addEventListener("click",()=>upgradeRoom(uid));
   document.getElementById("sellRoomBtn").addEventListener("click",()=>sellRoom(uid));
 }
@@ -1037,6 +1295,7 @@ function rollShop(paid){
   for(let i=0;i<2;i++) picks.push({kind:"room", defId: weightedRoom()});
   picks.push({kind:"crew"});
   picks.push({kind: Math.random()<0.5 ? "room" : "expansion", defId: weightedRoom()});
+  picks.push({kind:"trap", defId: TRAPS[Math.floor(Math.random()*TRAPS.length)].id});
   // preserve frozen slots
   const frozen = S.frozen||[];
   S.shop = picks.map((p,i)=> frozen[i] || p);
@@ -1050,6 +1309,7 @@ function weightedRoom(){
 function shopCardCost(p){
   if(p.kind==="crew") return 90;
   if(p.kind==="expansion") return 55;
+  if(p.kind==="trap") return (TRAPBYID[p.defId]||{cost:50}).cost;
   const def = ROOMBYID[p.defId];
   const rmult = {common:1,uncommon:1.3,rare:1.8,epic:2.6,legendary:3.6}[def.rarity];
   return Math.round(def.cost*0.9*rmult/1.6);
@@ -1086,6 +1346,14 @@ function shopCard(p,i){
       <div class="desc">دور عشوائي بصفات فريدة.</div>
       <div class="cost">${shopCardCost(p)} 💵</div></div>`;
   }
+  if(p.kind==="trap"){
+    const t = TRAPBYID[p.defId];
+    return `<div class="shopcard" data-i="${i}" style="--rc:#FF5E67">
+      <div class="rarity" style="background:#FF5E6733;color:#FF5E67">TRAP</div>
+      <span class="icobig">${t.icon}</span><div class="nm">${t.nameAr}</div>
+      <div class="desc">${t.desc}${t.power?` (${t.power}⚡)`:""}</div>
+      <div class="cost">${shopCardCost(p)} 💵</div></div>`;
+  }
   if(p.kind==="expansion"){
     return `<div class="shopcard" data-i="${i}" style="--rc:#3FDE8F">
       <div class="rarity" style="background:#3FDE8F33;color:#3FDE8F">EXPAND</div>
@@ -1108,6 +1376,7 @@ function buyShopItem(i){
   S.resources.cash -= cost;
   if(p.kind==="crew"){ const c=randomCrew(); S.crew.push(c); toast("انضم "+c.name); }
   else if(p.kind==="expansion"){ S.expansions++; toast("+1 توسعة"); }
+  else if(p.kind==="trap"){ S.inventory.push({kind:"trap", defId:p.defId}); toast("أُضيف الفخ — ركّبه على غرفة في وضع البناء"); }
   else { S.inventory.push({kind:"room", defId:p.defId, rot:0}); toast("أُضيف إلى المخزون — ضعه في وضع البناء"); }
   S.shop.splice(i,1,{kind:"bought"});
   save(); renderShopSheet(); renderTop();
@@ -1147,9 +1416,6 @@ function runEconomyTick(){
     if(def.id==="server_room") intelGain += 8*lvlMult;
     if(def.id==="hacker_lab") intelGain += 10*lvlMult;
     if(def.id==="black_market") cashGain += 12*lvlMult;
-    if(def.id==="clinic"){
-      S.crew.filter(c=>c.hp<c.maxHp && !c.room==null).forEach(c=>{});
-    }
   });
   // clinic healing for crew located in any active clinic
   S.rooms.filter(r=>r.defId==="clinic"&&r.active).forEach(rm=>{
@@ -1162,7 +1428,18 @@ function runEconomyTick(){
   });
   S.crew.forEach(c=>{ if(!c.room) c.morale=Math.max(0,c.morale-2); c.loyalty=Math.min(100,c.loyalty+ (c.morale>60?1:0)); });
   S.resources.cash += cashGain; S.resources.parts += partsGain; S.resources.intel += intelGain; S.resources.respect += respectGain;
-  S.heat = Math.max(0, S.heat - 2);
+  // Battery bookkeeping: surplus charges the bank, a deficit drains it (this is the only
+  // place charge changes, so re-rendering never silently burns stored power).
+  const pwr = applyPowerPriority(info);
+  if(pwr.deficit>0){
+    S.batteryCharge = Math.max(0, (S.batteryCharge||0) - pwr.deficit);
+    if(S.batteryCharge<=0 && batteryCapacity()>0) toast("⚠️ نفدت البطاريات — غرف ستتوقف");
+  } else {
+    S.batteryCharge = Math.min(batteryCapacity(), (S.batteryCharge||0) + Math.max(0, pwr.produced - pwr.used));
+  }
+  // Ventilation bleeds Heat; the district keeps pushing it back up.
+  const vents = S.rooms.filter(r=>r.defId==="ventilation"&&r.active).length;
+  S.heat = Math.max(0, S.heat - 2 - vents*1.5);
   const districtBonus = DISTRICTS[S.districtIdx].threat*0.6;
   S.heat += districtBonus;
   save();
@@ -1183,23 +1460,40 @@ function triggerEvent(){
 function showThreatPreview(){
   const hasSurv = S.rooms.some(r=>r.defId==="surveillance"||r.defId==="security_station");
   const hasWar = S.rooms.some(r=>r.defId==="war_room");
-  const objectives = pickObjective();
+  let objective = pickObjective();
   const isBoss = S.cycle%5===0;
-  let hints = ["نشاط مشبوه بالقرب من المخبأ..."];
-  if(hasSurv) hints.push("نقطة الدخول المتوقعة: "+ (isBoss?"عدة نقاط":"المدخل الرئيسي"));
-  if(hasWar || S.resources.intel>=30) hints.push("الهدف المحتمل: "+objectiveLabel(objectives));
-  if(S.resources.intel>=50) hints.push("قوة الهجوم: "+(isBoss?"⚠️ زعيم":(Math.min(5,1+Math.floor(S.heat/20))+"/5")));
-  const body = `<h3 class="stitle">${isBoss?"👹 BOSS INCOMING":"⚠️ تحذير مداهمة"}</h3>
-    <p class="sdesc">${isBoss?"زعيم عصابة يتجه نحو مخبأك — سيغيّر قواعد المداهمة.":"مداهمة قادمة على مخبأك."}</p>
+  const boss = isBoss ? bossForCycle(S.cycle) : null;
+  if(boss && boss.forceObjective && S.rooms.some(r=>r.defId===boss.forceObjective)) objective = boss.forceObjective;
+  if(boss && boss.targetMostValuable) objective = "valuables";
+
+  let hints = [];
+  if(boss && boss.hidePreview){
+    // THE GHOST: intel and surveillance buy you nothing this cycle.
+    hints = ["👻 لا معلومات. لا مسار معروف. لا هدف مؤكد.", "استعد لكل الاحتمالات."];
+  } else {
+    hints.push("نشاط مشبوه بالقرب من المخبأ...");
+    if(hasSurv) hints.push("نقطة الدخول: "+((boss&&boss.squads>1)?"⚠️ نقطتان مختلفتان":"المدخل الرئيسي"));
+    if(hasWar || S.resources.intel>=30) hints.push("الهدف المحتمل: "+objectiveLabel(objective));
+    if(S.resources.intel>=50) hints.push("قوة الهجوم: "+(isBoss?"⚠️ زعيم":(Math.min(5,1+Math.floor(S.heat/20))+"/5")));
+  }
+  const body = `<h3 class="stitle">${boss?`${boss.icon} ${boss.nameAr}`:"⚠️ تحذير مداهمة"}</h3>
+    <p class="sdesc">${boss?`<b style="color:var(--red)">${boss.name}</b> — ${boss.desc}`:"مداهمة قادمة على مخبأك."}</p>
     <div class="pillrow">${hints.map(h=>`<div class="pill">${h}</div>`).join("")}</div>
     <p class="sdesc">استعد الطاقم في الغرف المناسبة الآن. الأوامر التكتيكية ستكون متاحة أثناء المداهمة.</p>
+    <button class="btn ghost block" id="previewPathBtn" style="margin-bottom:8px">👁️ اعرض المسار المتوقع على المخبأ</button>
     <button class="btn danger block" id="startRaidBtn">ابدأ المداهمة ⚔️</button>`;
   openModal(body);
-  S._pendingObjective = objectives; S._pendingBoss = isBoss;
+  S._pendingObjective = objective; S._pendingBoss = isBoss;
   document.getElementById("startRaidBtn").addEventListener("click",()=>{ closeModal(); startRaid(); });
+  document.getElementById("previewPathBtn").addEventListener("click",()=>{
+    if(boss && boss.hidePreview){ toast("👻 الشبح لا يكشف مساره"); return; }
+    closeModal(); setOverlay("path");
+    toast("هذا هو المسار المتوقع — عدّل دفاعك ثم ابدأ من الزر بالأسفل");
+  });
 }
 function objectiveLabel(o){
-  const labels={vault:"سرقة الكاش 💰",generator:"تدمير المولد 🔋",crew:"أسر عضو 🎯",intel:"سرقة المعلومات 🗂️",workshop:"تخريب الورشة 🔧",control_room:"الوصول لغرفة التحكم 🎛️"};
+  const labels={vault:"سرقة الكاش 💰",generator:"تدمير المولد 🔋",crew:"أسر عضو 🎯",intel:"سرقة المعلومات 🗂️",
+    workshop:"تخريب الورشة 🔧",control_room:"الوصول لغرفة التحكم 🎛️",valuables:"نهب أغلى غرفة 🎩"};
   return labels[o]||o;
 }
 function pickObjective(){
@@ -1230,25 +1524,50 @@ function buildGraph(){
   });
   return nodes;
 }
-function roomDefenseWeight(rm){
+// How dangerous a room LOOKS to an attacker choosing a route. Traps add their weight;
+// a Decoy Room has negative weight, so the route is deliberately lured through it.
+// A Decoy Room makes its whole WING read as abandoned, not just its own tile — otherwise
+// the detour through it always costs an extra hop and no attacker would ever take the bait.
+function decoyAura(){
+  const infl = {};
+  const t = TRAPBYID["decoy_room"];
+  S.rooms.forEach(d=>{
+    if(!(d.traps||[]).includes("decoy_room")) return;
+    if(t.power>0 && !d.active) return; // an unpowered decoy fools nobody
+    S.rooms.forEach(o=>{
+      if(o.uid!==d.uid && cellsAdjacent(d.cells,o.cells)) infl[o.uid] = (infl[o.uid]||0) + 1.2;
+    });
+  });
+  return infl;
+}
+function roomDefenseWeight(rm, aura){
   const def = ROOMBYID[rm.defId];
   let w = 1;
   if(def.cat==="DEFENSE") w += 3;
   if(def.id==="guard_room") w += S.crew.filter(c=>c.room===rm.uid).length*1.5;
+  (rm.traps||[]).forEach(tid=>{
+    const t = TRAPBYID[tid]; if(!t) return;
+    if(t.power>0 && !rm.active) return; // an unpowered trap deters nobody
+    w += t.weight;
+  });
+  if(aura && aura[rm.uid]) w -= aura[rm.uid];
   if(!rm.active) w = Math.max(0.4,w-2); // powered-down defenses are weaker
-  return w;
+  return Math.max(0.2, w);
 }
-function findPath(targetUid){
+// Dijkstra from any entry node ("entrance" or a breached room) to the objective.
+function findPathFrom(startNode, targetUid){
   const graph = buildGraph();
-  const dist = {entrance:0}; const prev={}; const visited=new Set();
-  const pq = [{n:"entrance",d:0}];
+  const aura = decoyAura();
+  if(!graph[startNode]) return null;
+  const dist = {[startNode]:0}; const prev={}; const visited=new Set();
+  const pq = [{n:startNode,d:0}];
   while(pq.length){
     pq.sort((a,b)=>a.d-b.d);
     const {n} = pq.shift();
     if(visited.has(n)) continue; visited.add(n);
-    (graph[n]?.neighbors||[]).forEach(nb=>{
+    ((graph[n]||{}).neighbors||[]).forEach(nb=>{
       const rm = S.rooms.find(r=>r.uid===nb);
-      const w = rm?roomDefenseWeight(rm):1;
+      const w = rm?roomDefenseWeight(rm, aura):1;
       const nd = dist[n]+w;
       if(dist[nb]===undefined || nd<dist[nb]){ dist[nb]=nd; prev[nb]=n; pq.push({n:nb,d:nd}); }
     });
@@ -1256,7 +1575,19 @@ function findPath(targetUid){
   if(dist[targetUid]===undefined) return null;
   const path=[targetUid]; let cur=targetUid;
   while(prev[cur]!==undefined){ cur=prev[cur]; path.unshift(cur); }
-  return path; // ["entrance", uid1, uid2, ...]
+  return path; // [startNode, uid1, uid2, ...]
+}
+function findPath(targetUid){ return findPathFrom("entrance", targetUid); }
+// A second breach point for multi-entry bosses: the room deepest from the front door,
+// i.e. the back wall / roof access nobody bothered to defend.
+function rearBreachRoom(){
+  if(!S.rooms.length) return null;
+  return S.rooms.slice().sort((a,b)=>distFromEntrance(b)-distFromEntrance(a))[0];
+}
+function roomValue(rm){
+  const def = ROOMBYID[rm.defId];
+  const rmult = {common:1,uncommon:1.4,rare:2,epic:3,legendary:4.5}[def.rarity]||1;
+  return def.cost*rmult*(1+(rm.level-1)*0.5);
 }
 function resolveTargetRoom(objective){
   if(objective==="vault") return S.rooms.find(r=>r.defId==="vault") || S.rooms.find(r=>r.defId==="secret_vault");
@@ -1271,41 +1602,81 @@ function resolveTargetRoom(objective){
 let RAID = null;
 function startRaid(){
   S.phase="raid";
-  const objective = S._pendingObjective || pickObjective();
-  const isBoss = S._pendingBoss;
-  const targetRoom = resolveTargetRoom(objective);
+  const boss = S._pendingBoss ? bossForCycle(S.cycle) : null;
+  let objective = S._pendingObjective || pickObjective();
+  // BREAKER forces the Generator; THE COLLECTOR ignores objectives and goes for the richest room.
+  if(boss && boss.forceObjective && S.rooms.some(r=>r.defId===boss.forceObjective)) objective = boss.forceObjective;
+  let targetRoom = resolveTargetRoom(objective);
+  if(boss && boss.targetMostValuable && S.rooms.length){
+    targetRoom = S.rooms.slice().sort((a,b)=>roomValue(b)-roomValue(a))[0];
+    objective = "valuables";
+  }
   if(!targetRoom || !S.rooms.length){
-    // nothing to raid — trivial pass
+    RAID = {objective, boss, squads:[], log:[], done:false, spentTraps:new Set(), surged:[], tick:0, commands:0};
     finishRaid(true, "لا يوجد ما يستحق المداهمة بعد.");
     return;
   }
-  const path = findPath(targetRoom.uid) || ["entrance", targetRoom.uid];
   const heatMult = 1+S.heat/100;
   const districtMult = 1+DISTRICTS[S.districtIdx].threat*0.18;
-  const bossMult = isBoss?1.8:1;
-  const squadPower = Math.round(10*heatMult*districtMult*bossMult);
+  const squadPower = Math.round(10*heatMult*districtMult*(boss?1.8:1));
+  const hpMult = boss?boss.hpMult:1, dmgMult = boss?boss.dmgMult:1;
+  const squadCount = (boss && boss.squads) ? boss.squads : 1;
+
+  const squads = [];
+  for(let i=0;i<squadCount;i++){
+    let startNode = "entrance", entryLabel = "المدخل الرئيسي";
+    if(i>0){ // THE TWINS: the second squad breaches the least-defended rear room
+      const rear = rearBreachRoom();
+      if(rear){ startNode = rear.uid; entryLabel = "اختراق خلفي عبر "+ROOMBYID[rear.defId].nameAr; }
+    }
+    const path = findPathFrom(startNode, targetRoom.uid) || [startNode, targetRoom.uid];
+    const hp = Math.round(squadPower*6*hpMult/squadCount*(squadCount>1?1.3:1));
+    squads.push({
+      id:"sq"+i, name: squadCount>1 ? (i===0?"التوأم الأول":"التوأم الثاني") : "المهاجمون",
+      hp, hpMax:hp, dmg: Math.round(squadPower*0.9*dmgMult),
+      path, pathIdx: startNode==="entrance"?1:0,
+      targetUid: targetRoom.uid, entryLabel, dead:false,
+    });
+  }
+  // Alarm traps buy extra tactical commands.
+  const alarms = S.rooms.filter(r=>r.active).reduce((n,r)=>n+(r.traps||[]).filter(t=>t==="alarm").length,0);
   RAID = {
-    objective, targetUid: targetRoom.uid, path, pathIdx:1, isBoss,
-    attackerHp: Math.round(squadPower*6), attackerHpMax:0, attackerDmg: Math.round(squadPower*0.9),
-    commands: 3 + (S.rooms.some(r=>r.defId==="control_room"&&r.active)?1:0),
-    log: [], done:false, ticking:false,
+    objective, boss, targetUid:targetRoom.uid, squads,
+    commands: 3 + (S.rooms.some(r=>r.defId==="control_room"&&r.active)?1:0) + alarms,
+    log:[], done:false, tick:0, spentTraps:new Set(), surged:[],
     lockdownUid:null, decoyUsed:false,
   };
-  RAID.attackerHpMax = RAID.attackerHp;
   S.raidTargetUid = targetRoom.uid;
-  S.raidClearedUids = new Set();
+  S.raidClearedUids = []; // plain array: this is serialized into the save, a Set would not survive
   render();
   openRaidModal();
-  raidLog(`<b>مداهمة!</b> الهدف: ${objectiveLabel(objective)}${isBoss?' — <b style="color:var(--red)">زعيم</b>':''}`);
+  if(boss) raidLog(`<b style="color:var(--red)">${boss.icon} ${boss.nameAr}</b> — ${boss.desc}`);
+  raidLog(`<b>مداهمة!</b> الهدف: ${objectiveLabel(RAID.objective)}`);
+  squads.forEach(sq=>raidLog(`↘️ ${sq.name} يدخل من: ${sq.entryLabel}`));
   raidTick();
 }
 function openRaidModal(){
-  const body = `<h3 class="stitle">⚔️ مداهمة جارية</h3>
-    <div class="pillrow"><div class="pill">🎯 ${objectiveLabel(RAID.objective)}</div><div class="pill">🧨 قوة المهاجم: <span id="atkHp">${RAID.attackerHp}</span></div></div>
+  const body = `<h3 class="stitle">⚔️ مداهمة جارية${RAID.boss?` — ${RAID.boss.icon} ${RAID.boss.nameAr}`:""}</h3>
+    <div class="pillrow"><div class="pill">🎯 ${objectiveLabel(RAID.objective)}</div></div>
+    <div class="pillrow" id="squadRow"></div>
     <div id="log"></div>
     <div class="tactrow" id="tactrow"></div>`;
   openModal(body);
+  updateRaidHud();
   renderTactRow();
+}
+function updateRaidHud(){
+  const el = document.getElementById("squadRow");
+  if(!el || !RAID) return;
+  el.innerHTML = RAID.squads.map(sq=>
+    `<div class="pill" style="color:${sq.dead?'var(--dim)':'var(--red)'}">${sq.dead?"☠️":"🧨"} ${sq.name}: ${sq.hp}/${sq.hpMax}</div>`).join("");
+}
+function leadSquad(){
+  if(!RAID) return null;
+  const alive = RAID.squads.filter(s=>!s.dead);
+  if(!alive.length) return null;
+  // the squad with the fewest rooms left between it and the objective
+  return alive.sort((a,b)=>(a.path.length-a.pathIdx)-(b.path.length-b.pathIdx))[0];
 }
 function renderTactRow(){
   const cmds = [
@@ -1318,7 +1689,7 @@ function renderTactRow(){
     {id:"empower",ic:"🔌",label:"Emerg. Power"},
   ];
   const el = document.getElementById("tactrow");
-  if(!el) return;
+  if(!el || !RAID) return;
   el.innerHTML = cmds.map(c=>`<button class="tactbtn" data-cmd="${c.id}" ${RAID.commands<=0?"disabled":""}><span class="ic4">${c.ic}</span>${c.label}</button>`).join("")
     + `<div style="grid-column:span 4;text-align:center;font-size:10px;color:var(--muted);margin-top:2px">أوامر متبقية: ${RAID.commands}</div>`;
   el.querySelectorAll("[data-cmd]").forEach(b=>b.addEventListener("click",()=>useTactical(b.dataset.cmd)));
@@ -1329,76 +1700,127 @@ function raidLog(msg){
   if(el){ el.innerHTML = RAID.log.slice(-14).map(m=>`<div>${m}</div>`).join(""); el.scrollTop = el.scrollHeight; }
 }
 function useTactical(cmd){
-  if(RAID.commands<=0 || RAID.done) return;
+  if(!RAID || RAID.commands<=0 || RAID.done) return;
+  const sq = leadSquad();
+  if(!sq) return;
   RAID.commands--;
-  const curUid = RAID.path[RAID.pathIdx];
+  const curUid = sq.path[sq.pathIdx];
   const curRoom = S.rooms.find(r=>r.uid===curUid);
   if(cmd==="lockdown"){
     RAID.lockdownUid = curUid;
-    raidLog(`🔒 تم إغلاق باب ${curRoom?ROOMBYID[curRoom.defId].nameAr:''} مؤقتًا — تأخير المهاجم.`);
-    RAID.attackerHp += Math.round(RAID.attackerHpMax*0.06); // attacker must find another way, small extra grind
+    raidLog(`🔒 إغلاق باب ${curRoom?ROOMBYID[curRoom.defId].nameAr:"الممر"} — ${sq.name} يفقد جولة.`);
   } else if(cmd==="rally"){
     S.crew.forEach(c=>{ if(c.room===curUid) c.dmg = Math.round(c.dmg*1.25); });
-    raidLog(`📣 تجميع الطاقم — ضرر مضاعف مؤقتًا في الغرفة الحالية.`);
+    raidLog(`📣 تجميع الطاقم — ضرر أعلى في غرفة المواجهة.`);
   } else if(cmd==="overclock"){
-    const tech = S.rooms.find(r=>["intel_room","server_room","hacker_lab"].includes(r.defId));
-    if(tech){ RAID.attackerHp = Math.max(1, RAID.attackerHp - Math.round(RAID.attackerHpMax*0.1)); raidLog(`⚡ Overclock — ${ROOMBYID[tech.defId].nameAr} تُربك المهاجم.`); }
-    else raidLog(`⚡ لا توجد غرفة تقنية لتشغيلها.`);
+    const tech = S.rooms.find(r=>["intel_room","server_room","hacker_lab"].includes(r.defId)&&r.active);
+    if(tech){
+      RAID.squads.forEach(s=>{ if(!s.dead) s.hp = Math.max(1, s.hp - Math.round(s.hpMax*0.1)); });
+      raidLog(`⚡ Overclock — ${ROOMBYID[tech.defId].nameAr} تُربك كل المهاجمين.`);
+    } else raidLog(`⚡ لا توجد غرفة تقنية تعمل.`);
   } else if(cmd==="medkit"){
     const injured = S.crew.filter(c=>c.hp<c.maxHp).sort((a,b)=>a.hp-b.hp)[0];
     if(injured){ injured.hp = Math.min(injured.maxHp, injured.hp+Math.round(injured.maxHp*0.4)); raidLog(`💉 تم علاج ${injured.name}.`); }
     else raidLog(`💉 لا أحد يحتاج علاجًا الآن.`);
   } else if(cmd==="fallback"){
-    const inDanger = S.crew.filter(c=>c.room===curUid);
-    inDanger.forEach(c=>{ c.room=null; });
-    raidLog(`↩️ تم سحب الطاقم من غرفة المواجهة.`);
+    S.crew.filter(c=>c.room===curUid).forEach(c=>{ c.room=null; });
+    raidLog(`↩️ سحب الطاقم من غرفة المواجهة.`);
   } else if(cmd==="empower"){
-    if(curRoom){ curRoom.active=true; raidLog(`🔌 إعادة تشغيل طارئة لـ ${ROOMBYID[curRoom.defId].nameAr}.`); }
+    if(curRoom){
+      curRoom.active=true;
+      RAID.surged = RAID.surged.filter(x=>x.uid!==curRoom.uid); // also clears a Grid surge
+      raidLog(`🔌 إعادة تشغيل طارئة لـ ${ROOMBYID[curRoom.defId].nameAr}.`);
+    }
   } else if(cmd==="decoy"){
-    if(!RAID.decoyUsed){ RAID.decoyUsed=true; RAID.attackerDmg = Math.round(RAID.attackerDmg*0.6); raidLog(`🎭 مسار وهمي يشتت جزءًا من المهاجمين — ضررهم انخفض.`); }
+    if(!RAID.decoyUsed){
+      RAID.decoyUsed=true;
+      RAID.squads.forEach(s=>{ s.dmg = Math.round(s.dmg*0.6); });
+      raidLog(`🎭 مسار وهمي يشتت المهاجمين — ضررهم انخفض.`);
+    } else raidLog(`🎭 الخدعة استُخدمت بالفعل.`);
   }
-  save(); render(); renderTactRow();
-  const hpEl=document.getElementById("atkHp"); if(hpEl) hpEl.textContent=RAID.attackerHp;
+  save(); render(); renderTactRow(); updateRaidHud();
+}
+function markCleared(uid){
+  S.raidClearedUids = S.raidClearedUids || [];
+  if(S.raidClearedUids.indexOf(uid)<0) S.raidClearedUids.push(uid);
+}
+// One squad advances one room. Returns nothing; sets RAID.done via finishRaid on a breach.
+function stepSquad(sq){
+  const curUid = sq.path[sq.pathIdx];
+  if(curUid===undefined){ finishRaid(false, `${sq.name} وصل إلى الهدف!`); return; }
+  if(curUid===RAID.lockdownUid){
+    raidLog(`⛔ ${sq.name}: الباب مقفل — يبحثون عن طريق آخر...`);
+    RAID.lockdownUid = null;
+    return;
+  }
+  const rm = S.rooms.find(r=>r.uid===curUid);
+  if(!rm){ sq.pathIdx++; return; }
+  const def = ROOMBYID[rm.defId];
+  const defenders = S.crew.filter(c=>c.room===curUid && c.hp>0);
+  let defDmg = defenders.reduce((s,c)=>s+c.dmg,0) + (def.cat==="DEFENSE"?6:0) + (def.id==="armory"?4:0);
+  if(defenders.length===1 && defenders[0].trait.name==="Lone Wolf") defDmg = Math.round(defDmg*1.3);
+  if(!rm.active) defDmg = Math.round(defDmg*0.5);
+  // traps in this room fire
+  let trapDmg = 0, dmgReduce = 0; const fired = [];
+  (rm.traps||[]).forEach(tid=>{
+    const t = TRAPBYID[tid]; if(!t) return;
+    if(t.power>0 && !rm.active) return; // no power, no trap
+    const key = curUid+":"+tid+":"+sq.id;
+    if(t.oneShot && RAID.spentTraps.has(key)) return;
+    if(t.dmg){ trapDmg += t.dmg; fired.push(t.icon+" "+t.nameAr); }
+    if(t.dmgReduce) dmgReduce = Math.max(dmgReduce, t.dmgReduce);
+    if(t.oneShot) RAID.spentTraps.add(key);
+  });
+  const total = defDmg + trapDmg;
+  sq.hp = Math.max(0, sq.hp - total);
+  if(fired.length) raidLog(`<span class="hit">${fired.join(" + ")}</span> ينفجر على ${sq.name} (${trapDmg} ضرر).`);
+  if(defDmg>0) raidLog(`<span class="hit">🥊 ${def.nameAr}</span> يلحق ${defDmg} ضرر بـ${sq.name}. (متبقٍ ${sq.hp})`);
+  else if(!fired.length) raidLog(`⚠️ لا مقاومة في ${def.nameAr} — ${sq.name} يمر بلا خسائر.`);
+  if(sq.hp<=0){
+    sq.dead = true;
+    markCleared(curUid);
+    raidLog(`<b class="win">✅ تم القضاء على ${sq.name} في ${def.nameAr}</b>`);
+    return;
+  }
+  // counterattack
+  if(defenders.length){
+    const target = defenders[Math.floor(Math.random()*defenders.length)];
+    const incoming = Math.max(1, Math.round(sq.dmg*(1-dmgReduce)));
+    target.hp = Math.max(0, target.hp - incoming);
+    raidLog(`<span class="hit">💥</span> ${target.name} يتلقى ${incoming} ضرر${dmgReduce?" (خفّفه الدخان)":""}.`);
+    if(target.hp<=0){
+      target.injured = true; target.hp = 1;
+      const panic = S.rooms.find(r=>r.defId==="panic_room");
+      target.room = panic ? panic.uid : null;
+      raidLog(`🩸 ${target.name} أُصيب${panic?" ونُقل إلى غرفة الذعر":" وتم سحبه"}.`);
+    }
+  }
+  markCleared(curUid);
+  if(curUid===sq.targetUid){ finishRaid(false, `${sq.name} وصل إلى الهدف!`); return; }
+  sq.pathIdx++;
 }
 function raidTick(){
-  if(RAID.done) return;
-  RAID.ticking = true;
+  if(!RAID || RAID.done) return;
   setTimeout(()=>{
-    if(RAID.done) return;
-    const curUid = RAID.path[RAID.pathIdx];
-    if(!curUid){ // reached objective node itself with nothing left blocking
-      finishRaid(false, "وصل المهاجمون إلى الهدف!");
-      return;
+    if(!RAID || RAID.done) return;
+    RAID.tick++;
+    // THE GRID: periodic power surge knocks rooms offline for a couple of ticks
+    if(RAID.boss && RAID.boss.powerSurge && RAID.tick % RAID.boss.powerSurge === 0){
+      const live = S.rooms.filter(r=>r.active).sort(()=>Math.random()-0.5).slice(0,2);
+      live.forEach(r=>{ r.active=false; RAID.surged.push({uid:r.uid, until:RAID.tick+2}); });
+      if(live.length) raidLog(`🕸️ <b>POWER SURGE</b> — توقفت ${live.map(r=>ROOMBYID[r.defId].nameAr).join(" و ")} مؤقتًا.`);
     }
-    if(curUid===RAID.lockdownUid){
-      raidLog(`⛔ الباب مقفل — يبحث المهاجمون عن طريق آخر...`);
-      RAID.lockdownUid=null; // one-time delay
-      raidTick(); return;
+    RAID.surged = RAID.surged.filter(x=>{
+      if(RAID.tick>=x.until){ const rm=S.rooms.find(r=>r.uid===x.uid); if(rm) rm.active=true; return false; }
+      return true;
+    });
+    for(const sq of RAID.squads){
+      if(sq.dead) continue;
+      stepSquad(sq);
+      if(RAID.done) return; // a breach ends the raid immediately
     }
-    const rm = S.rooms.find(r=>r.uid===curUid);
-    if(!rm){ RAID.pathIdx++; raidTick(); return; }
-    const def = ROOMBYID[rm.defId];
-    const defenders = S.crew.filter(c=>c.room===curUid && c.hp>0);
-    let defDmg = defenders.reduce((s,c)=>s+c.dmg,0) + (def.cat==="DEFENSE"?6:0) + (def.id==="armory"?4:0);
-    if(defenders.length===1 && defenders[0].trait.name==="Lone Wolf") defDmg = Math.round(defDmg*1.3);
-    if(!rm.active) defDmg = Math.round(defDmg*0.5);
-    RAID.attackerHp = Math.max(0, RAID.attackerHp - defDmg);
-    if(defDmg>0) raidLog(`<span class="hit">🥊 ${ROOMBYID[rm.defId].nameAr}</span> يلحق ${defDmg} ضرر بالمهاجمين. (متبقٍ ${RAID.attackerHp})`);
-    else raidLog(`⚠️ لا مدافعين في ${ROOMBYID[rm.defId].nameAr} — المهاجمون يمرون بلا مقاومة.`);
-    if(RAID.attackerHp<=0){ finishRaid(true, "تم صد المداهمة!"); return; }
-    // attacker strikes back at defenders/room
-    if(defenders.length){
-      const target = defenders[Math.floor(Math.random()*defenders.length)];
-      target.hp = Math.max(0, target.hp - RAID.attackerDmg);
-      raidLog(`<span class="hit">💥</span> ${target.name} يتلقى ${RAID.attackerDmg} ضرر.`);
-      if(target.hp<=0){ target.injured=true; target.hp=1; target.room=null; raidLog(`🩸 ${target.name} أُصيب بشدة وتم سحبه للأمان.`); }
-    } else if(rm.uid===RAID.targetUid){
-      raidLog(`💢 المهاجمون يخربون ${ROOMBYID[rm.defId].nameAr}!`);
-    }
-    S.raidClearedUids.add(curUid);
-    RAID.pathIdx++;
-    render();
-    if(RAID.pathIdx>=RAID.path.length){ finishRaid(false, "وصل المهاجمون إلى الهدف!"); return; }
+    if(RAID.squads.every(s=>s.dead)){ finishRaid(true, "تم صد المداهمة!"); return; }
+    render(); updateRaidHud();
     raidTick();
   }, 1500);
 }
@@ -1413,19 +1835,37 @@ function finishRaid(defenderWin, msg){
 }
 function resolveOutcome(win){
   let cashLoss=0, respectGain=0, cashReward=0, partsReward=0, intelReward=0;
+  const bossMult = RAID.boss ? 2 : 1; // a boss is a bigger risk and a bigger payday
   if(win){
-    respectGain = 10 + Math.round(S.heat/5);
-    cashReward = 30 + Math.round(S.heat*1.2);
-    partsReward = 10;
+    respectGain = (10 + Math.round(S.heat/5)) * bossMult;
+    cashReward = (30 + Math.round(S.heat*1.2)) * bossMult;
+    partsReward = 10 * bossMult;
     S.heat = Math.max(0, S.heat-6);
   } else {
     if(RAID.objective==="vault"){ cashLoss = Math.round(S.resources.cash*0.25); S.resources.cash-=cashLoss; }
     if(RAID.objective==="generator"){ const g=S.rooms.find(r=>r.defId==="generator"); if(g) g.active=false; }
     if(RAID.objective==="intel"){ S.resources.intel = Math.max(0, S.resources.intel-15); }
+    if(RAID.objective==="valuables"){
+      // THE COLLECTOR strips the room it reached: it loses a level, or is looted for parts.
+      const rm = S.rooms.find(r=>r.uid===RAID.targetUid);
+      if(rm && rm.level>1){ rm.level--; }
+      else { S.resources.parts = Math.max(0, S.resources.parts-25); }
+      cashLoss = Math.round(S.resources.cash*0.15); S.resources.cash-=cashLoss;
+    }
     respectGain = -8;
     S.heat = Math.max(0, S.heat-2);
     checkGameOver();
   }
+  // One-shot traps that fired are spent, win or lose.
+  const spent = Array.from(RAID.spentTraps||[]);
+  S.rooms.forEach(rm=>{
+    (rm.traps||[]).slice().forEach(tid=>{
+      const t = TRAPBYID[tid];
+      if(t && t.oneShot && spent.some(k=>k.startsWith(rm.uid+":"+tid+":"))){
+        rm.traps.splice(rm.traps.indexOf(tid),1);
+      }
+    });
+  });
   S.resources.respect = Math.max(0, S.resources.respect+respectGain);
   S.resources.cash += cashReward;
   S.resources.parts += partsReward;
@@ -1516,7 +1956,7 @@ function showSetup(){
 function placeStarter(defId, c, r){
   const shape = SHAPES[ROOMBYID[defId].shape];
   const cells = shape.map(([dc,dr])=>[c+dc,r+dr]);
-  S.rooms.push({uid:"r"+(++UID), defId, cells, level:1, active:true, crew:[]});
+  S.rooms.push({uid:"r"+(++UID), defId, cells, level:1, active:true, crew:[], traps:[], priority:"normal"});
 }
 function afterBoot(){
   document.querySelector('[data-tab="hideout"]').classList.add("active");

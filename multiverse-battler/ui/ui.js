@@ -124,6 +124,7 @@
     S.phase = 'resources';
     S.paused = false;
     renderMatch();
+    banner('الجولة ' + S.match.round);
     const p = me();
     const inc = p.lastIncome;
     if (inc) {
@@ -171,6 +172,7 @@
     S.phase = 'combat';
     renderMatch();
     buildTokens();
+    banner('قتال!', 'fight');
     let last = performance.now(), acc = 0;
     const step = (ts) => {
       if (S.phase !== 'combat') return;
@@ -323,6 +325,32 @@
   }
   function flash(el, cls, ms) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
 
+  // ---- visual effects (pure presentation)
+  function burst(el, color, n, o) {
+    o = o || {};
+    if (!el || document.querySelectorAll('.fxp').length > 120) return;
+    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, d = (o.r || 26) * (0.5 + Math.random());
+      const q = document.createElement('i');
+      q.className = 'fxp' + (o.cls ? ' ' + o.cls : '');
+      q.style.left = cx + 'px'; q.style.top = cy + 'px';
+      q.style.setProperty('--tx', Math.cos(a) * d + 'px');
+      q.style.setProperty('--ty', (o.up ? -d * 1.3 : Math.sin(a) * d) + 'px');
+      q.style.setProperty('--c', color);
+      q.style.setProperty('--s', (o.s || 4 + Math.random() * 4) + 'px');
+      document.body.appendChild(q);
+      setTimeout(() => q.remove(), 750);
+    }
+  }
+  function banner(text, cls) {
+    const b = document.createElement('div');
+    b.className = 'round-banner ' + (cls || '');
+    b.innerHTML = '<span>' + text + '</span>';
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 1500);
+  }
+
   function drawCombat(skipFx) {
     const c = S.combat;
     const byId = {};
@@ -357,10 +385,17 @@
       if (e.type === 'damage' && f && el) {
         if (e.amount >= 4 || e.crit) floatAt(el, e.amount, e.crit ? 'crit' : e.skill ? 'skill' : '');
         flash(el, 'hit', 110);
+        if (e.amount >= 4 || e.crit) burst(el, e.crit ? '#ffd24a' : e.skill ? '#ff6b73' : '#ffffff', e.crit ? 12 : e.skill ? 8 : 3, { r: e.crit ? 34 : 22 });
+        if (e.crit || f.isHero) flash($('field'), 'shake', 260);
+      } else if (e.type === 'death' && f && el) {
+        burst(el, '#a9a9a9', 16, { r: 38, s: 7 }); burst(el, '#ff6b73', 6, { r: 30 });
+        if (f.isHero) flash($('field'), 'shake', 400);
       } else if (e.type === 'heal' && f && el) {
         floatAt(el, '+' + e.amount, 'heal');
+        burst(el, '#5bf08b', 5, { up: true, cls: 'plus', r: 22, s: 7 });
       } else if (e.type === 'cast' && f && el) {
         flash(el, 'cast', 500); floatAt(el, e.name, 'label', 26);
+        burst(el, (WORLDS[f.world] || {}).color || '#ffd24a', 14, { r: 44, s: 6 });
       } else if (e.type === 'attack' && byId[e.from] && byId[e.to]) {
         const ea = anchorEl(byId[e.from]), eb = anchorEl(byId[e.to]);
         if (!ea || !eb) continue;
@@ -466,6 +501,9 @@
     };
     const row = (side, ch, mine) => [0, 1, 2, 3].map((k) => cell(side, ch + (mine ? k : 3 - k), mine)).join('');
     const o = 1 - v;
+    const fe = $('field');
+    fe.style.setProperty('--mw', WORLDS[HEROES[p.heroId].world].color);
+    fe.style.setProperty('--ew', WORLDS[HEROES[m.players[o].heroId].world].color);
     $('slots').innerHTML =
       row(o, 'b', false) + row(o, 'f', false) +
       `<div class="divider"><span>${sc && !inCombat ? 'آخر تشكيلة للخصم (استطلاع)' : inCombat ? '' : 'الخصم — لم يقاتل بعد'}</span></div>` +
@@ -505,7 +543,7 @@
 
   function pieceHTML(u, o) {
     const def = UNITS[u.defId];
-    return cardHTML(def, { size: 'mini', star: u.star, items: u.items, sel: o && o.sel, k: u.uid,
+    return cardHTML(def, { size: 'mini', star: u.star, items: u.items, sel: o && o.sel, k: u.uid, cls: S.pop && S.pop.uid === u.uid ? (S.pop.merged ? 'pop merged' : 'pop') : '',
       attrs: `draggable="true" data-drag="unit:${u.uid}" title="${esc(def.name)} ${'★'.repeat(u.star)} — ${ROLES[def.role].name} / ${WORLDS[def.world].name}"` });
   }
   function heroPieceHTML(p) {
@@ -913,8 +951,19 @@
     buy: (d, el, e) => {
       if (!prepActive() || e.target.closest('[data-act="detail"]')) return;
       const r = S.match.buy(S.v, +d.idx);
-      if (res(r) && r.merged && r.merged.length) r.merged.forEach((u) => toast(`تطوير! ${UNITS[u.defId].name} ${'★'.repeat(u.star)}`, 'good'));
+      S.pop = null;
+      if (res(r)) {
+        if (r.merged && r.merged.length) {
+          r.merged.forEach((u) => toast(`تطوير! ${UNITS[u.defId].name} ${'★'.repeat(u.star)}`, 'good'));
+          S.pop = { uid: r.merged[r.merged.length - 1].uid, merged: true };
+        } else S.pop = { uid: r.unit.uid };
+      }
       renderMatch();
+      if (S.pop) {
+        const pe = document.querySelector(`[data-drag="unit:${S.pop.uid}"]`);
+        if (pe) { if (S.pop.merged) { burst(pe, '#ffd24a', 26, { r: 60, s: 7 }); burst(pe, '#ffffff', 10, { r: 40 }); banner('★ ترقية!', 'merge'); } else burst(pe, '#ffffff', 6, { r: 26 }); }
+        setTimeout(() => { S.pop = null; }, 800);
+      }
     },
     buyFromUpg: (d) => { const r = S.match.buy(S.v, +d.idx); if (res(r) && r.merged && r.merged.length) toast(`تطوير! ${UNITS[r.merged[r.merged.length - 1].defId].name} ${'★'.repeat(r.merged[r.merged.length - 1].star)}`, 'good'); renderMatch(); upgradesModal(); },
     buyItem: (d) => { if (prepActive() && res(S.match.buyItem(S.v, +d.idx))) renderMatch(); },
@@ -1015,6 +1064,23 @@
     const [zone, key] = t.dataset.drop.split(':');
     if (zone === 'board') clickSlot(key); else clickBench(+key);
   });
+
+  // card tilt + glare under the mouse
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const c = e.target.closest && e.target.closest('.tcard.hc.full:not(.empty)');
+    if (S.tilt && S.tilt !== c) { S.tilt.style.removeProperty('--rx'); S.tilt.style.removeProperty('--ry'); S.tilt = null; }
+    if (!c) return;
+    const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    c.style.setProperty('--ry', (x - 0.5) * 18 + 'deg'); c.style.setProperty('--rx', (0.5 - y) * 18 + 'deg');
+    c.style.setProperty('--gx', x * 100 + '%'); c.style.setProperty('--gy', y * 100 + '%');
+    S.tilt = c;
+  });
+  // the four heroes on the main menu
+  (function fillMenu() {
+    const el = $('menu-heroes');
+    if (el) el.innerHTML = Object.values(HEROES).map((h, i) => cardHTML(h, { k: 'menu' + i })).join('');
+  })();
 
   // debug / testing hook
   globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML };

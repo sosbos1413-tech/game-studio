@@ -52,6 +52,13 @@
       shards += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}L${x3.toFixed(1)} ${y3.toFixed(1)}z" fill="${W.color}" opacity=".35"/>`;
     }
     // manga-panel frame: cut corners for units, octagon for heroes
+    const hasChar = AMB.chars && AMB.chars.has(def.id);
+    const art = hasChar ? AMB.chars.draw(def.id)
+      : `<g transform="translate(26 24) scale(2.0)" color="#fff" style="filter:drop-shadow(2px 2px 0 #000)">${ICONS[ROLE_ICON[role]]}</g>`;
+    // small role badge (units only) so the role stays readable now that the art is a face
+    const badge = !isHero && hasChar
+      ? `<g transform="translate(8 66)"><circle cx="11" cy="11" r="11" fill="#000"/><circle cx="11" cy="11" r="9" fill="${ring}"/><g transform="translate(4 4) scale(.58)" color="#121010">${ICONS[ROLE_ICON[role]]}</g></g>`
+      : '';
     const frame = isHero ? 'M30 3H70L97 30V70L70 97H30L3 70V30Z' : 'M3 20L20 3H97V80L80 97H3Z';
     return `<svg class="portrait ${opts.cls || ''}" viewBox="0 0 100 100" aria-label="${def.name}">
       <defs>
@@ -64,8 +71,9 @@
         <rect width="100" height="100" fill="url(#${gid}h)"/>
         <g transform="rotate(${rot} 50 50)">${shards.replace(/opacity=".35"/g, 'opacity=".55" stroke="#000" stroke-width="1"').replace(new RegExp(W.color, 'g'), '#fff6dc')}</g>
         <text x="50" y="72" text-anchor="middle" font-size="58" fill="#000" opacity=".22" font-weight="900">${W.glyph}</text>
+        ${art}
       </g>
-      <g transform="translate(26 24) scale(2.0)" color="#fff" style="filter:drop-shadow(2px 2px 0 #000)">${ICONS[ROLE_ICON[role]]}</g>
+      ${badge}
       <path d="${frame}" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
       <path d="${frame}" fill="none" stroke="${ring}" stroke-width="2.5" stroke-linejoin="round" transform="translate(50 50) scale(.9) translate(-50 -50)"/>
     </svg>`;

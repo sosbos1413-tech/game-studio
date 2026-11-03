@@ -479,7 +479,7 @@
       return `<div class="card ${ok ? '' : 'cant'} ${pair ? 'pair' : ''}" style="--tc:var(--t${d.tier})" data-act="buy" data-idx="${i}" title="${esc(d.skill.name)}: ${esc(d.skill.text)}">
         <span class="cost">${icon('gold')}${d.cost}</span><span class="info" data-act="detail" data-id="${id}">i</span>
         ${portrait(d, { k: 'sh' + i })}<div class="cn">${d.name}</div>
-        <div class="cm" style="color:${WORLDS[d.world].color}">${WORLDS[d.world].name}</div><div class="cm">${ROLES[d.role].name}</div>
+        <span class="wtag" style="--w:${WORLDS[d.world].color}">${WORLDS[d.world].name}</span><div class="cm">${ROLES[d.role].name}</div>
         ${ow ? `<span class="owned">${pair ? 'سيتطور ★★!' : 'تملك ' + ow.n}</span>` : ''}</div>`;
     }).join('');
     const items = p.itemShop.map((id, i) => {
@@ -656,7 +656,7 @@
         ${skRows ? `<table><tr><th></th><th>★</th><th>★★</th><th>★★★</th></tr>${skRows}</table>` : ''}</div>
       <div class="hint"><b>التطوير:</b> ${CFG.stars.copiesPerStar} نسخ ★ = ★★ ، و ${CFG.stars.copiesPerStar} نسخ ★★ = ★★★ (الحد الأقصى). الصحة والهجوم ×${SM[2]} ثم ×${SM[3]}؛ السرعة والمدى ثابتان كي لا تصبح وحدة واحدة غير قابلة للمواجهة.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-        <div><b style="color:${W.color}">${SYNERGIES[d.world].name}</b>${synOf(d.world)}</div>
+        <div><span class="wtag" style="--w:${W.color}">${SYNERGIES[d.world].name}</span>${synOf(d.world)}</div>
         <div><b>${SYNERGIES[d.role].name}</b>${synOf(d.role)}</div></div>
       <p class="hint">${W.lore}</p>${match}`);
   }
@@ -794,7 +794,7 @@
       <div class="filters">${fb('world', '', 'كل العوالم')}${Object.values(WORLDS).map((w) => fb('world', w.id, w.name)).join('')}</div>
       <div class="filters">${fb('role', '', 'كل الأدوار')}${Object.values(ROLES).map((r) => fb('role', r.id, r.name)).join('')}</div>
       <div class="codex-grid">${units.map((d) => `<div class="card" style="--tc:var(--t${d.tier})" data-act="detail" data-id="${d.id}"><span class="cost">${icon('gold')}${d.cost}</span>${portrait(d, { k: 'cu' })}
-        <div class="cn">${d.name}</div><div class="cm" style="color:${WORLDS[d.world].color}">${WORLDS[d.world].name}</div><div class="cm">${ROLES[d.role].name} · ${d.skill.name}</div></div>`).join('')}</div>
+        <div class="cn">${d.name}</div><span class="wtag" style="--w:${WORLDS[d.world].color}">${WORLDS[d.world].name}</span><div class="cm">${ROLES[d.role].name} · ${d.skill.name}</div></div>`).join('')}</div>
       <h3>المعدات والتعاويذ</h3>
       <div class="codex-grid">${Object.values(ITEMS).map((it) => `<div class="card ${it.kind}"><span class="cost">${icon('gold')}${it.cost}</span>${icon(it.icon, 'big-ic')}<div class="cn">${it.name}</div><div class="cm">${it.kind === 'equip' ? 'معدة' : 'تعويذة'}</div><div class="cm">${it.text}</div></div>`).join('')}</div>`;
   }

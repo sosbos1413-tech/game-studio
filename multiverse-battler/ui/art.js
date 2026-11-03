@@ -23,7 +23,7 @@
     heart: '<path d="M12 20.5S3 15 3 8.8A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 9 2.2C21 15 12 20.5 12 20.5z" fill="currentColor"/>',
   };
   const ROLE_ICON = { guardian: 'shield', fighter: 'sword', assassin: 'dagger', mage: 'orb', marksman: 'bow', support: 'cross', hero: 'crown' };
-  const TIER_RING = { 1: '#9aa6b8', 2: '#4fb3ff', 3: '#ffcf4a' };
+  const TIER_RING = { 1: '#d9cfbd', 2: '#3d9bf0', 3: '#ffc21a' };
 
   function icon(name, cls) {
     return `<svg class="ic ${cls || ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ICONS.star}</svg>`;
@@ -51,13 +51,23 @@
       const x3 = 50 + Math.cos(a - 0.2) * r2, y3 = 50 + Math.sin(a - 0.2) * r2;
       shards += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}L${x3.toFixed(1)} ${y3.toFixed(1)}z" fill="${W.color}" opacity=".35"/>`;
     }
+    // manga-panel frame: cut corners for units, octagon for heroes
+    const frame = isHero ? 'M30 3H70L97 30V70L70 97H30L3 70V30Z' : 'M3 20L20 3H97V80L80 97H3Z';
     return `<svg class="portrait ${opts.cls || ''}" viewBox="0 0 100 100" aria-label="${def.name}">
-      <defs><radialGradient id="${gid}" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="${W.color}" stop-opacity=".95"/><stop offset=".55" stop-color="${W.color}" stop-opacity=".35"/><stop offset="1" stop-color="#0b0f1d"/></radialGradient></defs>
-      <rect x="2" y="2" width="96" height="96" rx="${isHero ? 48 : 20}" fill="url(#${gid})"/>
-      <g transform="rotate(${rot} 50 50)">${shards}</g>
-      <text x="50" y="66" text-anchor="middle" font-size="46" fill="#fff" opacity=".13" font-weight="700">${W.glyph}</text>
-      <g transform="translate(26 24) scale(2.0)" color="#fff" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))">${ICONS[ROLE_ICON[role]]}</g>
-      <rect x="2" y="2" width="96" height="96" rx="${isHero ? 48 : 20}" fill="none" stroke="${ring}" stroke-width="${isHero ? 5 : 4}"/>
+      <defs>
+        <linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${W.color}"/><stop offset="1" stop-color="#1a1412"/></linearGradient>
+        <pattern id="${gid}h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(${rot % 90})"><circle cx="2.5" cy="2.5" r="1.1" fill="#000" opacity=".28"/></pattern>
+        <clipPath id="${gid}c"><path d="${frame}"/></clipPath>
+      </defs>
+      <g clip-path="url(#${gid}c)">
+        <rect width="100" height="100" fill="url(#${gid})"/>
+        <rect width="100" height="100" fill="url(#${gid}h)"/>
+        <g transform="rotate(${rot} 50 50)">${shards.replace(/opacity=".35"/g, 'opacity=".55" stroke="#000" stroke-width="1"').replace(new RegExp(W.color, 'g'), '#fff6dc')}</g>
+        <text x="50" y="72" text-anchor="middle" font-size="58" fill="#000" opacity=".22" font-weight="900">${W.glyph}</text>
+      </g>
+      <g transform="translate(26 24) scale(2.0)" color="#fff" style="filter:drop-shadow(2px 2px 0 #000)">${ICONS[ROLE_ICON[role]]}</g>
+      <path d="${frame}" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
+      <path d="${frame}" fill="none" stroke="${ring}" stroke-width="2.5" stroke-linejoin="round" transform="translate(50 50) scale(.9) translate(-50 -50)"/>
     </svg>`;
   }
 

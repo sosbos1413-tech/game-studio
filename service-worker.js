@@ -6,6 +6,7 @@ self.addEventListener('message',event=>{if(event.data==='SKIP_WAITING')self.skip
 self.addEventListener('fetch',event=>{
   const req=event.request;if(req.method!=='GET')return;
   const url=new URL(req.url);if(url.origin!==self.location.origin)return;
+  if(url.pathname.includes('/multiverse-battler/'))return; // separate game: never cache it as the studio's index.html
   if(req.headers.has('range'))return; // Do not interfere with streamed MP3 range requests.
   if(req.mode==='navigate'){
     event.respondWith((async()=>{try{const fresh=await fetch(req);const c=await caches.open(CACHE);c.put('./index.html',fresh.clone());return fresh}catch(e){return (await caches.match(req))||(await caches.match('./index.html'))}})());return;

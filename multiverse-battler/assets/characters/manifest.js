@@ -3,5 +3,6 @@ globalThis.AMB = globalThis.AMB || {};
 AMB.IMAGES = {
   "kagira": "assets/characters/kagira.jpg",
   "merin": "assets/characters/merin.jpg",
-  "orath": "assets/characters/orath.jpg"
+  "orath": "assets/characters/orath.jpg",
+  "zerokai": "assets/characters/zerokai.jpg"
 };

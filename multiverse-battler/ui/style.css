@@ -704,3 +704,153 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 /* "i" moved onto the art (bottom centre) so the header is all name */
 .tcard.full .tc-art .tc-info { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); z-index: 3; width: 16px; height: 16px; border-radius: 50%; background: #fff; color: #000; border: 2px solid #000; font-size: 10px; line-height: 12px; box-shadow: 1px 1px 0 #000; }
 .tcard.full .tc-head { min-height: 30px; }
+
+/* =====================================================================
+   FANTASY CARD FRAME  (original artwork; common card-game conventions)
+   metal frame · oval portrait · gem cost · attack/health discs · name ribbon
+   ===================================================================== */
+.tcard.hc { --m1: #e0a56a; --m2: #9a6330; --m3: #523216; --par: #efe2c2; --rb: var(--wc);
+  position: relative; display: block; border: 0; background: none; box-shadow: none; clip-path: none; overflow: visible; padding: 0; color: var(--ink); }
+.tcard.hc.t1, .tcard.hc.mini.s1 { --m1: #e0a56a; --m2: #9a6330; --m3: #523216; }
+.tcard.hc.t2, .tcard.hc.mini.s2 { --m1: #f4f8fd; --m2: #9fb0c4; --m3: #4f5d70; }
+.tcard.hc.t3, .tcard.hc.mini.s3 { --m1: #fff1a6; --m2: #e3a800; --m3: #7a5200; }
+.tcard.hc.hero { --m1: #ffb4a0; --m2: #d62f3a; --m3: #6a0f16; }
+.tcard.hc .ic { display: inline-block; }
+
+/* ---- full card (shop / codex) */
+.tcard.hc.full { --hw: 116px; width: var(--hw); height: 162px; flex: none; cursor: pointer; filter: drop-shadow(0 3px 0 #000); transition: transform .12s; }
+.tcard.hc.full:hover:not(.empty):not(.cant) { transform: translateY(-6px) rotate(-1deg); }
+.tcard.hc.full.cant { opacity: .5; filter: grayscale(.7) drop-shadow(0 3px 0 #000); }
+.tcard.hc.full.pair { animation: pairlift .7s ease-in-out infinite alternate; }
+@keyframes pairlift { to { transform: translateY(-5px); } }
+.hc-frame { position: absolute; inset: 0; border-radius: 14px; overflow: hidden; border: 3px solid #000;
+  background: linear-gradient(150deg, var(--m1), var(--m2) 55%, var(--m3)); }
+.hc-frame::before { content: ''; position: absolute; inset: 4px; border-radius: 10px; border: 2px solid #000a;
+  background: radial-gradient(circle at 1px 1px, #3a2a1a1c 1px, transparent 1.5px) 0 0 / 6px 6px, linear-gradient(#f6ecd0, var(--par)); }
+.hc-frame::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 8% 6%, #fff7 0 3px, transparent 4px), radial-gradient(circle at 92% 6%, #fff7 0 3px, transparent 4px); }
+.hc-art { position: absolute; left: 12px; right: 12px; top: 9px; height: 88px; border-radius: 50% / 46%; overflow: hidden; background: #1d1815; }
+.hc-art .portrait { display: block; width: 100%; height: 100%; }
+.hc-ring { position: absolute; left: 7px; right: 7px; top: 4px; height: 98px; border-radius: 50% / 46%; pointer-events: none; padding: 5px;
+  background: conic-gradient(from 200deg, var(--m1), var(--m2), var(--m3), var(--m2), var(--m1), var(--m2), var(--m1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000); }
+.hc-name { position: absolute; left: -5px; right: -5px; top: 94px; height: 24px; display: grid; place-items: center; z-index: 2;
+  background: linear-gradient(var(--rb), color-mix(in srgb, var(--rb) 55%, #000)); border-top: 2px solid #000; border-bottom: 2px solid #000;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%, 8px 50%); }
+.hc-name b { color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; max-width: 92px; overflow: hidden; text-overflow: ellipsis; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; }
+.tcard.hc.item.equip { --rb: #3a322c; } .tcard.hc.item.spell { --rb: var(--red); }
+.hc-icons { position: absolute; left: 0; right: 0; top: 121px; display: flex; justify-content: center; gap: 7px; z-index: 2; }
+.hc-icons .bd { position: static; width: 22px; height: 22px; }
+.hc-icons .bd .ic { width: 13px; height: 13px; }
+.hc-gems { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); z-index: 3; }
+.hc-gems .ic { width: 11px; height: 11px; filter: drop-shadow(0 0 0 #000) drop-shadow(1px 1px 0 #000); }
+.hc-chips { position: absolute; left: 6px; right: 6px; top: 122px; bottom: 6px; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 2px 8px; z-index: 2; direction: ltr; }
+.hc-chips .sv { font-size: 13px; color: var(--ink); }
+.hc-chips .sv .ic { width: 14px; height: 14px; color: #a06800; }
+
+/* cost gem (hex crystal hanging off the top-left corner) */
+.hc-cost { position: absolute; top: -9px; left: -8px; width: 34px; height: 38px; z-index: 5; display: grid; place-items: center; filter: drop-shadow(0 2px 0 #000); }
+.hc-cost i { position: absolute; inset: 0; clip-path: polygon(50% 0, 100% 24%, 100% 76%, 50% 100%, 0 76%, 0 24%); background: #000; }
+.hc-cost i::after { content: ''; position: absolute; inset: 3px; clip-path: polygon(50% 0, 100% 24%, 100% 76%, 50% 100%, 0 76%, 0 24%); background: radial-gradient(circle at 35% 28%, #fff6b8, #f7c21a 45%, #b87a00); }
+.hc-cost b { position: relative; font-family: var(--display); font-size: 19px; font-weight: 400; color: #fff; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+.item .hc-cost i::after { background: radial-gradient(circle at 35% 28%, #fff6b8, #f7c21a 45%, #b87a00); }
+
+/* attack / health discs */
+.hc-atk, .hc-hp { position: absolute; bottom: -8px; z-index: 5; width: 36px; height: 36px; border-radius: 50%; border: 3px solid #000; display: grid; place-items: center; box-shadow: 0 2px 0 #000; overflow: hidden; }
+.hc-atk { left: -8px; background: radial-gradient(circle at 35% 28%, #fff3a8, #f2b300 55%, #a06800); }
+.hc-hp { right: -8px; background: radial-gradient(circle at 35% 28%, #ffb1b8, #e0262f 55%, #7a0f16); border-radius: 50% 50% 50% 50% / 42% 42% 58% 58%; }
+.hc-atk .ic, .hc-hp .ic { position: absolute; width: 70%; height: 70%; opacity: .32; color: #000; }
+.hc-atk b, .hc-hp b { position: relative; font-family: var(--display); font-weight: 400; font-size: 17px; color: #fff; line-height: 1; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+
+.hc-own { position: absolute; top: 14px; right: 16px; z-index: 6; min-width: 24px; height: 22px; padding: 0 6px; border-radius: 11px; border: 2px solid #000; background: #fff; font-weight: 700; font-size: 12px; display: grid; place-items: center; box-shadow: 1px 1px 0 #000; }
+.hc-own.up { background: var(--gold); animation: pairpulse .6s infinite alternate; }
+.hc-info { position: absolute; top: -7px; right: -6px; z-index: 6; width: 19px; height: 19px; border-radius: 50%; border: 2px solid #000; background: #fff; color: #000; font-size: 11px; line-height: 15px; text-align: center; font-weight: 700; cursor: help; box-shadow: 1px 1px 0 #000; }
+.tcard.hc.item .hc-art.iconart { display: grid; place-items: center; background: repeating-conic-gradient(#2a221d 0 8deg, #1d1815 8deg 16deg); }
+.tcard.hc.item .hc-art .big-ic { width: 46%; height: auto; color: var(--gold); filter: drop-shadow(2px 2px 0 #000); }
+.tcard.hc.item.spell .hc-art .big-ic { color: #ff7a82; }
+.tcard.hc.full .sheen { z-index: 1; }
+.tcard.hc.full.t3 .hc-frame .sheen { opacity: 1; animation: sheen 2.8s linear infinite; }
+
+/* ---- mini card = board minion: oval portrait + ring + two discs */
+.tcard.hc.mini { width: 100%; height: 100%; container-type: inline-size; }
+.tcard.hc.mini .hc-art { left: 8%; right: 8%; top: 4%; height: 76%; }
+.tcard.hc.mini .hc-ring { left: 4%; right: 4%; top: 1%; height: 82%; padding: max(3px, 4cqw); }
+.tcard.hc.mini.s3 .hc-ring { filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000) drop-shadow(0 0 7px #ffd24acc); }
+.tcard.hc.mini .hc-atk, .tcard.hc.mini .hc-hp { width: 31cqw; height: 31cqw; bottom: 0; border-width: max(2px, 3cqw); }
+.tcard.hc.mini .hc-atk { left: -2%; } .tcard.hc.mini .hc-hp { right: -2%; }
+.tcard.hc.mini .hc-atk b, .tcard.hc.mini .hc-hp b { font-size: max(10px, 15cqw); }
+.tcard.hc.mini .bd.role { top: 1%; left: 0; width: 22cqw; height: 22cqw; z-index: 5; }
+.tcard.hc.mini .bd.role .ic { width: 60%; height: 60%; }
+.tcard.hc.mini .stars { position: absolute; top: -3px; right: 3%; z-index: 5; font-size: max(11px, 14cqw); }
+.tcard.hc.mini .hc-its, .tcard.hc.mini .hc-bar { position: absolute; left: 30%; right: 30%; bottom: 5%; z-index: 4; display: flex; justify-content: center; gap: 1px; }
+.tcard.hc.mini .hc-its i { display: grid; place-items: center; width: 14cqw; height: 14cqw; background: #000; border: 1px solid var(--gold); color: var(--gold); }
+.tcard.hc.mini .hc-its .ic { width: 70%; height: 70%; }
+.tcard.hc.mini .hc-bar { flex-direction: column; gap: 2px; }
+.hc-bar .hpb { position: relative; height: 7px; background: #000; border: 1.5px solid #000; overflow: hidden; border-radius: 3px; }
+.hc-bar .hpb i { position: absolute; inset: 0 auto 0 0; background: #3fd66f; }
+.tcard.foe .hc-bar .hpb i { background: var(--red); }
+.hc-bar .hpb b { position: absolute; inset: 0 auto 0 0; background: #fff; }
+.hc-bar .mpb { position: relative; height: 3px; background: #000; border-radius: 2px; }
+.hc-bar .mpb i { position: absolute; inset: 0 auto 0 0; background: #5fe3ff; }
+.tcard.hc.mini .sheen { border-radius: 50%; }
+.tcard.hc.mini.s3 .hc-art .sheen { opacity: 1; animation: sheen 2.8s linear infinite; }
+
+/* states (mini) */
+.tcard.hc.mini.sel { outline: none; filter: drop-shadow(0 0 0 var(--gold)) drop-shadow(0 0 6px var(--gold)) drop-shadow(0 0 2px var(--gold)); z-index: 3; }
+.tcard.hc.mini.ghost { opacity: .5; filter: grayscale(.55); }
+.tcard.hc.mini.dead { filter: grayscale(1) brightness(.5); }
+.tcard.hc.mini.stunned .hc-art { filter: grayscale(1) contrast(1.3); }
+.tcard.hc.mini.shielded .hc-ring { filter: drop-shadow(0 0 6px #5fe3ff) drop-shadow(0 0 2px #5fe3ff); }
+.tcard.hc.mini.hit .hc-art { filter: invert(1); }
+.tcard.hc.mini.cast { animation: none; }
+.tcard.hc.mini.cast .hc-ring { animation: ringcast .5s ease-out; }
+@keyframes ringcast { from { filter: drop-shadow(0 0 14px #ffd24a) drop-shadow(0 0 4px #fff); } }
+.tcard.hc.mini.shielded, .tcard.hc.mini.s2, .tcard.hc.mini.s3 { box-shadow: none; border: 0; }
+.tcard.hc.mini.s2 .stars { color: #fff; } .tcard.hc.mini.s3 .stars { color: var(--gold); }
+
+/* fit: cards a bit taller → compact shop bar; bench uses small minions */
+.shopbar { align-items: flex-end; }
+.codex-grid { grid-template-columns: repeat(auto-fill, minmax(124px, 124px)); gap: 22px 16px; }
+.codex-grid .tcard.hc.full { width: 116px; }
+@media (max-width: 860px) { .tcard.hc.full { --hw: 100px; width: 100px; height: 140px; } }
+
+/* spacing so hanging gems/discs never touch the neighbouring card */
+.shop-cards, .item-cards { gap: 16px; padding: 10px 6px 12px; }
+.shopbar { padding: 6px 12px 4px; }
+.hc-atk b.sm, .hc-hp b.sm { font-size: 12px; }
+.tcard.hc.mini .hc-atk b.sm, .tcard.hc.mini .hc-hp b.sm { font-size: max(8px, 11cqw); }
+
+/* "will upgrade" = steady gold glow (a moving card is hard to click) */
+.tcard.hc.full.pair { animation: pairglow2 .8s ease-in-out infinite alternate; }
+@keyframes pairglow2 { from { filter: drop-shadow(0 3px 0 #000) drop-shadow(0 0 2px #f2b300); } to { filter: drop-shadow(0 3px 0 #000) drop-shadow(0 0 9px #ffd24a); } }
+/* slimmer shop so the field still fits without scrolling */
+.tcard.hc.full { --hw: 108px; width: 108px; height: 151px; }
+.hc-art { left: 11px; right: 11px; top: 8px; height: 80px; }
+.hc-ring { left: 6px; right: 6px; top: 3px; height: 90px; }
+.hc-name { top: 86px; height: 22px; }
+.hc-name b { max-width: 84px; font-size: 10.5px; }
+.hc-icons { top: 111px; gap: 6px; }
+.hc-icons .bd { width: 21px; height: 21px; }
+.hc-chips { top: 112px; }
+.hc-atk, .hc-hp { width: 33px; height: 33px; }
+.hc-atk b, .hc-hp b { font-size: 16px; }
+.hc-cost { width: 31px; height: 35px; }
+.hc-cost b { font-size: 17px; }
+.shop-cards, .item-cards { gap: 14px; padding: 8px 6px 10px; }
+.shopbar { padding: 4px 12px 2px; }
+.codex-grid .tcard.hc.full { width: 108px; }
+.codex-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 118px)); }
+.field-wrap { --cwv: clamp(76px, calc((100vh - 366px) / 4.44), 112px); }
+@media (max-width: 860px) { .field-wrap { --cwv: min(calc((100vw - 46px) / 4), 128px); } .tcard.hc.full { --hw: 100px; width: 100px; height: 140px; } }
+@media (max-height: 520px) and (min-width: 600px) { .field-wrap { --cwv: 92px; } }
+
+/* spacing pass: icons clear of the discs, own-badge off the face */
+.hc-art { top: 8px; height: 76px; }
+.hc-ring { top: 3px; height: 86px; }
+.hc-name { top: 82px; }
+.hc-icons { top: 106px; gap: 5px; }
+.hc-icons .bd { width: 19px; height: 19px; }
+.hc-icons .bd .ic { width: 11px; height: 11px; }
+.hc-chips { top: 108px; }
+.hc-gems { bottom: 3px; }
+.hc-own { top: 62px; right: auto; left: 11px; }

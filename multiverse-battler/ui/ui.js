@@ -227,7 +227,7 @@
   const gems = (n) => `<span class="gems t${n}">${icon('gem').repeat(n)}</span>`;
   const sv = (ic, v, cls) => `<span class="sv ${cls || ''}">${icon(ic)}<b>${v}</b></span>`;
 
-  /** One card component, two sizes: 'full' (shop/codex) and 'mini' (field/bench, no name). */
+  /** Fantasy-card look. 'full' = shop/codex card; 'mini' = board minion (oval portrait + attack/health discs). */
   function cardHTML(def, o) {
     o = o || {};
     const W = WORLDS[def.world];
@@ -237,24 +237,32 @@
     const sc = isHero ? '' : ' s' + star;
     const sel = o.sel ? ' sel' : '';
     const attrs = o.attrs || '';
-    const st = isHero ? null : cardStats(def, star);
-    const worldBd = disc('world', ART.WORLD_ICON[def.world], W.name);
-    const roleBd = isHero ? disc('role hero', 'crown', 'بطل') : disc('role', ART.ROLE_ICON[def.role], ROLES[def.role].name);
-    const skillBd = isHero ? '' : disc('skill', ART.SKILL_ICON[def.skill.type] || 'star', def.skill.name);
+    const atk = isHero ? def.board.atk : cardStats(def, star).atk;
+    const hp = isHero ? (o.life != null ? o.life : 100) : cardStats(def, star).hp;
+    const numCls = (n) => (String(n).length > 3 ? ' class="sm"' : '');
+    const atkBd = `<span class="hc-atk">${icon('sword')}<b${numCls(atk)}>${atk}</b></span>`;
+    const hpBd = `<span class="hc-hp">${icon('heart')}<b${numCls(hp)}>${hp}</b></span>`;
+    const roleD = isHero ? disc('role hero', 'crown', 'بطل') : disc('role', ART.ROLE_ICON[def.role], ROLES[def.role].name);
     if (o.size === 'mini') {
       const items = (o.items || []).map((it) => `<i title="${esc(ITEMS[it].name)}">${icon(ITEMS[it].icon)}</i>`).join('');
-      const bar = o.live
-        ? `<div class="tc-live"><div class="hpb"><b></b><i></i></div>${isHero ? '' : '<div class="mpb"><i></i></div>'}</div>`
-        : `<div class="tc-mini">${isHero ? sv('heart', o.life != null ? o.life : '') : sv('heart', st.hp) + sv('sword', st.atk)}<span class="its">${items}</span></div>`;
-      return `<div class="tcard mini ${tier}${sc}${sel} ${o.cls || ''}" style="--wc:${W.color}" title="${esc(def.name)}" ${attrs}>
-        <div class="tc-art">${portrait(def, { bare: true, k: o.k })}${roleBd}${isHero ? '' : stars(star)}${star > 1 ? '<i class="sheen"></i>' : ''}</div>
-        <div class="tc-foot">${bar}</div></div>`;
+      const mid = o.live ? `<div class="hc-bar"><div class="hpb"><b></b><i></i></div>${isHero ? '' : '<div class="mpb"><i></i></div>'}</div>` : (items ? `<div class="hc-its">${items}</div>` : '');
+      return `<div class="tcard hc mini ${tier}${sc}${sel} ${o.cls || ''}" style="--wc:${W.color}" title="${esc(def.name)}" ${attrs}>
+        <div class="hc-art">${portrait(def, { bare: true, k: o.k })}<i class="sheen"></i></div><div class="hc-ring"></div>
+        ${roleD}${isHero ? '' : stars(star)}${atkBd}${hpBd}${mid}</div>`;
     }
-    const own = o.own ? `<span class="bd own ${o.own.pair ? 'up' : ''}">${o.own.pair ? '↑' : '×' + o.own.n}</span>` : '';
-    return `<div class="tcard full ${tier}${sc} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
-      <div class="tc-head">${isHero ? '' : `<span class="tc-cost">${icon('coin')}${def.cost}</span>`}<b class="tc-name">${def.name}</b></div>
-      <div class="tc-art">${portrait(def, { bare: true, k: o.k })}${worldBd}${roleBd}${skillBd}${own}<span class="tc-info" data-act="${isHero ? 'heroInfo' : 'detail'}" data-id="${def.id}" title="تفاصيل">i</span><i class="sheen"></i></div>
-      <div class="tc-bar">${isHero ? sv('crown', '') : sv('heart', st.hp) + gems(def.tier) + sv('sword', st.atk)}</div></div>`;
+    const own = o.own ? `<span class="hc-own ${o.own.pair ? 'up' : ''}">${o.own.pair ? '↑' : '×' + o.own.n}</span>` : '';
+    const iconsRow = isHero
+      ? disc('world', ART.WORLD_ICON[def.world], W.name) + roleD
+      : disc('world', ART.WORLD_ICON[def.world], W.name) + roleD + disc('skill', ART.SKILL_ICON[def.skill.type] || 'star', def.skill.name);
+    return `<div class="tcard hc full ${tier}${sc} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
+      <div class="hc-frame"><i class="sheen"></i></div>
+      <div class="hc-art">${portrait(def, { bare: true, k: o.k })}</div><div class="hc-ring"></div>
+      <div class="hc-name"><b>${def.name}</b></div>
+      <div class="hc-icons">${iconsRow}</div>
+      ${isHero ? '' : gems(def.tier).replace('class="gems', 'class="hc-gems gems')}
+      ${isHero ? '' : `<span class="hc-cost"><i></i><b>${def.cost}</b></span>`}
+      ${atkBd}${hpBd}${own}
+      <span class="hc-info" data-act="${isHero ? 'heroInfo' : 'detail'}" data-id="${def.id}" title="تفاصيل">i</span></div>`;
   }
 
   const fmtStat = (stat, v) => (['startMana', 'range'].includes(stat) ? '+' + v : '+' + Math.round(v * 100) + '%');
@@ -266,10 +274,12 @@
   }
   function itemCardHTML(it, o) {
     o = o || {};
-    return `<div class="tcard full item ${it.kind} ${o.cls || ''}" ${o.attrs || ''} title="${esc(it.name + ': ' + it.text)}">
-      <div class="tc-head"><span class="tc-cost">${icon('coin')}${it.cost}</span><b class="tc-name">${it.name}</b></div>
-      <div class="tc-art iconart">${icon(it.icon, 'big-ic')}${disc(it.kind === 'equip' ? 'role' : 'skill', it.kind === 'equip' ? 'shield' : 'star', it.kind === 'equip' ? 'معدة' : 'تعويذة')}</div>
-      <div class="tc-bar chips">${itemChips(it)}</div></div>`;
+    return `<div class="tcard hc full item ${it.kind} ${o.cls || ''}" ${o.attrs || ''} title="${esc(it.name + ': ' + it.text)}">
+      <div class="hc-frame"></div>
+      <div class="hc-art iconart">${icon(it.icon, 'big-ic')}</div><div class="hc-ring"></div>
+      <div class="hc-name"><b>${it.name}</b></div>
+      <div class="hc-chips">${itemChips(it)}</div>
+      <span class="hc-cost"><i></i><b>${it.cost}</b></span></div>`;
   }
 
   // ---- combat field: same grid as the prep field, cards stay in their cells
@@ -284,7 +294,7 @@
     S.cardEls = {};
     S.combat.fighters.forEach((fi) => {
       const el = document.querySelector(`[data-fid="${fi.id}"]`);
-      if (el) S.cardEls[fi.id] = { el, hp: el.querySelector('.hpb i'), lag: el.querySelector('.hpb b'), mp: el.querySelector('.mpb i'), lagW: 100 };
+      if (el) S.cardEls[fi.id] = { el, hp: el.querySelector('.hpb i'), lag: el.querySelector('.hpb b'), mp: el.querySelector('.mpb i'), hpn: el.querySelector('.hc-hp b'), lagW: 100, last: -1 };
     });
   }
 
@@ -324,6 +334,7 @@
       t.lagW = Math.max(pct, t.lagW - 1.2);
       t.lag.style.width = t.lagW + '%';
       if (t.mp) t.mp.style.width = Math.min(100, (f.mana / f.maxMana) * 100) + '%';
+      if (t.hpn) { const v = Math.max(0, Math.ceil(f.isHero ? f.hp / CFG.combat.heroHpScale : f.hp)); if (v !== t.last) { t.hpn.textContent = v; t.hpn.className = v > 999 ? 'sm' : ''; t.last = v; } }
       const cl = t.el.classList;
       cl.toggle('dead', !f.alive);
       cl.toggle('retreated', f.alive && f.isHero && !f.onBoard);

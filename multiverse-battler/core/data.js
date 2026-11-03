@@ -151,18 +151,18 @@
    */
   const HEROES = {
     kagira: {
-      id: 'kagira', name: 'كاغيرا', title: 'سيدة اللهب', world: 'ember', style: 'هجومي — ضغط مبكر وضرر متفجر',
+      id: 'kagira', name: 'كيرو', title: 'الشعلة العنيدة', world: 'ember', style: 'هجومي — متهور ومتفائل، ضغط مبكر وضرر متفجر',
       board: { atk: 85, as: 0.8, range: 1, def: 0.2, crit: 0.1 },
       passive: { id: 'blazing_will', name: 'إرادة متقدة', text: 'عندما يصبح البطل مكشوفًا يكتسب الحلفاء +25% هجوم.' },
       abilities: [
-        { id: 'inferno_banner', name: 'راية الجحيم', cost: 3, type: 'buffAllies', atkPct: 0.3, dur: 6,
+        { id: 'inferno_banner', name: 'هتاف المعركة', cost: 3, type: 'buffAllies', atkPct: 0.3, dur: 6,
           text: '+30% هجوم لجميع الحلفاء لمدة 6 ثوانٍ.' },
-        { id: 'meteor', name: 'سقوط النيزك', cost: 4, type: 'damageCluster', dmg: 200, scale: 25, radius: 1.6,
+        { id: 'meteor', name: 'نيزك الجموح', cost: 4, type: 'damageCluster', dmg: 200, scale: 25, radius: 1.6,
           text: 'نيزك على أكثف تجمع للأعداء (200 + 25 لكل جولة).' },
       ],
     },
     merin: {
-      id: 'merin', name: 'ميرين', title: 'حارسة المدّ', world: 'tide', style: 'صمود — دروع وعلاج ومعارك طويلة',
+      id: 'merin', name: 'ميرين', title: 'قائدة المدّ الهادئة', world: 'tide', style: 'صمود — قيادة هادئة، دروع وعلاج ومعارك طويلة',
       board: { atk: 78, as: 0.8, range: 3, def: 0.1, crit: 0.05 },
       passive: { id: 'deep_reserve', name: 'مخزون عميق', text: '+1 جوهر إضافي كل جولة.' },
       abilities: [
@@ -173,7 +173,7 @@
       ],
     },
     zerokai: {
-      id: 'zerokai', name: 'زيرو-كاي', title: 'عدّاء الشبكة', world: 'neon', style: 'إيقاع — اقتصاد مرن وسرعة',
+      id: 'zerokai', name: 'زيرو-كاي', title: 'الظلّ المشفّر', world: 'neon', style: 'إيقاع — غامض يسبق خصمه بخطوة، اقتصاد مرن وسرعة',
       board: { atk: 80, as: 0.85, range: 4, def: 0.05, crit: 0.15 },
       passive: { id: 'free_reroll', name: 'وصول خلفي', text: 'أول تحديث للمتجر في كل جولة مجاني.' },
       abilities: [
@@ -184,7 +184,7 @@
       ],
     },
     orath: {
-      id: 'orath', name: 'أوراث', title: 'الجذر العتيق', world: 'sylvan', style: 'دفاعي — خط أمامي صلب وتحكم',
+      id: 'orath', name: 'أوراث', title: 'حارس الجذور العتيق', world: 'sylvan', style: 'دفاعي — حارس صامت لا يتزحزح، خط أمامي صلب وتحكم',
       board: { atk: 75, as: 0.65, range: 1, def: 0.3, crit: 0.05 },
       passive: { id: 'ancient_bark', name: 'لحاء عتيق', text: 'وحدات الصف الأمامي تكتسب +15% صحة قصوى.' },
       abilities: [

@@ -13,10 +13,15 @@
   const S = (o) => Object.assign({ skin: '#f2c9a5', eyeStyle: 'sharp', brow: 'fierce', mouth: 'smirk', collar: 'v', extra: [], prop: null }, o);
   const SPEC = {
     // ---- heroes
-    kagira: S({ hair: '#ff4a2a', hs: 'long', eye: '#ffb300', outfit: '#2a1210', trim: '#ff7a2a', collar: 'armor', extra: ['horns', 'headband'], acc: '#ffcf4a', prop: 'sword' }),
-    merin: S({ skin: '#f4d6c0', hair: '#2bb6c9', hs: 'long', eye: '#7ff0ff', eyeStyle: 'round', brow: 'calm', mouth: 'smile', outfit: '#1b4d6b', trim: '#e8f7ff', collar: 'robe', extra: ['halo', 'shell'], acc: '#ffe28a', prop: 'staff', top: 'crescent' }),
-    zerokai: S({ skin: '#e8b98f', hair: '#b24bff', hs: 'spiky', eye: '#39f0ff', eyeStyle: 'glow', outfit: '#161225', trim: '#39f0ff', collar: 'high', extra: ['headphones', 'markings'], prop: 'orb' }),
-    orath: S({ skin: '#8d5a3b', hair: '#3f6e2c', hs: 'hood', eye: '#9cff6a', eyeStyle: 'narrow', brow: 'calm', mouth: 'calm', outfit: '#3b2a1a', trim: '#6bd07a', collar: 'armor', extra: ['antlers', 'markings'], prop: 'staff', top: 'leaf' }),
+    // Heroes: one clear personality each (brash / calm leader / mysterious / stoic guardian)
+    kagira: S({ skin: '#e8b98f', hair: '#ff4f1a', hair2: '#ffd24a', hs: 'flame', eye: '#ffb300', eyeStyle: 'round', brow: 'fierce', mouth: 'grin',
+      outfit: '#2b1612', trim: '#ff7a2a', collar: 'armor', extra: ['goggles', 'plaster', 'earring', 'scarf'], acc: '#ffd24a', cape: '#7a1f12', aura: true, prop: 'sword' }),
+    merin: S({ skin: '#f4d6c0', hair: '#1fb2c6', hs: 'swept', eye: '#7ff0ff', eyeStyle: 'narrow', brow: 'calm', mouth: 'smile', noBlush: false,
+      outfit: '#1b4d6b', trim: '#f2fbff', collar: 'robe', extra: ['tiara', 'shell', 'beauty', 'sidebraid'], acc: '#ffe28a', cape: '#2c7fa8', aura: true, prop: 'staff', top: 'crescent' }),
+    zerokai: S({ skin: '#dfe6f0', hair: '#201a38', hs: 'hoodfringe', eye: '#39f0ff', eyeStyle: 'glow', brow: 'calm', mouth: 'smirk',
+      outfit: '#12101f', trim: '#39f0ff', collar: 'hoodie', extra: ['monocle', 'circuit', 'mask2'], acc: '#39f0ff', aura: true, prop: 'orb' }),
+    orath: S({ skin: '#8d5a3b', hair: '#3f6e2c', hs: 'bark', eye: '#9cff6a', eyeStyle: 'glow', brow: 'calm', mouth: 'none',
+      outfit: '#3b2a1a', trim: '#6bd07a', collar: 'armor', extra: ['antlers', 'longbeard', 'moss', 'wrinkles'], beardC: '#dfe8d0', aura: true, prop: 'staff', top: 'leaf' }),
 
     // ---- Emberreach
     ash_ronin: S({ skin: '#e8b98f', hair: '#2a2a2a', hs: 'ponytail', eye: '#ff7a45', outfit: '#6b1f14', trim: '#d9d0c0', extra: ['headband'], acc: '#e0262f', prop: 'sword' }),
@@ -80,6 +85,24 @@
     wild: {
       back: 'M26 52 L20 30 L31 33 L28 14 L41 24 L45 6 L53 21 L62 6 L66 23 L77 16 L73 34 L82 38 L74 52 Z',
       front: 'M33 42 L31 27 L39 33 L40 22 L47 31 L52 21 L56 32 L62 23 L63 33 L69 28 L67 42 L61 35 L56 40 L50 34 L44 40 L38 35 Z',
+    },
+    flame: {
+      back: 'M30 46 C25 40 24 30 28 22 C30 27 33 30 36 31 C34 22 36 12 42 5 C44 13 47 17 50 19 C52 11 57 5 65 3 C62 12 63 19 67 23 C72 17 77 13 83 12 C79 21 77 30 73 36 C79 34 82 38 83 44 C77 44 72 46 70 48 Z',
+      front: 'M33 42 C32 30 36 24 42 21 L40 30 L46 25 L48 33 L52 24 L55 32 L60 22 L61 31 L67 28 C68 33 67 38 67 42 L62 36 L57 40 L50 34 L43 40 Z M33 42 L31 53 L36 46 Z M67 42 L69 53 L64 46 Z',
+      tips: 'M42 5 L46 15 L39 12 Z M65 3 L62 15 L69 12 Z M83 12 L76 21 L82 26 Z M28 22 L35 29 L26 31 Z',
+    },
+    swept: {
+      back: 'M30 40 C25 20 38 12 50 12 C62 12 75 20 70 40 C74 56 72 72 77 90 C68 84 64 75 62 66 L38 66 C36 75 32 84 23 90 C28 72 26 56 30 40 Z',
+      front: 'M34 44 C32 26 42 17 52 17 C62 17 68 26 66 40 C62 30 54 25 46 28 C42 34 38 40 34 44 Z M45 24 C38 30 36 40 34 54 C41 46 45 37 49 28 Z',
+    },
+    hoodfringe: {
+      back: 'M20 84 C16 44 26 12 50 9 C74 12 84 44 80 84 Z',
+      front: 'M33 42 C32 27 41 20 50 20 C59 20 68 27 67 42 C62 33 57 29 53 31 C52 40 48 49 43 56 C41 50 38 46 34 49 Z',
+    },
+    bark: {
+      back: 'M18 86 C14 42 26 8 50 6 C74 8 86 42 82 86 Z',
+      lines: 'M28 28 C26 44 26 58 28 72 M39 16 C37 32 37 46 38 58 M61 16 C63 32 63 46 62 58 M72 28 C74 44 74 58 72 72 M50 10 L50 22',
+      front: 'M33 42 C32 27 41 20 50 20 C59 20 68 27 67 42 C62 31 38 31 33 42 Z',
     },
     ponytail2: null,
     hood: {
@@ -156,6 +179,7 @@
 
   function mouth(sp) {
     if (sp.mouth === 'none') return '';
+    if (sp.mouth === 'grin') return `<path d="M42.5 54.5 Q50 67 57.5 54.5 Q50 58 42.5 54.5 Z" fill="#6b1414" ${KT}/><path d="M44.5 55.6 Q50 58.4 55.5 55.6 L54.8 57.4 Q50 59.6 45.2 57.4 Z" fill="#fff"/>`;
     const m = { smirk: 'M46 57 Q50 58.4 54.5 55.6', calm: 'M47 57.2 L53 57.2', smile: 'M46 56 Q50 60 54 56', fierce: 'M46 58 Q50 55.4 54 58' }[sp.mouth];
     return `<path d="${m}" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>`;
   }
@@ -182,6 +206,19 @@
       case 'antenna': return `<path d="M56 21 L61 3" stroke="#000" stroke-width="4" stroke-linecap="round"/><path d="M56 21 L61 3" stroke="${t}" stroke-width="1.8" stroke-linecap="round"/><circle cx="61" cy="3" r="3" fill="#ff4a4a" ${KT}/>`;
       case 'moon': return `<path d="M62 36 C58 36 56 40 58 43 C58 40 61 38 64 39 C64 37.5 63.3 36.4 62 36 Z" fill="${t}" stroke="#000" stroke-width=".8"/>`;
       case 'robot': return `<path d="M36 52 L44 52 M56 52 L64 52" stroke="#000" stroke-width="1" opacity=".5"/><circle cx="35" cy="48" r="2.2" fill="${sp.trim}" ${KT}/><circle cx="65" cy="48" r="2.2" fill="${sp.trim}" ${KT}/>`;
+      case 'goggles': return `<path d="M33 31 C40 26 60 26 67 31 L67 35 C60 30 40 30 33 35 Z" fill="#6b4a2a" ${K}/><circle cx="41" cy="24" r="5.6" fill="#8fe8ff" ${K}/><circle cx="59" cy="24" r="5.6" fill="#8fe8ff" ${K}/><path d="M38 22 L41 20.5 M56 22 L59 20.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>`;
+      case 'plaster': return `<rect x="55" y="50.6" width="8.4" height="3.6" rx="1" fill="#f6efe0" ${KT} transform="rotate(-25 59 52.4)"/>`;
+      case 'earring': return `<circle cx="34.6" cy="53.6" r="2.4" fill="${t}" ${KT}/><path d="M34.6 50.6 L34.6 51.4" stroke="#000" stroke-width="1"/>`;
+      case 'scarf': return `<path d="M35 66 C44 75 56 75 65 66 L67 77 C56 85 44 85 33 77 Z" fill="${t}" ${K}/><path d="M60 78 C72 76 82 84 94 79 C88 91 76 93 64 88 Z" fill="${t}" ${K}/><path d="M66 82 L72 80 M72 86 L78 84" stroke="#000" stroke-width="1.2" opacity=".45"/>`;
+      case 'tiara': return `<path d="M39 30 L43.5 23 L47 28 L50 20 L53 28 L56.5 23 L61 30 Z" fill="${sp.acc || '#ffe28a'}" ${K}/><circle cx="50" cy="25.5" r="2.3" fill="#7ff0ff" ${KT}/>`;
+      case 'beauty': return `<circle cx="58.5" cy="55" r=".9" fill="#000" opacity=".7"/>`;
+      case 'sidebraid': return `<path d="M33 56 C28 62 28 70 32 76 C34 82 32 88 28 92 M67 56 C72 62 72 70 68 76 C66 82 68 88 72 92" fill="none" stroke="#000" stroke-width="6.5" stroke-linecap="round"/><path d="M33 56 C28 62 28 70 32 76 C34 82 32 88 28 92 M67 56 C72 62 72 70 68 76 C66 82 68 88 72 92" fill="none" stroke="${sp.hair}" stroke-width="3.6" stroke-linecap="round" stroke-dasharray="4 1.6"/>`;
+      case 'monocle': return `<circle cx="57.6" cy="46" r="7.4" fill="${sp.trim}" fill-opacity=".22" stroke="#000" stroke-width="2"/><circle cx="57.6" cy="46" r="5.2" fill="none" stroke="${sp.trim}" stroke-width="1" stroke-dasharray="2 1.4"/><path d="M65 44 L72 36" stroke="#000" stroke-width="1.6" stroke-linecap="round"/><circle cx="72" cy="35" r="1.6" fill="${sp.trim}" stroke="#000" stroke-width=".8"/><path d="M52 41 H56 M52 51 H60" stroke="${sp.trim}" stroke-width=".8" opacity=".9"/>`;
+      case 'circuit': return `<path d="M61 40 L61 44 L66 44 M62 53 L66 53 L66 57 M44 53 L40 53 L40 58" fill="none" stroke="${sp.trim}" stroke-width="1" stroke-linecap="round"/><circle cx="66" cy="44" r="1.1" fill="${sp.trim}"/><circle cx="66" cy="57" r="1.1" fill="${sp.trim}"/><circle cx="40" cy="58" r="1.1" fill="${sp.trim}"/>`;
+      case 'mask2': return `<path d="M36 54 C42 60 58 60 64 54 L64 64 C58 71 42 71 36 64 Z" fill="${sp.outfit}" ${K}/><path d="M43 61 H57 M43 65 H57" stroke="${sp.trim}" stroke-width="1" opacity=".9"/><circle cx="50" cy="63" r="1.4" fill="${sp.trim}"/>`;
+      case 'longbeard': return `<path d="M34.5 50 C33 70 41 86 50 92 C59 86 67 70 65.5 50 C60 58 40 58 34.5 50 Z" fill="${sp.beardC}" ${K}/><path d="M42 66 C44 74 46 80 50 85 M58 66 C56 74 54 80 50 85 M50 62 L50 80" fill="none" stroke="#000" stroke-width=".9" opacity=".3"/>`;
+      case 'moss': return `<ellipse cx="38" cy="14" rx="8" ry="4" fill="#5ab04a" ${KT}/><ellipse cx="62" cy="13" rx="7" ry="3.6" fill="#6bd07a" ${KT}/><circle cx="26" cy="74" r="5" fill="#5ab04a" ${KT}/><circle cx="74" cy="74" r="5.5" fill="#5ab04a" ${KT}/><path d="M30 14 C34 8 40 9 41 14 M58 11 C62 5 68 7 68 12" fill="none" stroke="#2f7a2c" stroke-width="1.4"/>`;
+      case 'wrinkles': return `<path d="M39 38.5 C43 36.5 46 37 48 38.5 M52 38.5 C54 37 57 36.5 61 38.5 M40 52 C41 54 42 55 44 55.6 M60 52 C59 54 58 55 56 55.6" fill="none" stroke="#000" stroke-width="1" opacity=".5" stroke-linecap="round"/>`;
       default: return '';
     }
   }
@@ -220,10 +257,14 @@
     if (!sp) return '';
     const H = HAIR[sp.hs] || HAIR.short;
     const hairFill = sp.hair;
-    const isHood = sp.hs === 'hood';
+    const isHood = sp.hs === 'hood' || sp.hs === 'hoodfringe' || sp.hs === 'bark';
     let o = '';
+    if (sp.aura) o += `<circle cx="50" cy="48" r="46" fill="#fff" opacity=".10"/><circle cx="50" cy="48" r="34" fill="#fff" opacity=".12"/>`;
     o += propBack(sp);
+    if (sp.cape) o += `<path d="M5 100 L10 66 C20 58 32 64 42 68 L58 68 C68 64 80 58 90 66 L95 100 Z" fill="${sp.cape}" ${K}/>`;
     if (H.back) o += `<path d="${H.back}" fill="${hairFill}" ${K}/>` + (isHood ? shade(H.back, 0.18) : '');
+    if (H.tips && sp.hair2) o += `<path d="${H.tips}" fill="${sp.hair2}" ${KT}/>`;
+    if (H.lines) o += `<path d="${H.lines}" fill="none" stroke="#000" stroke-width="1.4" opacity=".35" stroke-linecap="round"/>`;
     if (sp.extra.includes('foxears') || sp.extra.includes('catears') || sp.extra.includes('antlers') || sp.extra.includes('horns')) {
       // ears/horns sit behind the face but in front of back hair
       o += sp.extra.filter((a) => ['foxears', 'catears', 'antlers', 'horns'].includes(a)).map((a) => accessory(a, sp)).join('');
@@ -247,7 +288,8 @@
     // remaining accessories
     o += sp.extra.filter((a) => !['foxears', 'catears', 'antlers', 'horns'].includes(a)).map((a) => accessory(a, sp)).join('');
     o += propFront(sp);
-    return `<g class="chr" transform="translate(50 54) scale(1.13) translate(-50 -54)">${o}</g>`;
+    const k = sp.aura ? 0.98 : 1.13; // heroes show more of the silhouette (hair, antlers, cape)
+    return `<g class="chr" transform="translate(50 56) scale(${k}) translate(-50 -54)">${o}</g>`;
   }
 
   AMB.chars = { SPEC, draw, has: (id) => !!SPEC[id] };

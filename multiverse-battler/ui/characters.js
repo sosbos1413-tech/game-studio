@@ -120,17 +120,25 @@
     }
     let out = '';
     [-1, 1].forEach((d) => {
-      const sx = 50 + d * 7.5;
-      const ry = { sharp: 2.7, round: 3.7, narrow: 1.9, glow: 2.5 }[sp.eyeStyle] || 2.7;
-      const tilt = sp.eyeStyle === 'round' ? 0.2 : 1.3;
+      const sx = 50 + d * 7.6;
+      const ry = { sharp: 3.3, round: 4.4, narrow: 2.4, glow: 3 }[sp.eyeStyle] || 3.3;
       if (sp.eyeStyle === 'glow') {
-        out += `<ellipse cx="${sx}" cy="46" rx="4.4" ry="${ry}" fill="${c}" ${KT}/><ellipse cx="${sx}" cy="46" rx="2.2" ry="${ry - 0.8}" fill="#fff" opacity=".85"/>`;
+        out += `<ellipse cx="${sx}" cy="46" rx="4.9" ry="${ry}" fill="${c}" ${KT}/><ellipse cx="${sx}" cy="46" rx="2.5" ry="${ry - 0.9}" fill="#fff" opacity=".9"/>`;
       } else {
-        out += `<ellipse cx="${sx}" cy="46" rx="4.3" ry="${ry}" fill="#fff"/><circle cx="${sx}" cy="46.2" r="${Math.min(2.5, ry)}" fill="${c}"/><circle cx="${sx}" cy="46.3" r="1.1" fill="#000"/><circle cx="${sx - 0.9}" cy="45.3" r=".85" fill="#fff"/>`;
+        const r = Math.min(3.3, ry);
+        out += `<ellipse cx="${sx}" cy="46" rx="4.9" ry="${ry}" fill="#fff"/>` +
+          `<circle cx="${sx}" cy="46.2" r="${r}" fill="${c}"/>` +
+          `<path d="M${sx - r} 46 A${r} ${r} 0 0 1 ${sx + r} 46 Z" fill="#000" opacity=".28"/>` +
+          `<circle cx="${sx}" cy="46.4" r="${r * 0.42}" fill="#000"/>` +
+          `<circle cx="${sx - r * 0.45}" cy="45" r="${r * 0.36}" fill="#fff"/><circle cx="${sx + r * 0.4}" cy="47.6" r="${r * 0.18}" fill="#fff" opacity=".9"/>`;
       }
-      // upper lid (outer corner higher = fierce)
-      const yo = 45.2 - ry + 1 - tilt * 0.5, yi = 45.2 - ry + 1 + tilt * 0.5;
-      out += `<path d="M${sx + d * 4.9} ${yo.toFixed(1)} L${sx - d * 4.9} ${yi.toFixed(1)}" stroke="#000" stroke-width="2" stroke-linecap="round"/>`;
+      // thick upper lash line with an outward flick (anime look)
+      const top = 46 - ry;
+      const tilt = sp.eyeStyle === 'round' ? 0.2 : 1.1;
+      const yo = top - tilt * 0.4, yi = top + tilt * 0.4;
+      out += `<path d="M${sx - d * 5.1} ${yi.toFixed(1)} Q${sx} ${(top - 1).toFixed(1)} ${sx + d * 5.1} ${yo.toFixed(1)} L${sx + d * 6.5} ${(yo - 1.3).toFixed(1)}" fill="none" stroke="#000" stroke-width="2.1" stroke-linecap="round"/>`;
+      out += `<path d="M${sx - 3.6} ${(46 + ry).toFixed(1)} Q${sx} ${(46 + ry + 0.8).toFixed(1)} ${sx + 3.6} ${(46 + ry).toFixed(1)}" fill="none" stroke="#000" stroke-width=".7" opacity=".5"/>`;
+      if (!sp.noBlush && sp.mouth !== 'none') out += `<ellipse cx="${50 + d * 11}" cy="53.2" rx="3" ry="1.5" fill="#ff6a7a" opacity=".32"/>`;
     });
     return out;
   }
@@ -232,6 +240,7 @@
     // front hair / hood shading
     if (H.front) {
       o += `<path d="${H.front}" fill="${hairFill}" ${K}/>`;
+      if (sp.hs !== 'helm') o += `<path d="M44 21 C43 26 42 30 40 35 M50 20 C50 25 50 29 50 33 M57 21 C58 26 59 30 61 35" fill="none" stroke="#000" stroke-width=".9" opacity=".28" stroke-linecap="round"/>`;
       if (sp.hs !== 'helm') o += `<path d="M39 25 C45 20 56 20 62 26" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".38"/>`;
       else o += `<path d="M34 37 L66 37" stroke="#000" stroke-width="1.6" opacity=".5"/><path d="M40 20 C46 16 56 16 62 21" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".4"/>`;
     }

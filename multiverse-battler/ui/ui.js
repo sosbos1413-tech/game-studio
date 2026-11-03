@@ -40,13 +40,6 @@
   const opp = () => S.match.players[1 - S.v];
   const res = (r) => { if (!r.ok) toast(r.reason, 'err'); return r.ok; };
 
-  // field coordinates -> % of the field box. viewer 1 sees the board rotated.
-  function scr(x, y, viewer) {
-    if (viewer === 1) { x = 3 - x; y = 4 - y; }
-    return { left: ((x + 0.5) / 4) * 100, top: ((5.5 - y) / 7) * 100 };
-  }
-
-  // ======================================================================= menu / mode / hero
   function renderHeroSelect() {
     const who = S.mode === 'hotseat' ? `اللاعب ${S.pickIdx + 1}: اختر بطلك` : 'اختر بطلك';
     $('hero-title').textContent = who;
@@ -222,24 +215,66 @@
       <button class="btn primary big" data-act="${over ? 'toResults' : 'nextRound'}">${over ? 'عرض النتائج' : 'الجولة التالية'}</button></div>`);
   }
 
-  function buildTokens() {
-    const c = S.combat;
-    S.tokenEls = {};
-    const html = c.fighters.filter((f) => f.onBoard).map((f) => {
-      const def = f.isHero ? HEROES[f.defId] : UNITS[f.defId];
-      const enemy = f.side !== S.combatViewer;
-      return `<div class="token ${enemy ? 'enemy' : ''} ${f.isHero ? 'herotok' : ''}" id="tok${f.id}">
-        ${portrait(def, { k: 't' + f.id })}<div class="shieldring"></div>${f.isHero ? icon('crown', 'hero-crown') : stars(f.star)}
-        <div class="bars"><div class="hp"><b></b><i></i></div>${f.skill ? '<div class="mp"><i></i></div>' : ''}</div></div>`;
-    }).join('');
-    $('tokens').innerHTML = html;
-    c.fighters.forEach((f) => { const el = $('tok' + f.id); if (el) S.tokenEls[f.id] = { el, hp: el.querySelector('.hp i'), lag: el.querySelector('.hp b'), mp: el.querySelector('.mp i'), lagW: 100 }; });
-    $('fx').innerHTML = '';
-    $('floats').innerHTML = '';
+  // ---- card helpers shared by shop / bench / field / codex
+  function cardStats(def, star) {
+    const sm = CFG.stars.mult[star || 1];
+    return { hp: Math.round(def.hp * sm), atk: Math.round(def.atk * sm) };
+  }
+  /** One card component, three sizes: 'full' (shop/codex), 'mini' (field/bench), 'mini'+live (combat). */
+  function cardHTML(def, o) {
+    o = o || {};
+    const W = WORLDS[def.world];
+    const isHero = !def.role;
+    const tier = isHero ? 'hero' : 't' + def.tier;
+    const sel = o.sel ? ' sel' : '';
+    const attrs = o.attrs || '';
+    if (o.size === 'mini') {
+      const st = isHero ? null : cardStats(def, o.star);
+      const items = (o.items || []).map((it) => `<i title="${esc(ITEMS[it].name)}">${icon(ITEMS[it].icon)}</i>`).join('');
+      const line2 = o.live
+        ? `<div class="tc-live"><div class="hpb"><b></b><i></i></div>${def.role ? '<div class="mpb"><i></i></div>' : ''}</div>`
+        : `<div class="tc-mini">${isHero ? `<span>${icon('heart')}${o.life != null ? o.life : ''}</span>` : `<span>${icon('heart')}${st.hp}</span><span>${icon('sword')}${st.atk}</span>`}<span class="its">${items}</span></div>`;
+      return `<div class="tcard mini ${tier}${sel} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
+        <div class="tc-art">${portrait(def, { bare: true, k: o.k })}</div>
+        <div class="tc-foot"><div class="tc-line"><b class="tc-name">${def.name}</b>${isHero ? '<span class="tc-crown">' + icon('crown') + '</span>' : stars(o.star)}</div>${line2}</div></div>`;
+    }
+    // full card
+    const st = isHero ? null : cardStats(def, 1);
+    return `<div class="tcard full ${tier} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
+      <div class="tc-head">${isHero ? '' : `<span class="tc-cost">${icon('gold')}${def.cost}</span>`}<b class="tc-name">${def.name}</b><span class="tc-info" data-act="${isHero ? 'heroInfo' : 'detail'}" data-id="${def.id}">i</span></div>
+      <div class="tc-art">${portrait(def, { bare: true, k: o.k })}</div>
+      <div class="tc-tags"><span class="wtag" style="--w:${W.color}">${W.name}</span>${isHero ? `<span class="rtag">بطل</span>` : `<span class="rtag">${icon(AMB.art.ROLE_ICON[def.role])}${ROLES[def.role].name}</span>`}</div>
+      <div class="tc-stats">${isHero ? `<span>${esc(def.title)}</span>` : `<span>${icon('heart')}${st.hp}</span><span>${icon('sword')}${st.atk}</span><span>${icon('bow')}${def.range}</span>`}</div>
+      <div class="tc-note">${o.note || (isHero ? '' : esc(def.skill.name))}</div></div>`;
+  }
+  function itemCardHTML(it, o) {
+    o = o || {};
+    return `<div class="tcard full item ${it.kind} ${o.cls || ''}" ${o.attrs || ''} title="${esc(it.text)}">
+      <div class="tc-head"><span class="tc-cost">${icon('gold')}${it.cost}</span><b class="tc-name">${it.name}</b></div>
+      <div class="tc-art iconart">${icon(it.icon, 'big-ic')}</div>
+      <div class="tc-tags"><span class="rtag">${it.kind === 'equip' ? 'معدة' : 'تعويذة'}</span></div>
+      <div class="tc-text">${it.text}</div></div>`;
   }
 
-  function posOf(f) { return scr(f.x, f.y, S.combatViewer); }
+  // ---- combat field: same grid as the prep field, cards stay in their cells
+  function buildTokens() {
+    renderField(true);
+    const f = $('field');
+    $('fx').setAttribute('viewBox', `0 0 ${f.clientWidth} ${f.clientHeight}`);
+    $('fx').innerHTML = '';
+    $('floats').innerHTML = '';
+    S.cardEls = {};
+    S.combat.fighters.forEach((fi) => {
+      const el = document.querySelector(`[data-fid="${fi.id}"]`);
+      if (el) S.cardEls[fi.id] = { el, hp: el.querySelector('.hpb i'), lag: el.querySelector('.hpb b'), mp: el.querySelector('.mpb i'), lagW: 100 };
+    });
+  }
 
+  const anchorEl = (fi) => (S.cardEls[fi.id] ? S.cardEls[fi.id].el : $('post-' + fi.side));
+  function center(el) {
+    const fr = $('field').getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: r.left - fr.left + r.width / 2, y: r.top - fr.top + r.height / 2 };
+  }
   function addFloat(left, top, text, cls) {
     const fl = $('floats');
     if (fl.childElementCount > 40) fl.firstElementChild.remove();
@@ -251,28 +286,31 @@
     fl.appendChild(el);
     setTimeout(() => el.remove(), cls && cls.includes('big') ? 1600 : 900);
   }
+  function floatAt(el, text, cls, dy) {
+    const f = $('field'), c = center(el);
+    addFloat((c.x / f.clientWidth) * 100 + (Math.random() * 6 - 3), ((c.y + (dy || 0)) / f.clientHeight) * 100, text, cls);
+  }
+  function flash(el, cls, ms) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
 
   function drawCombat(skipFx) {
     const c = S.combat;
     const byId = {};
     c.fighters.forEach((f) => (byId[f.id] = f));
     for (const f of c.fighters) {
-      const t = S.tokenEls[f.id];
+      const t = S.cardEls[f.id];
       if (!t) continue;
-      const p = posOf(f);
-      t.el.style.left = p.left + '%';
-      t.el.style.top = p.top + '%';
       const pct = Math.max(0, (f.hp / f.maxHp) * 100);
       t.hp.style.width = pct + '%';
       t.lagW = Math.max(pct, t.lagW - 1.2);
       t.lag.style.width = t.lagW + '%';
       if (t.mp) t.mp.style.width = Math.min(100, (f.mana / f.maxMana) * 100) + '%';
-      t.el.classList.toggle('dead', !f.alive || (f.isHero && !f.onBoard));
-      t.el.classList.toggle('stunned', f.stun > 0);
-      t.el.classList.toggle('shielded', f.shield > 1);
+      const cl = t.el.classList;
+      cl.toggle('dead', !f.alive);
+      cl.toggle('retreated', f.alive && f.isHero && !f.onBoard);
+      cl.toggle('stunned', f.stun > 0);
+      cl.toggle('shielded', f.shield > 1);
     }
     renderPosts();
-    // clock
     const clock = document.querySelector('.combat-ctrl .clock');
     if (clock) clock.textContent = fmt(c.t, 1) + 's';
     const fury = document.querySelector('.combat-ctrl .fury');
@@ -283,52 +321,44 @@
     const fx = $('fx');
     for (const e of events) {
       const f = e.id != null ? byId[e.id] : null;
-      if (e.type === 'damage' && f) {
-        if (e.amount < 4 && !e.crit) continue;
-        const p = posOf(f);
-        addFloat(p.left + (Math.random() * 8 - 4), p.top - 6, e.amount, e.crit ? 'crit' : e.skill ? 'skill' : '');
-        const t = S.tokenEls[f.id];
-        if (t) { t.el.classList.add('hit'); setTimeout(() => t.el.classList.remove('hit'), 90); }
-      } else if (e.type === 'heal' && f) {
-        const p = posOf(f); addFloat(p.left, p.top - 10, '+' + e.amount, 'heal');
-      } else if (e.type === 'cast' && f) {
-        const t = S.tokenEls[f.id];
-        if (t) { t.el.classList.remove('cast'); void t.el.offsetWidth; t.el.classList.add('cast'); }
-        const p = posOf(f); addFloat(p.left, p.top + 9, e.name, 'label');
+      const el = f ? anchorEl(f) : null;
+      if (e.type === 'damage' && f && el) {
+        if (e.amount >= 4 || e.crit) floatAt(el, e.amount, e.crit ? 'crit' : e.skill ? 'skill' : '');
+        flash(el, 'hit', 110);
+      } else if (e.type === 'heal' && f && el) {
+        floatAt(el, '+' + e.amount, 'heal');
+      } else if (e.type === 'cast' && f && el) {
+        flash(el, 'cast', 500); floatAt(el, e.name, 'label', 26);
       } else if (e.type === 'attack' && byId[e.from] && byId[e.to]) {
-        const a = posOf(byId[e.from]), b = posOf(byId[e.to]);
-        const col = byId[e.from].side === S.combatViewer ? '#7ff5ff' : '#ff8fa3';
+        const ea = anchorEl(byId[e.from]), eb = anchorEl(byId[e.to]);
+        if (!ea || !eb) continue;
+        const a = center(ea), b = center(eb);
+        const L = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+        ea.style.setProperty('--dx', ((b.x - a.x) / L) * 9 + 'px');
+        ea.style.setProperty('--dy', ((b.y - a.y) / L) * 9 + 'px');
+        flash(ea, 'atk', 180);
         const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        ln.setAttribute('x1', a.left * 4); ln.setAttribute('y1', a.top * 5.6); ln.setAttribute('x2', b.left * 4); ln.setAttribute('y2', b.top * 5.6);
-        ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', e.ranged ? 2 : 4); ln.setAttribute('stroke-linecap', 'round');
-        ln.setAttribute('opacity', e.ranged ? 0.8 : 0.5);
-        ln.style.transition = 'opacity .25s';
+        ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y); ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+        ln.setAttribute('stroke', byId[e.from].side === S.combatViewer ? '#5fe3ff' : '#ff8a90');
+        ln.setAttribute('stroke-width', e.ranged ? 2 : 4); ln.setAttribute('stroke-linecap', 'round');
+        ln.setAttribute('opacity', 0.85); ln.style.transition = 'opacity .25s';
         fx.appendChild(ln);
         requestAnimationFrame(() => (ln.style.opacity = 0));
         setTimeout(() => ln.remove(), 280);
-      } else if (e.type === 'blast') {
-        const p = scr(e.x, e.y, S.combatViewer);
-        const ci = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        ci.setAttribute('cx', p.left * 4); ci.setAttribute('cy', p.top * 5.6); ci.setAttribute('r', e.r * 90);
-        ci.setAttribute('fill', '#ff9f4a55'); ci.setAttribute('stroke', '#ffcf4a'); ci.setAttribute('stroke-width', 3);
-        ci.style.transition = 'opacity .6s'; fx.appendChild(ci);
-        requestAnimationFrame(() => (ci.style.opacity = 0)); setTimeout(() => ci.remove(), 650);
       } else if (e.type === 'heroAbility' || e.type === 'spell') {
-        const top = e.side === S.combatViewer ? 70 : 30;
-        addFloat(50, top, (e.type === 'spell' ? '✦ ' : '⚡ ') + e.name, 'big');
+        addFloat(50, e.side === S.combatViewer ? 62 : 38, (e.type === 'spell' ? '✦ ' : '⚡ ') + e.name, 'big');
       } else if (e.type === 'exposed') {
-        const top = e.side === S.combatViewer ? 84 : 16;
-        addFloat(50, top, 'سقط خط الدفاع — البطل مكشوف!', 'big');
+        addFloat(50, e.side === S.combatViewer ? 84 : 16, 'سقط خط الدفاع — البطل مكشوف!', 'big');
       } else if (e.type === 'assault') {
         addFloat(50, e.side === S.combatViewer ? 80 : 20, 'هجوم على مركز القيادة!', 'big');
       } else if (e.type === 'retreat') {
         addFloat(50, e.side === S.combatViewer ? 80 : 20, 'انسحب البطل إلى مركز القيادة', 'big');
       } else if (e.type === 'sealed') {
         addFloat(50, e.side === S.combatViewer ? 88 : 12, 'تحصّن مركز القيادة (حد الضرر)', 'label');
-      } else if (e.type === 'leap' && f) {
-        const p = posOf(f); addFloat(p.left, p.top + 8, 'قفزة!', 'label');
-      } else if (e.type === 'stun' && f) {
-        const p = posOf(f); addFloat(p.left, p.top + 4, 'شلل', 'label');
+      } else if (e.type === 'leap' && f && el) {
+        floatAt(el, 'قفزة!', 'label', 26);
+      } else if (e.type === 'stun' && f && el) {
+        floatAt(el, 'شلل', 'label', 20);
       }
     }
   }
@@ -338,7 +368,7 @@
     if (!S.match) return;
     renderTop();
     renderSlots();
-    if (S.phase !== 'combat' && !keepTokens) { $('tokens').innerHTML = ''; $('fx').innerHTML = ''; $('floats').innerHTML = ''; }
+    if (S.phase !== 'combat' && !keepTokens) { $('fx').innerHTML = ''; $('floats').innerHTML = ''; }
     renderPosts();
     renderBench();
     renderShop();
@@ -370,50 +400,56 @@
       <button class="btn small" data-act="menuMatch">☰</button>`;
   }
 
+  // Field = a CSS grid of cards:  enemy post / enemy back / enemy front / rift / my front / my back / my post
   function renderSlots() {
-    const p = me();
-    const v = S.v;
+    if (S.phase === 'combat' || S.phase === 'result') return; // combat view is built by buildTokens()
+    renderField(false);
+  }
+
+  function renderField(inCombat) {
     const m = S.match;
-    const prep = S.phase === 'prep' || S.phase === 'resources';
-    let html = '';
-    if (S.phase === 'combat' || S.phase === 'result') { $('slots').innerHTML = ''; return; }
-    AMB.SLOTS.forEach((slot) => {
-      const g = AMB.combatGeom.slotPos(v, slot);
-      const pos = scr(g.x, g.y, v);
-      const u = p.board[slot];
-      const heroHere = p.summoned && p.heroSlot === slot;
-      let inner = '';
-      if (u) inner = pieceHTML(u, { sel: S.sel && S.sel.kind === 'unit' && S.sel.uid === u.uid });
-      else if (heroHere) inner = heroPieceHTML(p);
-      html += `<div class="slot mine" style="left:${pos.left}%;top:${pos.top}%" data-act="slot" data-slot="${slot}" data-drop="board:${slot}">${inner}<span class="rowtag">${g.row === 'front' ? 'أمامي' : 'خلفي'}</span></div>`;
-    });
-    // opponent: last formation they fought with (scouting)
+    const v = inCombat ? S.combatViewer : S.v;
+    const p = m.players[v];
     const sc = m.scout[1 - v];
-    AMB.SLOTS.forEach((slot) => {
-      const g = AMB.combatGeom.slotPos(1 - v, slot);
-      const pos = scr(g.x, g.y, v);
-      let inner = '';
-      if (sc) {
+    const cell = (side, slot, mine) => {
+      let inner = '', cls = mine ? 'mine' : 'enemy', fid = '';
+      if (inCombat) {
+        const f = S.combat.fighters.find((x) => x.side === side && x.slot === slot);
+        if (f) {
+          const def = f.isHero ? HEROES[f.defId] : UNITS[f.defId];
+          inner = cardHTML(def, { size: 'mini', star: f.star, live: true, k: 'c' + f.id, attrs: `data-fid="${f.id}"`, cls: mine ? '' : 'foe' });
+        }
+      } else if (mine) {
+        const u = p.board[slot];
+        if (u) inner = pieceHTML(u, { sel: S.sel && S.sel.kind === 'unit' && S.sel.uid === u.uid });
+        else if (p.summoned && p.heroSlot === slot) inner = heroPieceHTML(p);
+      } else if (sc) {
         const u = sc.units.find((x) => x.slot === slot);
-        if (u) inner = `<div class="piece ghost">${portrait(UNITS[u.defId], { k: 'sc' + slot })}${stars(u.star)}</div>`;
-        else if (sc.summoned && sc.heroSlot === slot) inner = `<div class="piece ghost">${portrait(HEROES[sc.heroId], { k: 'sch' })}</div>`;
+        if (u) inner = cardHTML(UNITS[u.defId], { size: 'mini', star: u.star, items: u.items, k: 'sc' + slot, cls: 'ghost' });
+        else if (sc.summoned && sc.heroSlot === slot) inner = cardHTML(HEROES[sc.heroId], { size: 'mini', k: 'sch', cls: 'ghost' });
       }
-      html += `<div class="slot enemy" style="left:${pos.left}%;top:${pos.top}%" ${prep ? '' : ''}>${inner}</div>`;
-    });
-    html += `<div class="fieldlabel" style="top:36%">${sc ? 'آخر تشكيلة للخصم (استطلاع)' : 'الخصم — لم يقاتل بعد'}</div>`;
-    html += `<div class="fieldlabel" style="top:51.5%">صفّك الأمامي ↓</div>`;
-    $('slots').innerHTML = html;
+      const act = mine && !inCombat ? `data-act="slot" data-slot="${slot}" data-drop="board:${slot}"` : '';
+      return `<div class="cell ${cls}" ${act}>${inner}</div>`;
+    };
+    const row = (side, ch, mine) => [0, 1, 2, 3].map((k) => cell(side, ch + (mine ? k : 3 - k), mine)).join('');
+    const o = 1 - v;
+    $('slots').innerHTML =
+      `<div class="post" id="post-${o}"></div>` +
+      row(o, 'b', false) + row(o, 'f', false) +
+      `<div class="divider"><span>${sc && !inCombat ? 'آخر تشكيلة للخصم (استطلاع)' : inCombat ? '' : 'الخصم — لم يقاتل بعد'}</span></div>` +
+      row(v, 'f', true) + row(v, 'b', true) +
+      `<div class="post" id="post-${v}"></div>`;
   }
 
   function renderPosts() {
     const m = S.match;
     const inCombat = S.combat && (S.phase === 'combat' || S.phase === 'result');
     const viewer = inCombat ? S.combatViewer : S.v;
-    let html = '';
     [viewer, 1 - viewer].forEach((side) => {
+      const el = $('post-' + side);
+      if (!el) return;
       const p = m.players[side];
       const h = HEROES[p.heroId];
-      const pos = scr(1.5, side === viewer ? -1 : 5, 0);
       let life = p.life, onBoard = p.summoned, exposed = false, status;
       if (inCombat) {
         const hf = S.combat.sides[side].hero;
@@ -424,36 +460,31 @@
           : hf.sealed ? '<span class="st safe">مركز القيادة محصّن</span>' : exposed ? '<span class="st risk">مكشوف! يمكن مهاجمته</span>' : '<span class="st safe">محمي بخط الدفاع</span>';
       } else {
         const board = side === S.v ? p.board : null;
-        const front = board ? Object.keys(board).filter((s) => s[0] === 'f').length : null;
+        const front = board ? Object.keys(board).filter((x) => x[0] === 'f').length : null;
         status = onBoard ? '<span class="st">مستدعى إلى الساحة</span>' : front === 0 ? '<span class="st risk">لا يوجد خط دفاع!</span>' : front ? `<span class="st safe">محمي (${front} في الصف الأمامي)</span>` : '<span class="st">مركز القيادة</span>';
       }
-      html += `<div class="post ${onBoard && !inCombat ? 'empty-hero' : ''} ${exposed && !onBoard ? 'exposed' : ''}" style="top:${pos.top}%">
-        ${portrait(h, { k: 'post' + side })}
+      el.className = 'post' + (onBoard && !inCombat ? ' empty-hero' : '') + (exposed && !onBoard ? ' exposed' : '');
+      el.innerHTML = `${portrait(h, { k: 'post' + side })}
         <div class="pl"><div class="pn">${esc(p.name)} · ${h.name}</div>
         <div class="lifebar"><i style="width:${Math.max(0, (life / p.maxLife) * 100)}%"></i></div>
-        <div class="st">${icon('heart')} ${lifeStr(life)}/${p.maxLife} — ${status}</div></div></div>`;
+        <div class="st">${icon('heart')} ${lifeStr(life)}/${p.maxLife} — ${status}</div></div>`;
     });
-    let el = document.getElementById('posts');
-    if (!el) { el = document.createElement('div'); el.id = 'posts'; el.className = 'slots'; el.style.pointerEvents = 'none'; $('field').appendChild(el); }
-    el.innerHTML = html;
   }
 
   function pieceHTML(u, o) {
     const def = UNITS[u.defId];
-    const items = u.items.length ? `<div class="itm">${u.items.map((it) => `<span title="${esc(ITEMS[it].name)}">${icon(ITEMS[it].icon)}</span>`).join('')}</div>` : '';
-    return `<div class="piece ${o && o.sel ? 'sel' : ''}" draggable="true" data-drag="unit:${u.uid}" title="${esc(def.name)} ${'★'.repeat(u.star)} — ${ROLES[def.role].name} / ${WORLDS[def.world].name}">
-      ${portrait(def, { k: u.uid })}${stars(u.star)}${items}</div>`;
+    return cardHTML(def, { size: 'mini', star: u.star, items: u.items, sel: o && o.sel, k: u.uid,
+      attrs: `draggable="true" data-drag="unit:${u.uid}" title="${esc(def.name)} ${'★'.repeat(u.star)} — ${ROLES[def.role].name} / ${WORLDS[def.world].name}"` });
   }
   function heroPieceHTML(p) {
     const sel = S.sel && S.sel.kind === 'hero';
-    return `<div class="piece ${sel ? 'sel' : ''}" draggable="true" data-drag="hero" title="البطل ${esc(HEROES[p.heroId].name)} — في الساحة">
-      ${portrait(HEROES[p.heroId], { k: 'hb' })}${icon('crown', 'hero-crown')}</div>`;
+    return cardHTML(HEROES[p.heroId], { size: 'mini', life: lifeStr(p.life), sel, k: 'hb', attrs: `draggable="true" data-drag="hero" title="البطل ${esc(HEROES[p.heroId].name)} — في الساحة"` });
   }
 
   function renderBench() {
     const p = me();
     if (S.phase === 'combat' || S.phase === 'result') {
-      $('bench').innerHTML = `<span class="lbl">احتياط</span>` + p.bench.map((u) => `<div class="bslot">${u ? `<div class="piece ghost" style="opacity:.6">${portrait(UNITS[u.defId], { k: 'bc' + u.uid })}${stars(u.star)}</div>` : ''}</div>`).join('');
+      $('bench').innerHTML = `<span class="lbl">احتياط</span>` + p.bench.map((u) => `<div class="bslot">${u ? cardHTML(UNITS[u.defId], { size: 'mini', star: u.star, items: u.items, k: 'bc' + u.uid, cls: 'ghost' }) : ''}</div>`).join('');
       return;
     }
     $('bench').innerHTML = `<span class="lbl">احتياط</span>` + p.bench.map((u, i) =>
@@ -471,22 +502,19 @@
     const owned = {};
     m.allUnits(p).forEach((u) => { owned[u.defId] = owned[u.defId] || { n: 0, s1: 0 }; owned[u.defId].n++; if (u.star === 1) owned[u.defId].s1++; });
     const cards = p.shop.map((id, i) => {
-      if (!id) return `<div class="card empty"><div class="cn">—</div></div>`;
+      if (!id) return `<div class="tcard full empty"></div>`;
       const d = UNITS[id];
       const ok = m.canBuy(S.v, i).ok;
       const ow = owned[id];
       const pair = ow && ow.s1 >= 2;
-      return `<div class="card ${ok ? '' : 'cant'} ${pair ? 'pair' : ''}" style="--tc:var(--t${d.tier})" data-act="buy" data-idx="${i}" title="${esc(d.skill.name)}: ${esc(d.skill.text)}">
-        <span class="cost">${icon('gold')}${d.cost}</span><span class="info" data-act="detail" data-id="${id}">i</span>
-        ${portrait(d, { k: 'sh' + i })}<div class="cn">${d.name}</div>
-        <span class="wtag" style="--w:${WORLDS[d.world].color}">${WORLDS[d.world].name}</span><div class="cm">${ROLES[d.role].name}</div>
-        ${ow ? `<span class="owned">${pair ? 'سيتطور ★★!' : 'تملك ' + ow.n}</span>` : ''}</div>`;
+      return cardHTML(d, { cls: `${ok ? '' : 'cant'} ${pair ? 'pair' : ''}`, k: 'sh' + i,
+        note: ow ? `<span class="owned">${pair ? 'سيتطور ★★!' : 'تملك ' + ow.n}</span>` : '',
+        attrs: `data-act="buy" data-idx="${i}" title="${esc(d.skill.name)}: ${esc(d.skill.text)}"` });
     }).join('');
     const items = p.itemShop.map((id, i) => {
-      if (!id) return `<div class="card empty"><div class="cn">—</div></div>`;
+      if (!id) return `<div class="tcard full empty"></div>`;
       const it = ITEMS[id];
-      return `<div class="card ${it.kind} ${p.gold >= it.cost ? '' : 'cant'}" data-act="buyItem" data-idx="${i}" title="${esc(it.text)}">
-        <span class="cost">${icon('gold')}${it.cost}</span>${icon(it.icon, 'big-ic')}<div class="cn">${it.name}</div><div class="cm">${it.kind === 'equip' ? 'معدة' : 'تعويذة'}</div></div>`;
+      return itemCardHTML(it, { cls: p.gold >= it.cost ? '' : 'cant', attrs: `data-act="buyItem" data-idx="${i}"` });
     }).join('');
     const freeR = p.freeRerolls > 0;
     $('shopbar').innerHTML = `
@@ -789,14 +817,13 @@
     const units = Object.values(UNITS).filter((u) => (!f.world || u.world === f.world) && (!f.role || u.role === f.role)).sort((a, b) => a.tier - b.tier);
     $('codex').innerHTML = `
       <h3>الأبطال</h3>
-      <div class="codex-grid">${Object.values(HEROES).map((h) => `<div class="card" data-act="heroInfo" data-id="${h.id}" style="--tc:${WORLDS[h.world].color}">${portrait(h, { k: 'cx' })}<div class="cn">${h.name}</div><div class="cm">${h.title}</div></div>`).join('')}</div>
+      <div class="codex-grid">${Object.values(HEROES).map((h) => cardHTML(h, { k: 'cx', note: esc(h.style.split('—')[0]), attrs: `data-act="heroInfo" data-id="${h.id}"` })).join('')}</div>
       <h3>الوحدات (${units.length})</h3>
       <div class="filters">${fb('world', '', 'كل العوالم')}${Object.values(WORLDS).map((w) => fb('world', w.id, w.name)).join('')}</div>
       <div class="filters">${fb('role', '', 'كل الأدوار')}${Object.values(ROLES).map((r) => fb('role', r.id, r.name)).join('')}</div>
-      <div class="codex-grid">${units.map((d) => `<div class="card" style="--tc:var(--t${d.tier})" data-act="detail" data-id="${d.id}"><span class="cost">${icon('gold')}${d.cost}</span>${portrait(d, { k: 'cu' })}
-        <div class="cn">${d.name}</div><span class="wtag" style="--w:${WORLDS[d.world].color}">${WORLDS[d.world].name}</span><div class="cm">${ROLES[d.role].name} · ${d.skill.name}</div></div>`).join('')}</div>
+      <div class="codex-grid">${units.map((d) => cardHTML(d, { k: 'cu', attrs: `data-act="detail" data-id="${d.id}"` })).join('')}</div>
       <h3>المعدات والتعاويذ</h3>
-      <div class="codex-grid">${Object.values(ITEMS).map((it) => `<div class="card ${it.kind}"><span class="cost">${icon('gold')}${it.cost}</span>${icon(it.icon, 'big-ic')}<div class="cn">${it.name}</div><div class="cm">${it.kind === 'equip' ? 'معدة' : 'تعويذة'}</div><div class="cm">${it.text}</div></div>`).join('')}</div>`;
+      <div class="codex-grid">${Object.values(ITEMS).map((it) => itemCardHTML(it)).join('')}</div>`;
   }
 
   // ======================================================================= input

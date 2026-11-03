@@ -83,7 +83,7 @@
         const maxHp = def.hp * sm * (1 + mods.hpPct);
         const f = this._fighter(s, {
           uid: u.uid, defId: def.id, name: def.name, role: def.role, world: def.world, star: u.star,
-          isHero: false, onBoard: true, row: pos.row, x: pos.x, y: pos.y,
+          isHero: false, onBoard: true, slot: u.slot, row: pos.row, x: pos.x, y: pos.y,
           maxHp, hp: maxHp, atk: def.atk * sm * (1 + mods.atkPct), as: def.as * (1 + mods.asPct),
           range: def.range + mods.range, def: def.def + mods.dr, crit: def.crit + mods.crit,
           critDmg: this.C.critMult + mods.critDmg, lifesteal: mods.lifesteal, skillPower: 1 + mods.skillPower,
@@ -104,7 +104,7 @@
       if (spec.summoned) {
         const pos = slotPos(s, spec.heroSlot);
         hf = this._fighter(s, Object.assign(base, {
-          onBoard: true, row: pos.row, x: pos.x, y: pos.y,
+          onBoard: true, slot: spec.heroSlot, row: pos.row, x: pos.x, y: pos.y,
           atk: (hero.board.atk + HC.boardAtkPerRound * this.round) * (1 + hMods.atkPct),
           as: hero.board.as * (1 + hMods.asPct), range: hero.board.range, def: hero.board.def + hMods.dr,
           crit: hero.board.crit, critDmg: this.C.critMult, lifesteal: 0, skillPower: 1, regenPct: hMods.regenPct,

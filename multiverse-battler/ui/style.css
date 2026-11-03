@@ -428,3 +428,141 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   .bench-row { gap: 4px; padding: 5px; }
   .post { width: 68%; }
 }
+
+/* =====================================================================
+   CARD SYSTEM — every unit/hero/item is a card. Fixed layout regions
+   (header / art / tags / stats / note) so nothing ever overlaps.
+   ===================================================================== */
+.tcard { --tc: var(--t1); position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  background: #fffaf0; border: 3px solid var(--ink); box-shadow: var(--hard-sm); color: var(--ink); }
+.tcard.t1 { --tc: #b9b2a3; } .tcard.t2 { --tc: #7db8ee; } .tcard.t3 { --tc: #ffd24a; } .tcard.hero { --tc: var(--red); }
+.tcard .tc-art { position: relative; overflow: hidden; background: #1d1815; border-bottom: 3px solid var(--ink); }
+.tcard .tc-art .portrait { display: block; width: 100%; height: 100%; }
+.tcard .tc-name { font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tcard .stars { font-size: 11px; flex: none; }
+
+/* full card (shop / codex) */
+.tcard.full { width: 112px; flex: none; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); cursor: pointer; transition: transform .1s; }
+.tcard.full:hover:not(.empty):not(.cant) { transform: translateY(-5px) rotate(-1deg); }
+.tcard.full .tc-head { display: flex; align-items: center; gap: 4px; padding: 3px 4px; background: var(--tc); border-bottom: 3px solid var(--ink); min-height: 28px; }
+.tcard.full .tc-name { flex: 1; font-size: 12px; text-align: center; }
+.tcard.full .tc-cost { flex: none; display: inline-flex; align-items: center; gap: 2px; background: var(--ink); color: var(--gold); font-family: var(--display); font-size: 15px; padding: 0 5px; height: 21px; }
+.tcard.full .tc-cost .ic { width: 11px; height: 11px; }
+.tcard.full .tc-info { flex: none; width: 19px; height: 19px; border: 2px solid var(--ink); background: #fff; font-size: 11px; line-height: 15px; text-align: center; font-weight: 700; cursor: help; }
+.tcard.full .tc-art { aspect-ratio: 1 / .8; }
+.tcard.full .tc-tags { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; padding: 3px 2px 2px; min-height: 26px; align-items: center; }
+.rtag { display: inline-flex; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 700; border: 1.5px solid var(--ink); background: var(--paper2); padding: 0 5px; line-height: 1.5; }
+.rtag .ic { width: 10px; height: 10px; }
+.tcard.full .tc-stats { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--ink); color: var(--paper); font-size: 11px; text-align: center; padding: 1px 0; direction: ltr; }
+.tcard.full .tc-stats .ic { width: 10px; height: 10px; margin-inline-end: 2px; color: var(--gold); }
+.tcard.full .tc-note { min-height: 19px; padding: 1px 3px; font-size: 10.5px; text-align: center; color: var(--muted); font-weight: 700; line-height: 1.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tcard.full .owned { background: var(--red); color: #fff; padding: 0 6px; }
+.tcard.full.empty { opacity: .28; border-style: dashed; background: transparent; box-shadow: none; cursor: default; min-height: 150px; clip-path: none; }
+.tcard.full.cant { opacity: .5; filter: grayscale(.7); }
+.tcard.full.pair { background: #ffe7a0; animation: pairpulse .7s infinite alternate; }
+.tcard.item { --tc: var(--ink); }
+.tcard.item.spell { --tc: var(--red); }
+.tcard.item .tc-head { color: var(--paper); }
+.tcard.item .tc-name { color: #fff; }
+.tcard.item .tc-art.iconart { aspect-ratio: 1 / .8; display: grid; place-items: center; background: repeating-conic-gradient(#2a221d 0 8deg, #1d1815 8deg 16deg); }
+.tcard.item .tc-art .big-ic { width: 46%; height: auto; color: var(--gold); filter: drop-shadow(2px 2px 0 #000); }
+.tcard.item.spell .tc-art .big-ic { color: #ff7a82; }
+.tcard.item .tc-text { padding: 3px 4px; font-size: 10.5px; line-height: 1.45; text-align: center; min-height: 40px; color: var(--ink3); }
+
+/* mini card (field cells + bench) — art on top, one footer strip */
+.tcard.mini { width: 100%; height: 100%; border-width: 2px; border-top: 5px solid var(--wc); box-shadow: none; }
+.tcard.mini .tc-art { flex: 1; min-height: 0; border-bottom-width: 2px; }
+.tcard.mini .tc-foot { padding: 1px 3px 2px; background: var(--paper); font-size: 10px; line-height: 1.25; }
+.tcard.mini .tc-line { display: flex; align-items: center; justify-content: space-between; gap: 2px; min-width: 0; }
+.tcard.mini .tc-name { font-size: 10.5px; flex: 1; min-width: 0; }
+.tcard.mini .tc-crown { color: var(--red); display: inline-flex; } .tcard.mini .tc-crown .ic { width: 12px; height: 12px; }
+.tcard.mini .tc-mini { display: flex; align-items: center; gap: 4px; font-weight: 700; direction: ltr; justify-content: flex-start; min-height: 13px; }
+.tcard.mini .tc-mini .ic { width: 9px; height: 9px; margin-inline-end: 1px; }
+.tcard.mini .tc-mini .ic[viewBox] { color: var(--red); }
+.tcard.mini .its { margin-inline-start: auto; display: inline-flex; gap: 1px; }
+.tcard.mini .its i { display: grid; place-items: center; width: 13px; height: 13px; background: var(--ink); color: var(--gold); }
+.tcard.mini .its .ic { width: 9px; height: 9px; color: var(--gold); }
+.tcard.mini.sel { outline: 4px solid var(--gold); outline-offset: -1px; z-index: 2; }
+.tcard.mini.ghost { opacity: .5; filter: grayscale(.55); pointer-events: none; }
+.tcard.mini[draggable="true"] { cursor: grab; }
+
+/* live bars (combat) */
+.tc-live { padding-top: 2px; }
+.tc-live .hpb { position: relative; height: 7px; background: #000; border: 1px solid #000; overflow: hidden; }
+.tc-live .hpb i { position: absolute; inset: 0 auto 0 0; background: #3fd66f; }
+.tcard.foe .tc-live .hpb i { background: var(--red); }
+.tc-live .hpb b { position: absolute; inset: 0 auto 0 0; background: #fff; }
+.tc-live .mpb { position: relative; height: 3px; background: #000; margin-top: 1px; }
+.tc-live .mpb i { position: absolute; inset: 0 auto 0 0; background: #5fe3ff; }
+
+/* combat states: all in place, no movement across cells */
+.tcard.dead { filter: grayscale(1) brightness(.45); }
+.tcard.dead::after { content: '✕'; position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 40px; color: var(--red); text-shadow: 2px 2px 0 #000; }
+.tcard.retreated { opacity: .35; }
+.tcard.stunned .tc-art { filter: grayscale(1) contrast(1.3); }
+.tcard.shielded { box-shadow: 0 0 0 3px #5fe3ff; }
+.tcard.hit .tc-art { filter: invert(1); }
+.tcard.cast { animation: cardcast .5s ease-out; }
+@keyframes cardcast { from { box-shadow: 0 0 0 0 var(--gold); } to { box-shadow: 0 0 0 16px #f2b30000; } }
+.tcard.atk { animation: lunge .18s ease-out; position: relative; z-index: 3; }
+@keyframes lunge { 50% { transform: translate(var(--dx, 0), var(--dy, 0)); } }
+
+/* ---------- field: a grid of cells (never overlapping) */
+.field-wrap { max-width: none; width: 100%; }
+.center { overflow-y: auto; overflow-x: hidden; }
+.field {
+  --cw: clamp(68px, min(calc((100vh - 470px) / 4.55), calc((100vw - 640px) / 3.2)), 108px);
+  width: max-content; min-width: 0; aspect-ratio: auto; max-width: 100%; padding: 10px; margin: 0 auto;
+}
+.field #slots { position: relative; display: grid; grid-template-columns: repeat(4, var(--cw)); gap: 6px; }
+.field .cell { position: relative; aspect-ratio: .88; border: 2px dashed #f3ead633; background: #f3ead608; min-width: 0; }
+.field .cell.mine { cursor: pointer; }
+.field .cell.mine:hover, .field .cell.drop { background: #f2b30030; border-color: var(--gold); }
+.field .cell.enemy { border-color: #e0262f40; }
+.field .cell:has(.tcard) { border-color: transparent; background: none; }
+.field .divider { grid-column: 1 / -1; height: 16px; position: relative; display: flex; align-items: center; justify-content: center; }
+.field .divider::before { content: ''; position: absolute; left: -2%; right: -2%; top: 50%; height: 8px; transform: translateY(-50%) rotate(-1deg); background: repeating-linear-gradient(90deg, var(--red) 0 20px, transparent 20px 28px); opacity: .6; }
+.field .divider span { position: relative; z-index: 1; background: #1d1815; padding: 0 8px; font-size: 10px; color: #f3ead6aa; }
+.field .post { position: static; transform: none; grid-column: 1 / -1; width: auto; height: auto; padding: 4px 8px; min-height: 44px; }
+.field .post .portrait { width: 36px; height: 36px; }
+.field-bg, .rift-line { display: none; }
+.fx, .floats { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.fx { width: 100%; height: 100%; }
+.float { z-index: 6; }
+
+/* bench = row of mini cards */
+.bench-row { max-width: 100%; width: auto; }
+.bslot { width: 74px; flex: none; max-width: none; aspect-ratio: .88; }
+.bslot .tcard.mini { border-width: 2px; }
+
+/* shop cards row */
+.shop-cards { gap: 8px; }
+.shop-cards .tcard.full, .item-cards .tcard.full { flex: none; }
+.item-cards { align-items: flex-start; }
+.codex-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 112px)); justify-content: center; }
+.codex-grid .tcard.full { width: 112px; }
+
+@media (max-width: 860px) {
+  .center { overflow: visible; }
+  .field { --cw: min(calc((100vw - 70px) / 4), 96px); }
+  .bslot { width: calc((100vw - 60px) / 7); min-width: 44px; }
+  .tcard.full { width: 100px; }
+}
+
+/* ---- fit tuning: compact shop cards, one-line top bar, smarter field size */
+.tcard.full .tc-art { aspect-ratio: 1 / .66; }
+.tcard.item .tc-art.iconart { aspect-ratio: 1 / .5; }
+.tcard.item .tc-text { min-height: 34px; }
+.tcard.full.empty { min-height: 128px; }
+.shopbar { padding: 6px 8px; }
+.phase:not(.on) { display: none; }
+.field { --cw: clamp(62px, min(calc((100vh - 520px) / 4.55), calc((100vw - 640px) / 3.2)), 108px); }
+.bslot { width: 60px; }
+.bench-row { padding: 4px 8px; }
+.field .post { min-height: 38px; padding: 3px 8px; }
+.field .post .portrait { width: 30px; height: 30px; }
+.tcard.mini .tc-name { font-size: 10px; }
+@media (min-width: 1500px) { .phase:not(.on) { display: inline-block; } }
+@media (max-width: 860px) { .bslot { width: calc((100vw - 60px) / 7); } }
+.field { flex: none; overflow: visible; }
+.field-wrap { flex: none; }

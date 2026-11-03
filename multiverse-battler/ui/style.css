@@ -593,3 +593,51 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   .center { overflow: visible; }
   .field { --cw: 92px; }
 }
+
+/* =====================================================================
+   NO-SCROLL LAYOUT (laptops): field | side column (hero posts + bench + controls)
+   The hero posts moved out of the grid, so the field is just 4 rows of cards.
+   ===================================================================== */
+.field-wrap { --cwv: clamp(76px, calc((100vh - 345px) / 4.44), 112px); display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 14px; width: 100%; max-width: none; flex: none; padding-top: 0; }
+.field { --cw: var(--cwv); flex: none; }
+.fx { overflow: visible; }
+.side { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; width: 250px; flex: none; }
+.side-mid { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: center; min-height: 0; }
+.side .post { position: static; transform: none; width: auto; height: auto; min-height: 46px; padding: 5px 8px; }
+.side .post .portrait { width: 34px; height: 34px; }
+.side .bench-row { flex-wrap: wrap; justify-content: center; width: 100%; max-width: none; padding: 6px; gap: 5px; }
+.side .bench-row .lbl { writing-mode: horizontal-tb; transform: none; width: 100%; text-align: center; padding: 0; font-size: 14px; }
+.side .bslot { width: 68px; }
+.side .combat-ctrl { color: var(--paper); }
+.center { overflow-y: auto; }
+
+/* compact chrome so the field gets the height */
+.topbar { padding: 3px 10px; gap: 6px 12px; }
+.tb-round { font-size: 22px; }
+.timer { font-size: 22px; }
+.tcard.full .tc-art { aspect-ratio: 1 / .58; }
+.tcard.item .tc-art.iconart { aspect-ratio: 1 / .42; }
+.tcard.item .tc-text { min-height: 30px; }
+.tcard.full.empty { min-height: 118px; }
+.shopbar { padding: 5px 8px; }
+.shop-actions .btn { padding: 5px 12px; }
+
+@media (max-width: 860px) {
+  /* phones / tablets: stack  hero(enemy) → field → hero(me) → controls → bench */
+  .field-wrap { --cwv: min(calc((100vw - 46px) / 4), 128px); flex-direction: column; align-items: center; gap: 6px; }
+  .side, .side-mid { display: contents; }
+  #post-top { order: -1; } #post-bottom { order: 1; } #combat-ctrl { order: 2; } #bench { order: 3; }
+  .side .post, #bench { width: calc(var(--cwv) * 4 + 22px); max-width: 100%; }
+  .side .bench-row { flex-wrap: nowrap; }
+  .side .bench-row .lbl { writing-mode: vertical-rl; transform: rotate(180deg); width: auto; padding: 6px 2px; }
+  .side .bslot { width: calc((100vw - 60px) / 7); }
+  .center { overflow: visible; }
+}
+@media (max-height: 520px) and (min-width: 600px) { .field-wrap { --cwv: 92px; } }
+
+/* room for the field's outline/shadow inside the clipped centre column */
+.field-wrap { --cwv: clamp(76px, calc((100vh - 360px) / 4.44), 112px); }
+.center { padding: 6px 0 8px; }
+.field { box-shadow: 6px 6px 0 var(--red); }
+@media (max-width: 860px) { .center { padding: 0; } .field-wrap { --cwv: min(calc((100vw - 46px) / 4), 128px); } }
+@media (max-height: 520px) and (min-width: 600px) { .field-wrap { --cwv: 92px; } }

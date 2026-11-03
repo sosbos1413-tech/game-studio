@@ -273,7 +273,9 @@
     });
   }
 
-  const anchorEl = (fi) => (S.cardEls[fi.id] ? S.cardEls[fi.id].el : $('post-' + fi.side));
+  const viewerSide = () => (S.combat && (S.phase === 'combat' || S.phase === 'result') ? S.combatViewer : S.v);
+  const postEl = (side) => $(side === viewerSide() ? 'post-bottom' : 'post-top');
+  const anchorEl = (fi) => (S.cardEls[fi.id] ? S.cardEls[fi.id].el : postEl(fi.side));
   function center(el) {
     const fr = $('field').getBoundingClientRect(), r = el.getBoundingClientRect();
     return { x: r.left - fr.left + r.width / 2, y: r.top - fr.top + r.height / 2 };
@@ -437,11 +439,9 @@
     const row = (side, ch, mine) => [0, 1, 2, 3].map((k) => cell(side, ch + (mine ? k : 3 - k), mine)).join('');
     const o = 1 - v;
     $('slots').innerHTML =
-      `<div class="post" id="post-${o}"></div>` +
       row(o, 'b', false) + row(o, 'f', false) +
       `<div class="divider"><span>${sc && !inCombat ? 'آخر تشكيلة للخصم (استطلاع)' : inCombat ? '' : 'الخصم — لم يقاتل بعد'}</span></div>` +
-      row(v, 'f', true) + row(v, 'b', true) +
-      `<div class="post" id="post-${v}"></div>`;
+      row(v, 'f', true) + row(v, 'b', true);
   }
 
   function renderPosts() {
@@ -449,7 +449,7 @@
     const inCombat = S.combat && (S.phase === 'combat' || S.phase === 'result');
     const viewer = inCombat ? S.combatViewer : S.v;
     [viewer, 1 - viewer].forEach((side) => {
-      const el = $('post-' + side);
+      const el = postEl(side);
       if (!el) return;
       const p = m.players[side];
       const h = HEROES[p.heroId];

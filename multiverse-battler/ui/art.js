@@ -80,7 +80,7 @@
       : '';
     const frame = isHero ? 'M30 3H70L97 30V70L70 97H30L3 70V30Z' : 'M3 20L20 3H97V80L80 97H3Z';
     if (opts.bare) {
-      return `<svg class="portrait bare" viewBox="0 0 100 100" preserveAspectRatio="xMidYMin slice" aria-label="${def.name}">
+      return `<svg class="portrait bare" viewBox="0 0 100 100" preserveAspectRatio="${imgSrc ? 'xMidYMid' : 'xMidYMin'} slice" aria-label="${def.name}">
       <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${W.color}"/><stop offset="1" stop-color="#1a1412"/></linearGradient>
       <pattern id="${gid}h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(${rot % 90})"><circle cx="2.5" cy="2.5" r="1.1" fill="#000" opacity=".28"/></pattern></defs>
       <rect width="100" height="100" fill="url(#${gid})"/><rect width="100" height="100" fill="url(#${gid}h)"/>

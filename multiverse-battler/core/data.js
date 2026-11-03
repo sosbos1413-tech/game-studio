@@ -162,7 +162,7 @@
       ],
     },
     merin: {
-      id: 'merin', name: 'ميرين', title: 'قائدة المدّ الهادئة', world: 'tide', style: 'صمود — قيادة هادئة، دروع وعلاج ومعارك طويلة',
+      id: 'merin', name: 'ميرين', title: 'قائد المدّ الهادئ', world: 'tide', style: 'صمود — قيادة هادئة، دروع وعلاج ومعارك طويلة',
       board: { atk: 78, as: 0.8, range: 3, def: 0.1, crit: 0.05 },
       passive: { id: 'deep_reserve', name: 'مخزون عميق', text: '+1 جوهر إضافي كل جولة.' },
       abilities: [
@@ -184,7 +184,7 @@
       ],
     },
     orath: {
-      id: 'orath', name: 'أوراث', title: 'حارس الجذور العتيق', world: 'sylvan', style: 'دفاعي — حارس صامت لا يتزحزح، خط أمامي صلب وتحكم',
+      id: 'orath', name: 'أوراث', title: 'حارس الجذور الصامت', world: 'sylvan', style: 'دفاعي — حارس صامت لا يتزحزح، خط أمامي صلب وتحكم',
       board: { atk: 75, as: 0.65, range: 1, def: 0.3, crit: 0.05 },
       passive: { id: 'ancient_bark', name: 'لحاء عتيق', text: 'وحدات الصف الأمامي تكتسب +15% صحة قصوى.' },
       abilities: [

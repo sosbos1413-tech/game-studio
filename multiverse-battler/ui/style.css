@@ -566,3 +566,30 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 @media (max-width: 860px) { .bslot { width: calc((100vw - 60px) / 7); } }
 .field { flex: none; overflow: visible; }
 .field-wrap { flex: none; }
+
+/* ---- bigger field cards on small screens */
+/* short laptops: never shrink below a readable size; the centre column scrolls instead */
+.field { --cw: clamp(86px, min(calc((100vh - 520px) / 4.55), calc((100vw - 640px) / 3.2)), 112px); }
+.field .cell { aspect-ratio: .9; }
+.tcard.mini .tc-name { font-size: 11px; }
+.tcard.mini .tc-mini { font-size: 11px; }
+@media (max-width: 860px) {
+  /* phones/tablets: the grid takes the full screen width, minimal padding */
+  #scr-match.active { padding: 4px; gap: 6px; }
+  .field-wrap { max-width: none; padding-top: 0; }
+  .field { --cw: min(calc((100vw - 46px) / 4), 128px); padding: 4px; outline-width: 3px; box-shadow: 5px 5px 0 var(--red); max-width: none; }
+  .field #slots { gap: 4px; }
+  .field .post { min-height: 40px; }
+  .tcard.mini .tc-name { font-size: 12px; }
+  .tcard.mini .tc-mini { font-size: 11.5px; }
+  .tcard.mini .tc-mini .ic { width: 10px; height: 10px; }
+  .tcard.mini .stars { font-size: 12px; }
+  .bench-row { max-width: 100%; }
+}
+/* landscape phones (very short): keep cards readable, let the page scroll */
+@media (max-height: 520px) and (min-width: 600px) {
+  #scr-match.active { height: auto; min-height: 100vh; }
+  .match-grid { display: contents; }
+  .center { overflow: visible; }
+  .field { --cw: 92px; }
+}

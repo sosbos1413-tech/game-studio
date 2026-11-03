@@ -117,6 +117,7 @@
 
   function beginPrep(pi) {
     closeOverlay();
+    const ctr = document.querySelector('.center'); if (ctr) ctr.scrollTop = 0;
     S.v = pi;
     S.sel = null;
     S.phase = 'resources';
@@ -259,6 +260,8 @@
   // ---- combat field: same grid as the prep field, cards stay in their cells
   function buildTokens() {
     renderField(true);
+    const ctr = document.querySelector('.center'); if (ctr) ctr.scrollTop = 0;
+    window.scrollTo(0, 0);
     const f = $('field');
     $('fx').setAttribute('viewBox', `0 0 ${f.clientWidth} ${f.clientHeight}`);
     $('fx').innerHTML = '';

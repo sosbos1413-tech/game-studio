@@ -64,6 +64,7 @@
   }
 
   function startMatch() {
+    S.panels = false; $('scr-match').classList.remove('show-panels');
     const heroIds = Object.keys(HEROES);
     let players;
     if (S.mode === 'hotseat') {
@@ -426,7 +427,8 @@
       <span class="lifechip" title="حياة بطل الخصم">${portrait(HEROES[o.heroId], { k: 'tb1' })}${esc(o.name)} ${icon('heart')} ${lifeStr(o.life)}</span>
       <span class="res gold" title="الذهب">${icon('gold')} ${p.gold}</span>
       <span class="res ess" title="الجوهر: متاح / الإجمالي (يُدفع فقط عند تفعيل القدرة)">${icon('essence')} ${avail}/${p.essence}</span>
-      <span class="lvl" title="المستوى = الحد الأقصى للوحدات في الساحة">مستوى ${p.level} <span class="xpbar"><i style="width:${need ? (p.xp / need) * 100 : 100}%"></i></span> <small style="color:var(--muted)">${need ? p.xp + '/' + need : 'MAX'}</small></span>
+      <span class="lvl" title="المستوى = الحد الأقصى للوحدات في الساحة"><span class="lw">مستوى</span> ${p.level} <span class="xpbar"><i style="width:${need ? (p.xp / need) * 100 : 100}%"></i></span> <small style="color:var(--muted)">${need ? p.xp + '/' + need : 'MAX'}</small></span>
+      <button class="btn small mob-only" data-act="panels" title="التآزر وقدرات البطل">${S.panels ? 'إغلاق' : 'البطل'}</button>
       <button class="btn small" data-act="pause" title="إيقاف مؤقت">${S.paused ? '▶' : '⏸'}</button>
       <button class="btn small" data-act="menuMatch">☰</button>`;
   }
@@ -492,6 +494,7 @@
         const front = board ? Object.keys(board).filter((x) => x[0] === 'f').length : null;
         status = onBoard ? '<span class="st">مستدعى إلى الساحة</span>' : front === 0 ? '<span class="st risk">لا يوجد خط دفاع!</span>' : front ? `<span class="st safe">محمي (${front} في الصف الأمامي)</span>` : '<span class="st">مركز القيادة</span>';
       }
+      el.style.setProperty('--wc', WORLDS[h.world].color);
       el.className = 'post' + (onBoard && !inCombat ? ' empty-hero' : '') + (exposed && !onBoard ? ' exposed' : '');
       el.innerHTML = `${portrait(h, { k: 'post' + side })}
         <div class="pl"><div class="pn">${esc(p.name)} · ${h.name}</div>
@@ -531,7 +534,7 @@
     const owned = {};
     m.allUnits(p).forEach((u) => { owned[u.defId] = owned[u.defId] || { n: 0, s1: 0 }; owned[u.defId].n++; if (u.star === 1) owned[u.defId].s1++; });
     const cards = p.shop.map((id, i) => {
-      if (!id) return `<div class="tcard full empty"></div>`;
+      if (!id) return `<div class="tcard hc full empty"></div>`;
       const d = UNITS[id];
       const ok = m.canBuy(S.v, i).ok;
       const ow = owned[id];
@@ -541,7 +544,7 @@
         attrs: `data-act="buy" data-idx="${i}" title="${esc(d.skill.name)}: ${esc(d.skill.text)}"` });
     }).join('');
     const items = p.itemShop.map((id, i) => {
-      if (!id) return `<div class="tcard full empty"></div>`;
+      if (!id) return `<div class="tcard hc full empty"></div>`;
       const it = ITEMS[id];
       return itemCardHTML(it, { cls: p.gold >= it.cost ? '' : 'cant', attrs: `data-act="buyItem" data-idx="${i}"` });
     }).join('');
@@ -552,8 +555,8 @@
         <button class="btn" data-act="xp" ${p.level >= E.maxLevel ? 'disabled' : ''} title="اختصار: F">+${E.xpPerBuy} خبرة <span>${icon('gold')}${E.xpCost}</span></button>
         <button class="btn ${p.shopLocked ? 'on' : ''}" data-act="lock" title="يبقي نفس العروض للجولة القادمة">${p.shopLocked ? '🔒 مقفل' : '🔓 قفل'}</button>
       </div>
-      <div class="shop-cards">${cards}</div>
-      <div class="item-cards">${items}</div>
+      <div class="shop-row"><div class="shop-cards">${cards}</div>
+      <div class="item-cards">${items}</div></div>
       <div class="shop-actions">
         <button class="btn" data-act="upgrades">شاشة التطوير</button>
         <button class="btn primary ready-btn" data-act="ready" title="Enter">جاهز ⚔</button>
@@ -936,6 +939,7 @@
       } else if (S.phase === 'combat') S.paused = !S.paused;
       renderTop();
     },
+    panels: () => { S.panels = !S.panels; $('scr-match').classList.toggle('show-panels', S.panels); renderTop(); },
     menuMatch: () => matchMenu(),
     resumeMenu: () => {
       closeModal();

@@ -877,3 +877,129 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 .tcard.hc.mini.s2 .hc-halo { display: block; border-color: #e8eef7; box-shadow: 0 0 0 1.5px #000, 0 0 8px 1px #cfe0ff99; }
 .tcard.hc.mini.s3 .hc-halo { display: block; border-color: #ffd24a; box-shadow: 0 0 0 1.5px #000, 0 0 12px 3px #f2b300cc; }
 .tcard.hc.mini .hc-art, .tcard.hc.mini .hc-ring { z-index: 1; }
+
+/* =====================================================================
+   FACTION COLOURS, LOUDER
+   ===================================================================== */
+.tcard.hc { --f1: color-mix(in srgb, var(--wc) 72%, #fff); --f2: var(--wc); --f3: color-mix(in srgb, var(--wc) 58%, #000);
+  --par: color-mix(in srgb, var(--wc) 32%, #f3e8c8); --rb: color-mix(in srgb, var(--wc) 78%, #000); }
+.hc-frame::before { background: radial-gradient(circle at 1px 1px, #1a120a22 1px, transparent 1.5px) 0 0 / 6px 6px, linear-gradient(color-mix(in srgb, var(--wc) 20%, #f9efd4), var(--par)); }
+.hc-icons .bd.world { box-shadow: 0 0 0 2px #fff, 1px 1px 0 2px #000; }
+/* board minions sit on a faction-coloured plate */
+.tcard.hc.mini::before { content: ''; position: absolute; left: 0; right: 0; top: 1%; bottom: 0; z-index: 0; border-radius: 13px; border: 2px solid #000;
+  background: radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--wc) 62%, #fff), var(--wc) 56%, color-mix(in srgb, var(--wc) 62%, #000));
+  box-shadow: inset 0 0 0 2px #ffffff40; }
+.tcard.hc.mini.hero::before { background: radial-gradient(circle at 50% 32%, #ffe9a0, var(--wc) 60%, color-mix(in srgb, var(--wc) 60%, #000)); }
+/* hero bars carry the faction colour too */
+.post { border-inline-start: 9px solid var(--wc, #000); }
+
+/* =====================================================================
+   PHONE IN PORTRAIT: one screen, no scrolling
+   topbar · enemy hero · field · my hero · bench · shop+buttons
+   (synergies / hero abilities open from the "البطل" button)
+   ===================================================================== */
+.mob-only { display: none; }
+@media (max-width: 860px) and (orientation: portrait) {
+  .mob-only { display: inline-block; }
+  html, body { height: 100%; overflow: hidden; }
+  #scr-match.active { height: 100vh; height: 100dvh; min-height: 0; padding: 3px; gap: 4px; overflow: hidden; }
+  .topbar { flex-wrap: nowrap; padding: 2px 6px; gap: 5px; height: 42px; min-height: 0; overflow: hidden; align-items: center; }
+  .topbar .phases, .topbar .lifechip, .topbar .xpbar, .topbar .lvl small, .topbar .tb-spacer { display: none; }
+  .topbar .tb-round { font-size: 17px; white-space: nowrap; }
+  .topbar .timer { font-size: 18px; min-width: 50px; padding: 0 6px; }
+  .topbar .res { padding: 1px 6px; font-size: 13px; }
+  .topbar .res .ic { width: 15px; height: 15px; }
+  .topbar .lvl { font-size: 12px; white-space: nowrap; }
+  .topbar .btn.small { padding: 3px 8px; font-size: 12px; }
+  .center { flex: 1; min-height: 0; overflow: hidden; padding: 0; }
+  .field-wrap { --cwv: clamp(50px, min(calc((100vh - 372px) / 4.44), calc((100vw - 40px) / 4)), 118px); --cwv: clamp(50px, min(calc((100dvh - 372px) / 4.44), calc((100vw - 40px) / 4)), 118px); gap: 3px; }
+  .field { padding: 3px; }
+  .field #slots { gap: 3px; }
+  /* compact hero bars: health big, status text hidden unless it is a warning */
+  .side .post { min-height: 30px; padding: 2px 6px; gap: 6px; }
+  .side .post .portrait { width: 24px; height: 24px; }
+  .side .post .pn { font-size: 11px; }
+  .side .post .lifebar { margin: 1px 0; height: 6px; }
+  .side .post .pl > .st { font-size: 13px; font-weight: 700; }
+  .side .post .pl > .st .st.safe, .side .post .pl > .st .st:not(.risk) { display: none; }
+  .side .bench-row { padding: 2px 4px; gap: 3px; }
+  .side .bench-row .lbl { display: none; }
+  .side .bslot { width: 44px; }
+  .combat-ctrl { min-height: 28px; }
+  /* shop: actions on one row, cards right under them at reduced size */
+  .shopbar { gap: 3px; padding: 3px 4px 2px; flex-wrap: wrap; overflow: hidden; align-items: stretch; }
+  .shop-actions { flex-direction: row; flex-wrap: nowrap; width: auto; gap: 3px; }
+  .shop-actions:first-child { flex: 1.6; }
+  .shop-actions:last-child { flex: 1; }
+  .shop-actions .btn { flex: 1; padding: 3px 4px; font-size: 11.5px; justify-content: center; gap: 3px; }
+  .shop-actions .btn .ic { width: 12px; height: 12px; }
+  .ready-btn { min-width: 0 !important; font-size: 15px !important; }
+  .shop-cards, .item-cards { flex-wrap: nowrap; min-width: 0; width: auto; padding: 4px 2px 8px; gap: 5px; border: 0; }
+  .shop-cards { order: 5; flex: 0 0 auto; }
+  .item-cards { order: 6; flex: 0 0 auto; }
+  .shopbar > .shop-cards, .shopbar > .item-cards { overflow: visible; }
+  .shopbar { overflow-x: auto; overflow-y: hidden; }
+  .tcard.hc.full { zoom: .64; }
+  .tcard.hc.full.empty { min-height: 0; height: 151px; }
+  /* phones: synergies + hero abilities open as a full-screen layer */
+  .match-grid { display: contents; }
+  .panel.left, .panel.right { display: none; }
+  #scr-match.show-panels .match-grid { display: block; position: fixed; left: 0; right: 0; top: 48px; bottom: 0; z-index: 35; overflow-y: auto; background: var(--ink); padding: 8px; }
+  #scr-match.show-panels .panel.left, #scr-match.show-panels .panel.right { display: block; max-height: none; margin-bottom: 8px; overflow: visible; }
+  #scr-match.show-panels .center, #scr-match.show-panels .shopbar { display: none; }
+}
+
+/* wrapper is invisible on desktop; on phones it becomes one horizontally scrollable row */
+.shop-row { display: contents; }
+@media (max-width: 860px) and (orientation: portrait) {
+  .topbar { gap: 4px; padding: 2px 5px; }
+  .topbar .tb-round { font-size: 15px; }
+  .topbar .timer { font-size: 16px; min-width: 42px; padding: 0 4px; }
+  .topbar .res { padding: 1px 5px; font-size: 12px; gap: 3px; }
+  .topbar .res .ic { width: 13px; height: 13px; }
+  .topbar .lvl { font-size: 11px; }
+  .topbar .lw { font-size: 0; }
+  .topbar .lw::before { content: 'م'; font-size: 11px; }
+  .topbar .btn.small { padding: 2px 6px; font-size: 11px; }
+  .side .post .pn { display: none; }
+  .side .post { min-height: 28px; }
+  .field-wrap { --cwv: clamp(50px, min(calc((100vh - 386px) / 4.44), calc((100vw - 40px) / 4)), 118px); --cwv: clamp(50px, min(calc((100dvh - 386px) / 4.44), calc((100vw - 40px) / 4)), 118px); }
+  .shop-row { display: flex; flex: 1 0 100%; order: 5; gap: 10px; overflow-x: auto; overflow-y: hidden; padding: 0; -webkit-overflow-scrolling: touch; }
+  .shop-row .shop-cards, .shop-row .item-cards { order: 0; flex: 0 0 auto; padding: 4px 2px 8px; }
+  .shop-row .item-cards { border-inline-start: 2px dotted #ffffff55; padding-inline-start: 10px; }
+  .shopbar { overflow: hidden; }
+}
+
+/* phone portrait: squeeze the last pixels so prep fits too */
+@media (max-width: 860px) and (orientation: portrait) {
+  .combat-ctrl { min-height: 0; }
+  .combat-ctrl .hint { display: none; }
+  .side .bslot { width: 40px; }
+  .side .bench-row { padding: 2px 3px; }
+  .tcard.hc.full { zoom: .62; }
+  .shop-actions .btn { padding: 2px 4px; }
+  .shopbar { padding-top: 2px; gap: 2px; }
+}
+
+/* empty shop slot = dashed outline, same size as a card (so the shop never changes height) */
+.tcard.hc.full.empty { filter: none; cursor: default; border: 2px dashed #3a322c66; border-radius: 13px; background: #0000000d; height: 151px; }
+.tcard.hc.full.empty:hover { transform: none; }
+
+/* phone portrait: shop has a fixed height (never grows after buying) and the field leaves room for it */
+@media (max-width: 860px) and (orientation: portrait) {
+  .shopbar { height: 152px; flex: none; }
+  .field-wrap { --cwv: clamp(50px, min(calc((100vh - 396px) / 4.44), calc((100vw - 40px) / 4)), 118px); --cwv: clamp(50px, min(calc((100dvh - 396px) / 4.44), calc((100vw - 40px) / 4)), 118px); }
+  .center { padding-bottom: 2px; }
+}
+@media (max-width: 860px) and (orientation: portrait) {
+  .shopbar:has(> .hint) { height: auto; min-height: 0; }
+  .shopbar > .hint { padding: 4px 6px !important; font-size: 11px; }
+}
+@media (max-width: 860px) and (orientation: portrait) {
+  .side .bslot { width: 46px; height: 52px; aspect-ratio: auto; }
+  .side .bslot .tcard.hc.mini .hc-atk, .side .bslot .tcard.hc.mini .hc-hp { width: 17px; height: 17px; border-width: 1.5px; bottom: -2px; }
+  .side .bslot .tcard.hc.mini .hc-atk b, .side .bslot .tcard.hc.mini .hc-hp b { font-size: 0; }
+  .side .bslot .tcard.hc.mini .hc-atk .ic, .side .bslot .tcard.hc.mini .hc-hp .ic { opacity: .75; width: 70%; height: 70%; }
+  .side .bslot .tcard.hc.mini .stars { font-size: 9px; top: -2px; }
+  .side .bslot .tcard.hc.mini .bd.role { display: none; }
+}

@@ -700,3 +700,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 .tcard.full .tc-info { width: 17px; height: 17px; font-size: 10px; line-height: 13px; }
 .tc-bar.chips { min-height: 38px; align-content: center; }
 .tc-bar.chips .sv .ic { width: 12px; height: 12px; }
+
+/* "i" moved onto the art (bottom centre) so the header is all name */
+.tcard.full .tc-art .tc-info { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); z-index: 3; width: 16px; height: 16px; border-radius: 50%; background: #fff; color: #000; border: 2px solid #000; font-size: 10px; line-height: 12px; box-shadow: 1px 1px 0 #000; }
+.tcard.full .tc-head { min-height: 30px; }

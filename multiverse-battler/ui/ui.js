@@ -252,8 +252,8 @@
     }
     const own = o.own ? `<span class="bd own ${o.own.pair ? 'up' : ''}">${o.own.pair ? '↑' : '×' + o.own.n}</span>` : '';
     return `<div class="tcard full ${tier}${sc} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
-      <div class="tc-head">${isHero ? '' : `<span class="tc-cost">${icon('coin')}${def.cost}</span>`}<b class="tc-name">${def.name}</b><span class="tc-info" data-act="${isHero ? 'heroInfo' : 'detail'}" data-id="${def.id}">i</span></div>
-      <div class="tc-art">${portrait(def, { bare: true, k: o.k })}${worldBd}${roleBd}${skillBd}${own}<i class="sheen"></i></div>
+      <div class="tc-head">${isHero ? '' : `<span class="tc-cost">${icon('coin')}${def.cost}</span>`}<b class="tc-name">${def.name}</b></div>
+      <div class="tc-art">${portrait(def, { bare: true, k: o.k })}${worldBd}${roleBd}${skillBd}${own}<span class="tc-info" data-act="${isHero ? 'heroInfo' : 'detail'}" data-id="${def.id}" title="تفاصيل">i</span><i class="sheen"></i></div>
       <div class="tc-bar">${isHero ? sv('crown', '') : sv('heart', st.hp) + gems(def.tier) + sv('sword', st.atk)}</div></div>`;
   }
 

@@ -641,3 +641,62 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 .field { box-shadow: 6px 6px 0 var(--red); }
 @media (max-width: 860px) { .center { padding: 0; } .field-wrap { --cwv: min(calc((100vw - 46px) / 4), 128px); } }
 @media (max-height: 520px) and (min-width: 600px) { .field-wrap { --cwv: 92px; } }
+
+/* =====================================================================
+   ICON CARDS — symbols instead of words. Text left on a card: one short
+   name (shop only) + numbers.
+   ===================================================================== */
+.bd { position: absolute; z-index: 2; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #000; color: #fff; background: var(--ink); box-shadow: 1px 1px 0 #000; }
+.bd .ic { width: 15px; height: 15px; }
+.bd.world { top: 4px; right: 4px; background: var(--wc); }
+.bd.world .ic { filter: drop-shadow(1px 1px 0 #000); }
+.bd.role { bottom: 4px; left: 4px; color: var(--gold); }
+.bd.skill { bottom: 4px; right: 4px; background: var(--red); }
+.bd.own { top: 4px; left: 4px; width: auto; min-width: 24px; height: 22px; padding: 0 6px; border-radius: 11px; background: #fff; color: #000; font-weight: 700; font-size: 12px; }
+.bd.own.up { background: var(--gold); animation: pairpulse .6s infinite alternate; }
+
+.tcard.full .tc-art { aspect-ratio: 1 / .88; position: relative; }
+.tcard.full .tc-cost { gap: 3px; padding: 0 7px 0 4px; border-radius: 12px; height: 22px; }
+.tcard.full .tc-cost .ic { width: 15px; height: 15px; color: var(--gold); }
+.tc-bar { display: flex; align-items: center; justify-content: space-between; gap: 4px; background: var(--ink); color: var(--paper); padding: 3px 7px; font-size: 13px; direction: ltr; min-height: 24px; }
+.sv { display: inline-flex; align-items: center; gap: 3px; font-weight: 700; }
+.sv .ic { width: 13px; height: 13px; }
+.tc-bar .sv:first-child .ic, .tc-mini .sv:first-child .ic { color: #ff5a6a; }
+.tc-bar .sv:last-child .ic, .tc-mini .sv:nth-child(2) .ic { color: var(--gold); }
+.gems { display: inline-flex; }
+.gems .ic { width: 11px; height: 11px; }
+.gems.t1 { color: #b9b2a3; } .gems.t2 { color: #5aa7ee; } .gems.t3 { color: #ffc21a; }
+.tc-bar.chips { justify-content: center; flex-wrap: wrap; gap: 1px 9px; min-height: 26px; }
+.tc-bar.chips .sv .ic { color: var(--gold); }
+.tcard.item .tc-art.iconart { aspect-ratio: 1 / .8; }
+
+/* mini cards: art + role disc + stars + one dark footer of numbers */
+.tcard.mini .bd.role { top: 3px; left: 3px; bottom: auto; width: 20px; height: 20px; }
+.tcard.mini .bd.role .ic { width: 12px; height: 12px; }
+.tcard.mini .tc-art .stars { position: absolute; top: 3px; right: 4px; z-index: 2; font-size: 13px; }
+.tcard.mini .tc-foot { background: var(--ink); color: var(--paper); padding: 2px 5px; }
+.tcard.mini .tc-mini { display: flex; align-items: center; gap: 7px; font-size: 12px; direction: ltr; min-height: 16px; }
+.tcard.mini .tc-mini .sv .ic { width: 11px; height: 11px; margin: 0; }
+.tcard.mini .its { margin-inline-start: auto; }
+.tcard.mini .tc-live { padding: 3px 0 1px; }
+
+/* the frame tells the star level; tier 3 gets a foil sheen */
+.sheen { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 3; background: linear-gradient(115deg, transparent 38%, #ffffff77 50%, transparent 62%); background-size: 260% 100%; }
+.tcard.s3 .sheen, .tcard.full.t3 .sheen { opacity: 1; animation: sheen 2.8s linear infinite; }
+@keyframes sheen { from { background-position: 160% 0; } to { background-position: -60% 0; } }
+.tcard.mini.s2 { border-color: #d6deea; box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px #d6deea; }
+.tcard.mini.s3 { border-color: var(--gold); box-shadow: 0 0 0 2px var(--ink), 0 0 11px 3px #f2b300cc; }
+.tcard.mini.s2 .stars { color: #fff; } .tcard.mini.s3 .stars { color: var(--gold); }
+
+/* fit fixes: compact bar, two-line names, equal item heights */
+.tc-bar { padding: 3px 5px; gap: 2px; font-size: 12px; }
+.tc-bar .sv { gap: 2px; }
+.tc-bar .sv .ic { width: 11px; height: 11px; }
+.gems .ic { width: 9px; height: 9px; }
+.tcard.full .tc-head { min-height: 32px; padding: 3px; gap: 3px; }
+.tcard.full .tc-name { font-size: 11px; line-height: 1.15; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: center; }
+.tcard.full .tc-cost { height: 20px; font-size: 14px; padding: 0 6px 0 3px; }
+.tcard.full .tc-cost .ic { width: 13px; height: 13px; }
+.tcard.full .tc-info { width: 17px; height: 17px; font-size: 10px; line-height: 13px; }
+.tc-bar.chips { min-height: 38px; align-content: center; }
+.tc-bar.chips .sv .ic { width: 12px; height: 12px; }

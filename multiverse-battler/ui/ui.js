@@ -221,40 +221,55 @@
     const sm = CFG.stars.mult[star || 1];
     return { hp: Math.round(def.hp * sm), atk: Math.round(def.atk * sm) };
   }
-  /** One card component, three sizes: 'full' (shop/codex), 'mini' (field/bench), 'mini'+live (combat). */
+  // Icon language: every fact on a card is a symbol, only numbers (and one short name) remain as text.
+  const ART = AMB.art;
+  const disc = (cls, iconName, title) => `<span class="bd ${cls}" title="${esc(title || '')}">${icon(iconName)}</span>`;
+  const gems = (n) => `<span class="gems t${n}">${icon('gem').repeat(n)}</span>`;
+  const sv = (ic, v, cls) => `<span class="sv ${cls || ''}">${icon(ic)}<b>${v}</b></span>`;
+
+  /** One card component, two sizes: 'full' (shop/codex) and 'mini' (field/bench, no name). */
   function cardHTML(def, o) {
     o = o || {};
     const W = WORLDS[def.world];
     const isHero = !def.role;
     const tier = isHero ? 'hero' : 't' + def.tier;
+    const star = o.star || 1;
+    const sc = isHero ? '' : ' s' + star;
     const sel = o.sel ? ' sel' : '';
     const attrs = o.attrs || '';
+    const st = isHero ? null : cardStats(def, star);
+    const worldBd = disc('world', ART.WORLD_ICON[def.world], W.name);
+    const roleBd = isHero ? disc('role hero', 'crown', 'بطل') : disc('role', ART.ROLE_ICON[def.role], ROLES[def.role].name);
+    const skillBd = isHero ? '' : disc('skill', ART.SKILL_ICON[def.skill.type] || 'star', def.skill.name);
     if (o.size === 'mini') {
-      const st = isHero ? null : cardStats(def, o.star);
       const items = (o.items || []).map((it) => `<i title="${esc(ITEMS[it].name)}">${icon(ITEMS[it].icon)}</i>`).join('');
-      const line2 = o.live
-        ? `<div class="tc-live"><div class="hpb"><b></b><i></i></div>${def.role ? '<div class="mpb"><i></i></div>' : ''}</div>`
-        : `<div class="tc-mini">${isHero ? `<span>${icon('heart')}${o.life != null ? o.life : ''}</span>` : `<span>${icon('heart')}${st.hp}</span><span>${icon('sword')}${st.atk}</span>`}<span class="its">${items}</span></div>`;
-      return `<div class="tcard mini ${tier}${sel} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
-        <div class="tc-art">${portrait(def, { bare: true, k: o.k })}</div>
-        <div class="tc-foot"><div class="tc-line"><b class="tc-name">${def.name}</b>${isHero ? '<span class="tc-crown">' + icon('crown') + '</span>' : stars(o.star)}</div>${line2}</div></div>`;
+      const bar = o.live
+        ? `<div class="tc-live"><div class="hpb"><b></b><i></i></div>${isHero ? '' : '<div class="mpb"><i></i></div>'}</div>`
+        : `<div class="tc-mini">${isHero ? sv('heart', o.life != null ? o.life : '') : sv('heart', st.hp) + sv('sword', st.atk)}<span class="its">${items}</span></div>`;
+      return `<div class="tcard mini ${tier}${sc}${sel} ${o.cls || ''}" style="--wc:${W.color}" title="${esc(def.name)}" ${attrs}>
+        <div class="tc-art">${portrait(def, { bare: true, k: o.k })}${roleBd}${isHero ? '' : stars(star)}${star > 1 ? '<i class="sheen"></i>' : ''}</div>
+        <div class="tc-foot">${bar}</div></div>`;
     }
-    // full card
-    const st = isHero ? null : cardStats(def, 1);
-    return `<div class="tcard full ${tier} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
-      <div class="tc-head">${isHero ? '' : `<span class="tc-cost">${icon('gold')}${def.cost}</span>`}<b class="tc-name">${def.name}</b><span class="tc-info" data-act="${isHero ? 'heroInfo' : 'detail'}" data-id="${def.id}">i</span></div>
-      <div class="tc-art">${portrait(def, { bare: true, k: o.k })}</div>
-      <div class="tc-tags"><span class="wtag" style="--w:${W.color}">${W.name}</span>${isHero ? `<span class="rtag">بطل</span>` : `<span class="rtag">${icon(AMB.art.ROLE_ICON[def.role])}${ROLES[def.role].name}</span>`}</div>
-      <div class="tc-stats">${isHero ? `<span>${esc(def.title)}</span>` : `<span>${icon('heart')}${st.hp}</span><span>${icon('sword')}${st.atk}</span><span>${icon('bow')}${def.range}</span>`}</div>
-      <div class="tc-note">${o.note || (isHero ? '' : esc(def.skill.name))}</div></div>`;
+    const own = o.own ? `<span class="bd own ${o.own.pair ? 'up' : ''}">${o.own.pair ? '↑' : '×' + o.own.n}</span>` : '';
+    return `<div class="tcard full ${tier}${sc} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
+      <div class="tc-head">${isHero ? '' : `<span class="tc-cost">${icon('coin')}${def.cost}</span>`}<b class="tc-name">${def.name}</b><span class="tc-info" data-act="${isHero ? 'heroInfo' : 'detail'}" data-id="${def.id}">i</span></div>
+      <div class="tc-art">${portrait(def, { bare: true, k: o.k })}${worldBd}${roleBd}${skillBd}${own}<i class="sheen"></i></div>
+      <div class="tc-bar">${isHero ? sv('crown', '') : sv('heart', st.hp) + gems(def.tier) + sv('sword', st.atk)}</div></div>`;
+  }
+
+  const fmtStat = (stat, v) => (['startMana', 'range'].includes(stat) ? '+' + v : '+' + Math.round(v * 100) + '%');
+  function itemChips(it) {
+    if (it.kind === 'equip') return it.effects.map((e) => `<span class="sv">${icon(ART.STAT_ICON[e.stat] || 'star')}<b>${fmtStat(e.stat, e.value)}</b></span>`).join('');
+    const sp = it.spell;
+    const map = { buffAll: ['sword', '+' + Math.round(sp.atkPct * 100) + '%'], shieldFront: ['shield', sp.amount], hitBack: ['burst', sp.dmg], hasteAll: ['wind', '+' + Math.round(sp.asPct * 100) + '%'] }[sp.type];
+    return map ? `<span class="sv">${icon(map[0])}<b>${map[1]}</b></span>` : '';
   }
   function itemCardHTML(it, o) {
     o = o || {};
-    return `<div class="tcard full item ${it.kind} ${o.cls || ''}" ${o.attrs || ''} title="${esc(it.text)}">
-      <div class="tc-head"><span class="tc-cost">${icon('gold')}${it.cost}</span><b class="tc-name">${it.name}</b></div>
-      <div class="tc-art iconart">${icon(it.icon, 'big-ic')}</div>
-      <div class="tc-tags"><span class="rtag">${it.kind === 'equip' ? 'معدة' : 'تعويذة'}</span></div>
-      <div class="tc-text">${it.text}</div></div>`;
+    return `<div class="tcard full item ${it.kind} ${o.cls || ''}" ${o.attrs || ''} title="${esc(it.name + ': ' + it.text)}">
+      <div class="tc-head"><span class="tc-cost">${icon('coin')}${it.cost}</span><b class="tc-name">${it.name}</b></div>
+      <div class="tc-art iconart">${icon(it.icon, 'big-ic')}${disc(it.kind === 'equip' ? 'role' : 'skill', it.kind === 'equip' ? 'shield' : 'star', it.kind === 'equip' ? 'معدة' : 'تعويذة')}</div>
+      <div class="tc-bar chips">${itemChips(it)}</div></div>`;
   }
 
   // ---- combat field: same grid as the prep field, cards stay in their cells
@@ -511,7 +526,7 @@
       const ow = owned[id];
       const pair = ow && ow.s1 >= 2;
       return cardHTML(d, { cls: `${ok ? '' : 'cant'} ${pair ? 'pair' : ''}`, k: 'sh' + i,
-        note: ow ? `<span class="owned">${pair ? 'سيتطور ★★!' : 'تملك ' + ow.n}</span>` : '',
+        own: ow ? { n: ow.n, pair } : null,
         attrs: `data-act="buy" data-idx="${i}" title="${esc(d.skill.name)}: ${esc(d.skill.text)}"` });
     }).join('');
     const items = p.itemShop.map((id, i) => {
@@ -820,7 +835,7 @@
     const units = Object.values(UNITS).filter((u) => (!f.world || u.world === f.world) && (!f.role || u.role === f.role)).sort((a, b) => a.tier - b.tier);
     $('codex').innerHTML = `
       <h3>الأبطال</h3>
-      <div class="codex-grid">${Object.values(HEROES).map((h) => cardHTML(h, { k: 'cx', note: esc(h.style.split('—')[0]), attrs: `data-act="heroInfo" data-id="${h.id}"` })).join('')}</div>
+      <div class="codex-grid">${Object.values(HEROES).map((h) => cardHTML(h, { k: 'cx', attrs: `data-act="heroInfo" data-id="${h.id}"` })).join('')}</div>
       <h3>الوحدات (${units.length})</h3>
       <div class="filters">${fb('world', '', 'كل العوالم')}${Object.values(WORLDS).map((w) => fb('world', w.id, w.name)).join('')}</div>
       <div class="filters">${fb('role', '', 'كل الأدوار')}${Object.values(ROLES).map((r) => fb('role', r.id, r.name)).join('')}</div>
@@ -987,5 +1002,5 @@
   });
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch };
+  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML };
 })();

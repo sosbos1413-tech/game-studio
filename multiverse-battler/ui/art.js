@@ -20,6 +20,22 @@
     star: '<path d="M12 2.5l2.8 6.3 6.7.6-5.1 4.5 1.5 6.6L12 17l-5.9 3.5 1.5-6.6-5.1-4.5 6.7-.6z" fill="currentColor"/>',
     gold: '<circle cx="12" cy="12" r="8.5" fill="#ffc94a"/><circle cx="12" cy="12" r="5.8" fill="none" stroke="#b9851a" stroke-width="1.6"/>',
     essence: '<path d="M12 2.5l6 9.5-6 9.5-6-9.5z" fill="#8ff0ff"/><path d="M12 6l3.6 6L12 18l-3.6-6z" fill="#3aa9e0"/>',
+    flame: '<path d="M12 2.2c1.2 3.6 5.3 5.6 5.3 10.4a5.3 5.3 0 0 1-10.6 0c0-2.1 1-3.4 2.1-4.4.2 1.7.9 2.5 1.8 2.8C10.1 7.9 10.4 5 12 2.2z" fill="currentColor"/>',
+    moon: '<path d="M15.6 3A9.2 9.2 0 1 0 21 14.2 7.6 7.6 0 0 1 15.6 3z" fill="currentColor"/>',
+    bolt: '<path d="M13.6 1.8L5 13.6h5.6L9.4 22.2 19 9.6h-5.9z" fill="currentColor"/>',
+    leaf: '<path d="M20.5 3.5C10.5 3.5 4.5 8.6 4.5 15.4c0 1.6.4 3 1.1 4C6.8 14.6 10 11.6 14.6 9.6 11 12.2 8.6 15.2 7.8 20c1.2.7 2.5 1 3.8 1C18 21 20.5 13 20.5 3.5z" fill="currentColor"/>',
+    burst: '<path d="M12 1.5l2.2 6.3 6.3-2.2-2.2 6.3 6.2 2.4-6.2 2.4 2.2 6.3-6.3-2.2L12 22.5l-2.2-6.3-6.3 2.2 2.2-6.3L1.5 12l6.2-2.4-2.2-6.3 6.3 2.2z" fill="currentColor"/>',
+    blast: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 5.5l1.8 4.7 4.7 1.8-4.7 1.8L12 18.5l-1.8-4.7L5.5 12l4.7-1.8z" fill="currentColor"/>',
+    slash: '<path d="M4.5 3l5.5 18M10.5 3l5.5 18M16.5 3l4 13" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>',
+    snow: '<path d="M12 2v20M3.4 7l17.2 10M3.4 17L20.6 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/>',
+    drop: '<path d="M12 2.4C8 8 5.4 11 5.4 14.6a6.6 6.6 0 0 0 13.2 0C18.6 11 16 8 12 2.4z" fill="currentColor"/>',
+    skull: '<path fill-rule="evenodd" d="M12 3a8 8 0 0 0-8 8c0 2.7 1.3 4.5 3 5.6V20h3v-2h4v2h3v-3.4c1.7-1.1 3-2.9 3-5.6a8 8 0 0 0-8-8zM9 9.4a1.9 1.9 0 1 0 .01 0zm6 0a1.9 1.9 0 1 0 .01 0z" fill="currentColor"/>',
+    target: '<circle cx="12" cy="12" r="6.8" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 1.5v6M12 16.5v6M1.5 12h6M16.5 12h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="12" r="1.9" fill="currentColor"/>',
+    arrows: '<path d="M3.5 19L20 5M3.5 12H20.5M3.5 5L20 19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M20.5 3.5v5h-5zM21.5 12l-4.5-3v6zM20.5 20.5v-5h-5z" fill="currentColor"/>',
+    taunt: '<path d="M12 2.5l7.5 3v5.8c0 4.8-3.2 8.6-7.5 10.2-4.3-1.6-7.5-5.4-7.5-10.2V5.5z" fill="currentColor"/><path d="M12 7.5v6.2" stroke="#000" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="17" r="1.4" fill="#000"/>',
+    healall: '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 6h4v4h4v4h-4v4h-4v-4H6v-4h4z" fill="currentColor"/>',
+    gem: '<path d="M12 2l8 9-8 11-8-11z" fill="currentColor"/><path d="M4 11h16M12 2l-3 9 3 11 3-11z" fill="none" stroke="#000" stroke-width=".9" opacity=".45"/>',
+    coin: '<circle cx="12" cy="12" r="9" fill="currentColor"/><circle cx="12" cy="12" r="6" fill="none" stroke="#000" stroke-width="1.4" opacity=".45"/>',
     heart: '<path d="M12 20.5S3 15 3 8.8A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 9 2.2C21 15 12 20.5 12 20.5z" fill="currentColor"/>',
   };
   const ROLE_ICON = { guardian: 'shield', fighter: 'sword', assassin: 'dagger', mage: 'orb', marksman: 'bow', support: 'cross', hero: 'crown' };
@@ -89,5 +105,9 @@
 
   function stars(n) { return n ? `<span class="stars s${n}">${'★'.repeat(n)}</span>` : ''; }
 
-  AMB.art = { icon, portrait, stars, ROLE_ICON, TIER_RING, ICONS };
+  const WORLD_ICON = { ember: 'flame', tide: 'moon', neon: 'bolt', sylvan: 'leaf' };
+  const SKILL_ICON = { nuke: 'burst', cleave: 'slash', aoe: 'blast', stunAoe: 'snow', stunStrike: 'bolt', burn: 'flame', drain: 'drop', execute: 'skull',
+    snipe: 'target', multishot: 'arrows', taunt: 'taunt', shieldSelf: 'shield', healSelf: 'heart', healLowest: 'cross', healAll: 'healall', hasteAllies: 'wind' };
+  const STAT_ICON = { atkPct: 'sword', hpPct: 'heart', dr: 'shield', asPct: 'wind', startMana: 'orb', skillPower: 'burst', lifesteal: 'drop', range: 'target', crit: 'dagger' };
+  AMB.art = { icon, portrait, stars, ROLE_ICON, TIER_RING, ICONS, WORLD_ICON, SKILL_ICON, STAT_ICON };
 })();

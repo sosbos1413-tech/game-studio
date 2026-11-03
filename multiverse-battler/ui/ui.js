@@ -247,7 +247,7 @@
       const items = (o.items || []).map((it) => `<i title="${esc(ITEMS[it].name)}">${icon(ITEMS[it].icon)}</i>`).join('');
       const mid = o.live ? `<div class="hc-bar"><div class="hpb"><b></b><i></i></div>${isHero ? '' : '<div class="mpb"><i></i></div>'}</div>` : (items ? `<div class="hc-its">${items}</div>` : '');
       return `<div class="tcard hc mini ${tier}${sc}${sel} ${o.cls || ''}" style="--wc:${W.color}" title="${esc(def.name)}" ${attrs}>
-        <div class="hc-art">${portrait(def, { bare: true, k: o.k })}<i class="sheen"></i></div><div class="hc-ring"></div>
+        <i class="hc-halo"></i><div class="hc-art">${portrait(def, { bare: true, k: o.k })}<i class="sheen"></i></div><div class="hc-ring"></div>
         ${roleD}${isHero ? '' : stars(star)}${atkBd}${hpBd}${mid}</div>`;
     }
     const own = o.own ? `<span class="hc-own ${o.own.pair ? 'up' : ''}">${o.own.pair ? '↑' : '×' + o.own.n}</span>` : '';

@@ -854,3 +854,26 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 .hc-chips { top: 108px; }
 .hc-gems { bottom: 3px; }
 .hc-own { top: 62px; right: auto; left: 11px; }
+
+/* =====================================================================
+   FACTION COLOURS — the frame takes the colour of the card's world.
+   Tier stays readable on the portrait ring (bronze / silver / gold) and
+   the gems; on board the ring is faction-coloured and stars add a halo.
+   ===================================================================== */
+.tcard.hc { --f1: color-mix(in srgb, var(--wc) 38%, #fff); --f2: var(--wc); --f3: color-mix(in srgb, var(--wc) 48%, #000);
+  --par: color-mix(in srgb, var(--wc) 15%, #efe2c2); --rb: color-mix(in srgb, var(--wc) 72%, #000); }
+.hc-frame { background: linear-gradient(150deg, var(--f1), var(--f2) 55%, var(--f3)); }
+.hc-frame::before { background: radial-gradient(circle at 1px 1px, #3a2a1a1c 1px, transparent 1.5px) 0 0 / 6px 6px, linear-gradient(color-mix(in srgb, var(--wc) 8%, #f8eed2), var(--par)); }
+.tcard.hc.hero { --m1: #fff1a6; --m2: #e3a800; --m3: #7a5200; }
+.tcard.hc.item.equip { --wc: #6f7886; --rb: #3a322c; }
+.tcard.hc.item.spell { --wc: #d64550; --rb: #a5141b; }
+
+/* board minions: faction ring + star halo */
+.tcard.hc.mini.s1, .tcard.hc.mini.s2, .tcard.hc.mini.s3, .tcard.hc.mini.hero {
+  --m1: color-mix(in srgb, var(--wc) 38%, #fff); --m2: var(--wc); --m3: color-mix(in srgb, var(--wc) 48%, #000); }
+.tcard.hc.mini.hero { --m1: #fff1a6; --m2: #e3a800; --m3: #7a5200; }
+.tcard.hc.mini.s3 .hc-ring { filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000); }
+.hc-halo { display: none; position: absolute; left: 0; right: 0; top: -2%; height: 86%; border-radius: 50% / 46%; border: max(2px, 3cqw) solid transparent; pointer-events: none; z-index: 0; }
+.tcard.hc.mini.s2 .hc-halo { display: block; border-color: #e8eef7; box-shadow: 0 0 0 1.5px #000, 0 0 8px 1px #cfe0ff99; }
+.tcard.hc.mini.s3 .hc-halo { display: block; border-color: #ffd24a; box-shadow: 0 0 0 1.5px #000, 0 0 12px 3px #f2b300cc; }
+.tcard.hc.mini .hc-art, .tcard.hc.mini .hc-ring { z-index: 1; }

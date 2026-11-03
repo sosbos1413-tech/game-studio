@@ -151,18 +151,18 @@
    */
   const HEROES = {
     kagira: {
-      id: 'kagira', name: 'كيرو', title: 'الشعلة العنيدة', world: 'ember', style: 'هجومي — متهور ومتفائل، ضغط مبكر وضرر متفجر',
+      id: 'kagira', name: 'كيرو', title: 'الجمر الهادئ', world: 'ember', style: 'هجومي — هادئ ومحسوب، ينفجر عند الهجوم: ضغط مبكر وضرر متفجر',
       board: { atk: 85, as: 0.8, range: 1, def: 0.2, crit: 0.1 },
       passive: { id: 'blazing_will', name: 'إرادة متقدة', text: 'عندما يصبح البطل مكشوفًا يكتسب الحلفاء +25% هجوم.' },
       abilities: [
-        { id: 'inferno_banner', name: 'هتاف المعركة', cost: 3, type: 'buffAllies', atkPct: 0.3, dur: 6,
+        { id: 'inferno_banner', name: 'أمر الهجوم', cost: 3, type: 'buffAllies', atkPct: 0.3, dur: 6,
           text: '+30% هجوم لجميع الحلفاء لمدة 6 ثوانٍ.' },
-        { id: 'meteor', name: 'نيزك الجموح', cost: 4, type: 'damageCluster', dmg: 200, scale: 25, radius: 1.6,
+        { id: 'meteor', name: 'نيزك الجمر', cost: 4, type: 'damageCluster', dmg: 200, scale: 25, radius: 1.6,
           text: 'نيزك على أكثف تجمع للأعداء (200 + 25 لكل جولة).' },
       ],
     },
     merin: {
-      id: 'merin', name: 'ميرين', title: 'قائد المدّ الهادئ', world: 'tide', style: 'صمود — قيادة هادئة، دروع وعلاج ومعارك طويلة',
+      id: 'merin', name: 'ميران', title: 'حارس المدّ الصامت', world: 'tide', style: 'صمود — ظلّ هادئ يحمي الفريق: دروع وعلاج ومعارك طويلة',
       board: { atk: 78, as: 0.8, range: 3, def: 0.1, crit: 0.05 },
       passive: { id: 'deep_reserve', name: 'مخزون عميق', text: '+1 جوهر إضافي كل جولة.' },
       abilities: [
@@ -184,9 +184,9 @@
       ],
     },
     orath: {
-      id: 'orath', name: 'أوراث', title: 'حارس الجذور الصامت', world: 'sylvan', style: 'دفاعي — حارس صامت لا يتزحزح، خط أمامي صلب وتحكم',
+      id: 'orath', name: 'أوراث', title: 'الحارس المحلّل', world: 'sylvan', style: 'دفاعي — هادئ وتحليلي يقرأ المعركة قبل أن تبدأ: خط أمامي صلب وتحكم',
       board: { atk: 75, as: 0.65, range: 1, def: 0.3, crit: 0.05 },
-      passive: { id: 'ancient_bark', name: 'لحاء عتيق', text: 'وحدات الصف الأمامي تكتسب +15% صحة قصوى.' },
+      passive: { id: 'ancient_bark', name: 'لحاء صلب', text: 'وحدات الصف الأمامي تكتسب +15% صحة قصوى.' },
       abilities: [
         { id: 'thorn_wall', name: 'جدار الأشواك', cost: 3, type: 'frontDR', dr: 0.35, dur: 6,
           text: 'الصف الأمامي يتلقى ضررًا أقل بـ 35% لمدة 6 ثوانٍ.' },

@@ -12,6 +12,7 @@
     orb: '<circle cx="12" cy="12" r="6.5" fill="currentColor" opacity=".85"/><circle cx="9.5" cy="9.5" r="2" fill="#fff" opacity=".7"/><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2.5"/>',
     bow: '<path d="M6 2.5c9 3 9 16 0 19" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 2.5v19" stroke="currentColor" stroke-width="1"/><path d="M3 12h16m-3-3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="2"/>',
     cross: '<path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z" fill="currentColor"/>',
+    wings: '<path d="M11.4 2.6C6.6 3.6 2.6 7.6 1.6 14.2c2-1.6 4-2.2 5.8-1.8-1.8 1.5-2.4 3.9-2 6 1.6-1.7 3.4-2.3 5-1.9-.8 1.5-.6 3.4.6 4.8.9-2.3 1.2-9.6 0-18.7z" fill="currentColor"/><path d="M11.4 2.6C6.6 3.6 2.6 7.6 1.6 14.2c2-1.6 4-2.2 5.8-1.8-1.8 1.5-2.4 3.9-2 6 1.6-1.7 3.4-2.3 5-1.9-.8 1.5-.6 3.4.6 4.8.9-2.3 1.2-9.6 0-18.7z" transform="matrix(-1 0 0 1 24 0)" fill="currentColor"/>',
     crown: '<path d="M3 18.5l1.6-11 5 4.6L12 4.5l2.4 7.6 5-4.6 1.6 11z" fill="currentColor"/><rect x="3" y="19.3" width="18" height="2" rx="1" fill="currentColor"/>',
     wind: '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     fang: '<path d="M5 4h14l-3 9-2-4-2 11-2-11-2 4z" fill="currentColor"/>',
@@ -38,7 +39,7 @@
     coin: '<circle cx="12" cy="12" r="9" fill="currentColor"/><circle cx="12" cy="12" r="6" fill="none" stroke="#000" stroke-width="1.4" opacity=".45"/>',
     heart: '<path d="M12 20.5S3 15 3 8.8A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 9 2.2C21 15 12 20.5 12 20.5z" fill="currentColor"/>',
   };
-  const ROLE_ICON = { guardian: 'shield', fighter: 'sword', assassin: 'dagger', mage: 'orb', marksman: 'bow', support: 'cross', hero: 'crown' };
+  const ROLE_ICON = { guardian: 'shield', fighter: 'sword', assassin: 'dagger', mage: 'orb', marksman: 'bow', support: 'wings', hero: 'crown' };
   const TIER_RING = { 1: '#d9cfbd', 2: '#3d9bf0', 3: '#ffc21a' };
 
   function icon(name, cls) {

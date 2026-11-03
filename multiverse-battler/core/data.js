@@ -28,7 +28,7 @@
     assassin: { id: 'assassin', name: 'قاتل', en: 'Assassin', icon: 'dagger', desc: 'يقفز فوق خط الدفاع إلى الصف الخلفي للخصم.' },
     mage: { id: 'mage', name: 'ساحر', en: 'Mage', icon: 'orb', desc: 'مهارات منطقة قوية، صحة منخفضة.' },
     marksman: { id: 'marksman', name: 'قناص', en: 'Marksman', icon: 'bow', desc: 'ضرر مستمر من مدى بعيد.' },
-    support: { id: 'support', name: 'دعم', en: 'Support', icon: 'cross', desc: 'علاج ودروع وتعزيز للحلفاء.' },
+    support: { id: 'support', name: 'دعم', en: 'Support', icon: 'wings', desc: 'علاج ودروع وتعزيز للحلفاء.' },
   };
 
   // 1-star, tier-1 baseline per role. Tier multiplies hp & atk.

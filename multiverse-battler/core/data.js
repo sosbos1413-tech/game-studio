@@ -23,12 +23,12 @@
   };
 
   const ROLES = {
-    guardian: { id: 'guardian', name: 'حارس', en: 'Guardian', icon: 'shield', desc: 'وحدة دفاعية تحمي الخط الأمامي وتشتت العدو.' },
-    fighter: { id: 'fighter', name: 'مقاتل', en: 'Fighter', icon: 'sword', desc: 'التحام متوازن بين التحمل والضرر.' },
-    assassin: { id: 'assassin', name: 'قاتل', en: 'Assassin', icon: 'dagger', desc: 'يقفز فوق خط الدفاع إلى الصف الخلفي للخصم.' },
-    mage: { id: 'mage', name: 'ساحر', en: 'Mage', icon: 'orb', desc: 'مهارات منطقة قوية، صحة منخفضة.' },
-    marksman: { id: 'marksman', name: 'قناص', en: 'Marksman', icon: 'bow', desc: 'ضرر مستمر من مدى بعيد.' },
-    support: { id: 'support', name: 'دعم', en: 'Support', icon: 'wings', desc: 'علاج ودروع وتعزيز للحلفاء.' },
+    guardian: { side: 'front', kind: 'def', place: 'أمامي', id: 'guardian', name: 'حارس', en: 'Guardian', icon: 'shield', desc: 'وحدة دفاعية تحمي الخط الأمامي وتشتت العدو.' },
+    fighter: { side: 'front', kind: 'off', place: 'أمامي', id: 'fighter', name: 'مقاتل', en: 'Fighter', icon: 'sword', desc: 'التحام متوازن بين التحمل والضرر.' },
+    assassin: { side: 'any', kind: 'off', place: 'أمامي أو خلفي (يقفز للخلف)', id: 'assassin', name: 'قاتل', en: 'Assassin', icon: 'dagger', desc: 'يقفز فوق خط الدفاع إلى الصف الخلفي للخصم.' },
+    mage: { side: 'back', kind: 'off', place: 'خلفي', id: 'mage', name: 'ساحر', en: 'Mage', icon: 'orb', desc: 'مهارات منطقة قوية، صحة منخفضة.' },
+    marksman: { side: 'back', kind: 'off', place: 'خلفي', id: 'marksman', name: 'قناص', en: 'Marksman', icon: 'bow', desc: 'ضرر مستمر من مدى بعيد.' },
+    support: { side: 'back', kind: 'def', place: 'خلفي', id: 'support', name: 'دعم', en: 'Support', icon: 'wings', desc: 'علاج ودروع وتعزيز للحلفاء.' },
   };
 
   // 1-star, tier-1 baseline per role. Tier multiplies hp & atk.

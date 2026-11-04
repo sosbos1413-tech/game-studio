@@ -24,7 +24,7 @@
     el.className = 'toast ' + (kind || '');
     el.textContent = msg;
     $('toasts').appendChild(el);
-    setTimeout(() => el.remove(), 2500);
+    setTimeout(() => el.remove(), kind === 'err' ? 4200 : 2500);
   }
   function show(screen) {
     document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === 'scr-' + screen));
@@ -32,8 +32,14 @@
     document.body.classList.toggle('in-match', screen === 'match');   // page scroll is locked only during a match
     window.scrollTo(0, 0);
   }
-  function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on'); }
-  function closeModal() { $('modal-back').classList.remove('on'); }
+  function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
+    // opening any details window stops the prep timer so you can read in peace
+    if (S.phase === 'prep' && !S.paused) { S.paused = true; S.pausedLeft = S.deadline - Date.now(); S._mp = true; renderTop(); }
+  }
+  function closeModal() {
+    $('modal-back').classList.remove('on');
+    if (S._mp) { S._mp = false; if (S.paused && S.phase === 'prep') { S.paused = false; S.deadline = Date.now() + S.pausedLeft; renderTop(); } }   // resume the prep timer
+  }
   function overlay(html) { $('overlay').innerHTML = html; $('overlay').classList.add('on'); }
   function closeOverlay() { $('overlay').classList.remove('on'); $('overlay').innerHTML = ''; }
 
@@ -87,9 +93,10 @@
 
   // ======================================================================= round flow
   function prepSeconds() {
-    if (S.mode === 'hotseat') return CFG.match.hotseatPrepSeconds;
-    if (S.mode === 'friendly') return CFG.match.prepSeconds * 2;
-    return CFG.match.prepSeconds;
+    const learn = S.match && S.match.round <= 2 ? 20 : 0;   // first two rounds: +20s to learn the screen
+    if (S.mode === 'hotseat') return CFG.match.hotseatPrepSeconds + learn;
+    if (S.mode === 'friendly') return CFG.match.prepSeconds * 2 + learn;
+    return CFG.match.prepSeconds + learn;
   }
 
   function nextRound() {
@@ -104,6 +111,20 @@
       if (S.aiFirst) AMB.AI.prep(m, 1);
       beginPrep(0);
     }
+  }
+
+  // ---- quick-start guide: shown once automatically, reopen with "؟"
+  function showTutorial() {
+    const steps = [
+      ['crown', 'اشترِ', 'اضغط بطاقة من المتجر (أسفل الشاشة) لشرائها. تصل إلى الاحتياط. «ⓘ» يفتح تفاصيلها، والمؤقت يتوقف وأنت تقرأ.'],
+      ['shield', 'ضعها في الساحة', 'اضغط الوحدة ثم خانة مضيئة، أو اسحبها. <b>حارس ومقاتل: أمامي</b> (يحميان بطلك). <b>ساحر وقناص ودعم: خلفي</b>. أو اضغط «ترتيب تلقائي».'],
+      ['star', 'غيّر رأيك بسهولة', 'اضغط أي وحدة (في الساحة أو الاحتياط) فيظهر شريط: <b>بيع</b> أو <b>للاحتياط</b> أو <b>تفاصيل</b>. اضغط وحدة أخرى لتبديل مكانهما.'],
+      ['burst', 'الترقية ★', '<b>٣ نسخ متطابقة = ترقية تلقائية</b> لنجمة أقوى. علامة <b>×2</b> على بطاقة المتجر = تملك نسختين، و<b>↑</b> = شراؤها يرقّيها. «ترقية ★» يعرض تقدمك.'],
+      ['sword', 'جاهز', 'اضغط «جاهز» حين تنتهي، أو ينتهي المؤقت ويبدأ القتال لحاله. القتال تلقائي بالكامل. المباراة ٧ جولات وبعد كل مرحلة مكافأة.'],
+    ];
+    modal(`<h2>دليل سريع</h2><div class="tut">${steps.map((st, i) => `<div class="tut-step"><span class="tut-n">${i + 1}</span><span class="tut-ic">${icon(st[0])}</span><div><b>${st[1]}</b><p>${st[2]}</p></div></div>`).join('')}</div>
+      <div style="text-align:center;margin-top:10px"><button class="btn primary big" data-act="closeModal">فهمت</button></div>`);
+    try { localStorage.setItem('amb_tut', '1'); } catch (e) { /* ignore */ }
   }
 
   // ---- stage rewards (draft 1 of 3)
@@ -171,6 +192,8 @@
       S.phase = 'prep';
       S.deadline = Date.now() + prepSeconds() * 1000;
       renderMatch();
+      let seen = true; try { seen = localStorage.getItem('amb_tut') === '1'; } catch (e) { /* ignore */ }
+      if (!seen && S.match.round === 1) showTutorial();
     }, 900);
   }
 
@@ -294,12 +317,13 @@
       const mid = o.live ? `<div class="hc-bar"><div class="hpb"><b></b><i></i></div>${isHero ? '' : '<div class="mpb"><i></i></div>'}</div>` : (items ? `<div class="hc-its">${items}</div>` : '');
       return `<div class="tcard hc mini ${tier}${sc}${sel} ${o.cls || ''}" style="--wc:${W.color}" title="${esc(def.name)}" ${attrs}>
         <i class="hc-halo"></i><div class="hc-art">${portrait(def, { bare: true, k: o.k })}<i class="sheen"></i></div><div class="hc-ring"></div>
-        ${roleD}${isHero ? '' : stars(star)}${atkBd}${hpBd}${mid}</div>`;
+        ${roleD}${isHero ? '' : stars(star)}${o.prog ? `<span class="hc-prog" title="نسخ متطابقة: واحدة إضافية وتترقى">${o.prog}</span>` : ''}${atkBd}${hpBd}${mid}</div>`;
     }
     const own = o.own ? `<span class="hc-own ${o.own.pair ? 'up' : ''}">${o.own.pair ? '↑' : '×' + o.own.n}</span>` : '';
+    const rolePill = isHero ? '' : `<span class="rolepill ${ROLES[def.role].kind}" title="${esc(ROLES[def.role].desc)} · تُوضع: ${esc(ROLES[def.role].place)}">${icon(ART.ROLE_ICON[def.role])}${ROLES[def.role].name}</span>`;
     const iconsRow = isHero
       ? disc('world', ART.WORLD_ICON[def.world], W.name) + roleD
-      : disc('world', ART.WORLD_ICON[def.world], W.name) + roleD + disc('skill', ART.SKILL_ICON[def.skill.type] || 'star', def.skill.name);
+      : disc('world', ART.WORLD_ICON[def.world], W.name) + rolePill + disc('skill', ART.SKILL_ICON[def.skill.type] || 'star', def.skill.name);
     return `<div class="tcard hc full ${tier}${sc} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
       <div class="hc-frame"><i class="sheen"></i></div>
       <div class="hc-art">${portrait(def, { bare: true, k: o.k })}</div><div class="hc-ring"></div>
@@ -559,6 +583,7 @@
       <span class="res gold" title="الذهب">${icon('gold')} ${p.gold}</span>
       <span class="res ess" title="الجوهر: متاح / الإجمالي (يُدفع فقط عند تفعيل القدرة)">${icon('essence')} ${avail}/${p.essence}</span>
       <span class="lvl" title="المستوى = الحد الأقصى للوحدات في الساحة"><span class="lw">مستوى</span> ${p.level} <span class="xpbar"><i style="width:${need ? (p.xp / need) * 100 : 100}%"></i></span> <small style="color:var(--muted)">${need ? p.xp + '/' + need : 'MAX'}</small></span>
+      <button class="btn small mob-hide" data-act="tutorial" title="دليل سريع">؟</button>
       <button class="btn small mob-only" data-act="panels" title="التآزر وقدرات البطل">${S.panels ? 'إغلاق' : 'البطل'}</button>
       <button class="btn small" data-act="pause" title="إيقاف مؤقت">${S.paused ? '▶' : '⏸'}</button>
       ${soundBtn()}
@@ -594,7 +619,9 @@
         else if (sc.summoned && sc.heroSlot === slot) inner = cardHTML(HEROES[sc.heroId], { size: 'mini', k: 'sch', cls: 'ghost' });
       }
       const act = mine && !inCombat ? `data-act="slot" data-slot="${slot}" data-drop="board:${slot}"` : '';
-      return `<div class="cell ${cls}" ${act}>${inner}</div>`;
+      let rec = '';
+      if (mine && !inCombat && S.sel && S.sel.kind === 'unit') { const su = m.findUnit(p, S.sel.uid); if (su) { const sd = ROLES[UNITS[su.defId].role].side; if (sd === 'any' || (sd === 'front') === (slot[0] === 'f')) rec = ' rec'; } }
+      return `<div class="cell ${cls}${rec}" ${act} data-row="${slot[0] === 'f' ? 'أمامي' : 'خلفي'}">${inner}</div>`;
     };
     const row = (side, ch, mine) => [0, 1, 2, 3].map((k) => cell(side, ch + (mine ? k : 3 - k), mine)).join('');
     const o = 1 - v;
@@ -640,7 +667,8 @@
 
   function pieceHTML(u, o) {
     const def = UNITS[u.defId];
-    return cardHTML(def, { size: 'mini', star: u.star, items: u.items, sel: o && o.sel, k: u.uid, cls: S.pop && S.pop.uid === u.uid ? (S.pop.merged ? 'pop merged' : 'pop') : '',
+    const same = me().bench.concat(Object.values(me().board)).filter((x) => x && x.defId === u.defId && x.star === u.star).length;
+    return cardHTML(def, { size: 'mini', star: u.star, items: u.items, sel: o && o.sel, k: u.uid, prog: same >= 2 && u.star < 3 ? same + '/' + CFG.stars.copiesPerStar : '', cls: S.pop && S.pop.uid === u.uid ? (S.pop.merged ? 'pop merged' : 'pop') : '',
       attrs: `draggable="true" data-drag="unit:${u.uid}" title="${esc(def.name)} ${'★'.repeat(u.star)} — ${ROLES[def.role].name} / ${WORLDS[def.world].name}"` });
   }
   function heroPieceHTML(p) {
@@ -693,7 +721,7 @@
       <div class="shop-row"><div class="shop-cards">${cards}</div>
       <div class="item-cards">${items}</div></div>
       <div class="shop-actions">
-        <button class="btn" data-act="upgrades">شاشة التطوير</button>
+        <button class="btn" data-act="upgrades" title="تقدّم الترقية لكل وحدة">ترقية ★</button>
         <button class="btn primary ready-btn" data-act="ready" title="Enter">جاهز ⚔</button>
       </div>`;
   }
@@ -810,6 +838,35 @@
     return '';
   }
 
+  // one row under the field: your selection's actions, or a default row with auto-arrange
+  function prepBarHTML() {
+    const m = S.match, p = me(), sel = S.sel, E = CFG.economy;
+    const cnt = `${Object.keys(p.board).length}/${p.level}`;
+    if (sel && sel.kind === 'unit') {
+      const u = m.findUnit(p, sel.uid);
+      if (u) {
+        const d = UNITS[u.defId], R = ROLES[d.role], onBoard = Object.values(p.board).includes(u);
+        return `<div class="pb sel"><span class="pb-name">${d.name} ${stars(u.star)} <span class="rolepill ${R.kind}">${icon(ART.ROLE_ICON[d.role])}${R.name}</span></span>
+          <span class="pb-tip">تُوضع: <b>${R.place}</b> · اضغط خانة مضيئة لنقلها</span>
+          <span class="pb-btns"><button class="btn small danger" data-act="sell">بيع +${m.sellValue(u)}</button>
+          <button class="btn small" data-act="${onBoard ? 'toBench' : 'toBoard'}">${onBoard ? 'للاحتياط' : 'للساحة'}</button>
+          <button class="btn small" data-act="detail" data-id="${d.id}" data-star="${u.star}">تفاصيل</button>
+          ${u.items.length ? '<button class="btn small" data-act="unequip">نزع المعدات</button>' : ''}
+          <button class="btn small ghost" data-act="deselect">✕</button></span></div>`;
+      }
+    }
+    if (sel && sel.kind === 'item') {
+      const it = ITEMS[p.items[sel.idx]];
+      if (it) return `<div class="pb sel"><span class="pb-name">${icon(it.icon)} ${it.name}</span><span class="pb-tip">${it.kind === 'equip' ? 'اضغط وحدة لتجهيزها بها' : it.text}</span>
+        <span class="pb-btns">${it.kind === 'spell' ? '<button class="btn small" data-act="arm">جهّز للقتال</button>' : ''}<button class="btn small danger" data-act="sellItem">بيع +${Math.floor(it.cost / 2)}</button><button class="btn small ghost" data-act="deselect">✕</button></span></div>`;
+    }
+    if (sel && sel.kind === 'hero') return `<div class="pb sel"><span class="pb-name">البطل</span><span class="pb-tip">اضغط خانة في ساحتك لنقله</span><span class="pb-btns"><button class="btn small ghost" data-act="deselect">✕</button></span></div>`;
+    const bag = p.items.map((id, i) => `<button class="bagchip" data-act="bagSel" data-idx="${i}" title="${esc(ITEMS[id].name)}: ${esc(ITEMS[id].text)}">${icon(ITEMS[id].icon)}</button>`).join('');
+    return `<div class="pb"><span class="pb-count">في الساحة ${cnt}${p.summoned ? ' + البطل' : ''}</span>${bag ? `<span class="pb-bag" title="معداتك: اضغط واحدة ثم وحدة">${bag}</span>` : ''}
+      <span class="pb-tip">اضغط وحدة لتغييرها · ٣ نسخ متطابقة = ترقية ★</span>
+      <span class="pb-btns"><button class="btn small" data-act="autoArrange" title="يختار أقوى وحداتك ويضع الحراس أمام والباقي خلف">ترتيب تلقائي</button></span></div>`;
+  }
+
   function renderCombatCtrl() {
     const el = $('combat-ctrl');
     if (S.phase === 'combat') {
@@ -817,8 +874,7 @@
         ${[1, 2, 4].map((s) => `<button class="btn small ${S.speed === s ? 'on' : ''}" data-act="speed" data-v="${s}">${s}x</button>`).join('')}
         <button class="btn small" data-act="skip">تخطي ⏭</button><span class="fury"></span>`;
     } else if (S.phase === 'prep' || S.phase === 'resources') {
-      const p = me();
-      el.innerHTML = `<span class="hint">${Object.keys(p.board).length}/${p.level} وحدات في الساحة${p.summoned ? ' + البطل' : ''} · مرحلة التجهيز</span>`;
+      el.innerHTML = prepBarHTML();
     } else el.innerHTML = '';
   }
 
@@ -909,7 +965,8 @@
     S._resumeAfterMenu = !wasPaused;
     modal(`<h2>القائمة</h2><div style="display:grid;gap:10px;margin-top:12px">
       <button class="btn" data-act="resumeMenu">متابعة</button>
-      <button class="btn" data-act="howto">كيف ألعب؟</button>
+      <button class="btn" data-act="tutorial">دليل سريع</button>
+      <button class="btn" data-act="howto">كل القواعد</button>
       <button class="btn danger" data-act="surrender">استسلام (${esc(me().name)})</button>
       <button class="btn ghost" data-act="abandon">خروج للقائمة الرئيسية (لا تُسجَّل)</button></div>`);
   }
@@ -1040,6 +1097,7 @@
   const ACT = {
     go: (d) => { show(d.to); if (d.to === 'stats') renderStats(); if (d.to === 'codex') renderCodex(); },
     howto: () => howto(),
+    tutorial: () => showTutorial(),
     diff: (d) => { S.difficulty = d.v; document.querySelectorAll('#diff-seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === d.v)); },
     mode: (d) => { S.mode = d.v; S.picks = [null, null]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
     pickHero: (d, el, e) => { if (e.target.closest('[data-act="heroInfo"]')) return; S.picks[S.pickIdx] = d.id; renderHeroSelect(); },
@@ -1054,6 +1112,7 @@
     bench: (d) => prepActive() && clickBench(+d.idx),
     buy: (d, el, e) => {
       if (!prepActive() || e.target.closest('[data-act="detail"]')) return;
+      const m0 = S.match;
       const r = S.match.buy(S.v, +d.idx);
       S.pop = null;
       if (res(r)) {
@@ -1061,7 +1120,11 @@
         if (r.merged && r.merged.length) {
           r.merged.forEach((u) => toast(`تطوير! ${UNITS[u.defId].name} ${'★'.repeat(u.star)}`, 'good'));
           S.pop = { uid: r.merged[r.merged.length - 1].uid, merged: true };
-        } else S.pop = { uid: r.unit.uid };
+        } else {
+          S.pop = { uid: r.unit.uid };
+          const have = m0.allUnits(m0.players[S.v]).filter((x) => x.defId === r.unit.defId && x.star === 1).length;
+          if (have === 2) toast(`عندك نسختان من «${UNITS[r.unit.defId].name}»: اشترِ ثالثة وتترقى ★ تلقائيًا`, 'good');
+        }
       }
       renderMatch();
       if (S.pop) {
@@ -1077,6 +1140,21 @@
     xp: () => { if (prepActive()) { const lv = me().level; if (res(S.match.buyXp(S.v))) { if (me().level > lv) toast(`المستوى ${me().level}! يمكنك وضع ${me().level} وحدات`, 'good'); renderMatch(); } } },
     lock: () => { if (prepActive()) { S.match.toggleLock(S.v); renderMatch(); } },
     ready: () => prepActive() && endPrep(),
+    deselect: () => { S.sel = null; renderMatch(); },
+    autoArrange: () => { if (!prepActive()) return; S.match.autoArrange(S.v); S.sel = null; toast('تم ترتيب أقوى وحداتك: الحراس أمام والباقي خلف', 'good'); renderMatch(); },
+    toBench: () => {
+      const m = S.match, p = me(); if (!S.sel || S.sel.kind !== 'unit') return;
+      const bi = p.bench.indexOf(null); if (bi < 0) { toast('الاحتياط ممتلئ: بع وحدة أو بدّل مكانها', 'err'); return; }
+      if (res(m.move(S.v, S.sel.uid, { zone: 'bench', idx: bi }))) { S.sel = null; renderMatch(); }
+    },
+    toBoard: () => {
+      const m = S.match, p = me(); if (!S.sel || S.sel.kind !== 'unit') return;
+      const u = m.findUnit(p, S.sel.uid); if (!u) return;
+      const sd = ROLES[UNITS[u.defId].role].side, F = ['f1', 'f2', 'f0', 'f3'], B = ['b1', 'b2', 'b0', 'b3'];
+      const order = (sd === 'back' ? B.concat(F) : sd === 'front' ? F.concat(B) : F.concat(B)).filter((x) => !p.board[x] && !(p.summoned && p.heroSlot === x));
+      if (!order.length || Object.keys(p.board).length >= p.level) { toast(`الساحة ممتلئة (${p.level}/${p.level}). اضغط وحدة في الساحة لتبديلها، أو بع وحدة، أو ارفع مستواك`, 'err'); return; }
+      if (res(m.move(S.v, u.uid, { zone: 'board', slot: order[0] }))) { S.sel = null; renderMatch(); }
+    },
     sell: () => { if (prepActive() && S.sel && S.sel.kind === 'unit' && res(S.match.sell(S.v, S.sel.uid))) { S.sel = null; renderMatch(); } },
     unequip: () => { if (S.sel && S.sel.kind === 'unit' && res(S.match.unequip(S.v, S.sel.uid))) renderMatch(); },
     bagSel: (d) => { if (!prepActive()) return; const i = +d.idx; S.sel = S.sel && S.sel.kind === 'item' && S.sel.idx === i ? null : { kind: 'item', idx: i }; renderMatch(); },

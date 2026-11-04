@@ -245,7 +245,7 @@
           p.heroSlot = from.slot; delete p.board[from.slot]; p.board[dest.slot] = u; return { ok: true };
         }
         const other = p.board[dest.slot] || null;
-        if (from.zone === 'bench' && !other && this.boardCount(p) >= p.level) return this._fail(`الحد الأقصى للوحدات في الساحة: ${p.level} (ارفع المستوى)`);
+        if (from.zone === 'bench' && !other && this.boardCount(p) >= p.level) return this._fail(`الساحة ممتلئة (${p.level}/${p.level}). بدّل بوحدة في الساحة، أو بع وحدة، أو ارفع مستواك بزر «خبرة»`);
         this._remove(p, u);
         if (other) { this._remove(p, other); this._put(p, other, from); }
         p.board[dest.slot] = u;
@@ -365,6 +365,31 @@
       const other = p.board[slot];
       if (other) { delete p.board[slot]; p.board[p.heroSlot] = other; }
       p.heroSlot = slot;
+      return { ok: true };
+    }
+
+    /** Smart arrangement: the strongest `level` units on the board, tanks in front, ranged behind, the rest on the bench. */
+    autoArrange(pi) {
+      const p = this.players[pi], U = AMB.DATA.UNITS, R = AMB.DATA.ROLES;
+      const pw = (u) => (AMB.AI && AMB.AI.power ? AMB.AI.power(u) : U[u.defId].tier * AMB.CONFIG.stars.mult[u.star]);
+      const all = this.allUnits(p).slice().sort((a, b) => pw(b) - pw(a));
+      const want = all.slice(0, p.level);
+      let front = want.filter((u) => R[U[u.defId].role].side === 'front');
+      let back = want.filter((u) => R[U[u.defId].role].side === 'back');
+      const any = want.filter((u) => R[U[u.defId].role].side === 'any');
+      any.forEach((u) => (front.length <= back.length ? front : back).push(u));
+      if (!front.length && back.length > 1) { back.sort((a, b) => U[b.defId].hp * AMB.CONFIG.stars.mult[b.star] - U[a.defId].hp * AMB.CONFIG.stars.mult[a.star]); front.push(back.shift()); }   // somebody must hold the line
+      while (front.length > 4) back.push(front.pop());
+      while (back.length > 4) front.push(back.pop());
+      const FR = ['f1', 'f2', 'f0', 'f3'], BK = ['b1', 'b2', 'b0', 'b3'];
+      const skip = (arr) => arr.filter((x) => !(p.summoned && p.heroSlot === x));
+      const fs = skip(FR), bs = skip(BK);
+      p.board = {};
+      front.forEach((u, i) => { p.board[fs[i] || bs.shift()] = u; });
+      back.forEach((u, i) => { p.board[bs[i] || fs.shift()] = u; });
+      const rest = all.filter((u) => !want.includes(u));
+      p.bench = new Array(AMB.CONFIG.economy.benchSize).fill(null);
+      rest.forEach((u, i) => { if (i < p.bench.length) p.bench[i] = u; });
       return { ok: true };
     }
 

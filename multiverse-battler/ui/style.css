@@ -1171,3 +1171,73 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   .topbar .lvl { font-size: 10.5px; }
 }
 @media (max-width: 340px) and (orientation: portrait) { .topbar .lvl { display: none; } }
+
+/* =====================================================================
+   FEEDBACK FIXES: action bar, role pills, recommended cells, guide
+   ===================================================================== */
+.mob-hide { display: inline-block; }
+@media (max-width: 860px) and (orientation: portrait) { .mob-hide { display: none; } }
+
+.rolepill { display: inline-flex; align-items: center; gap: 3px; height: 19px; padding: 0 6px; border: 2px solid #000; font-size: 10.5px; font-weight: 700; line-height: 1; white-space: nowrap; color: #fff; box-shadow: 1px 1px 0 #000; }
+.rolepill .ic { width: 11px; height: 11px; }
+.rolepill.off { background: #c9302c; } .rolepill.def { background: #1f78c8; }
+.hc-icons .rolepill { height: 20px; }
+
+/* one row under the field */
+.combat-ctrl { display: block; width: 100%; color: var(--ink); }
+.pb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; background: var(--paper); border: 3px solid var(--ink); box-shadow: var(--hard-sm); padding: 4px 7px; min-height: 40px; font-size: 12.5px; }
+.pb.sel { background: #fff3c4; }
+.pb-name { font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+.pb-count { font-weight: 700; }
+.pb-tip { color: var(--muted); font-size: 11.5px; flex: 1 1 140px; line-height: 1.4; }
+.pb-btns { display: inline-flex; gap: 4px; flex-wrap: wrap; margin-inline-start: auto; }
+.pb-bag { display: inline-flex; gap: 3px; }
+.bagchip { width: 28px; height: 28px; background: var(--ink); color: var(--gold); border: 2px solid #000; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.bagchip .ic { width: 16px; height: 16px; }
+
+/* where this unit should go */
+.field .cell.mine[data-row]:not(:has(.tcard))::after { content: attr(data-row); position: absolute; inset: auto 0 5px 0; text-align: center; font-size: 10px; color: #f3ead655; pointer-events: none; }
+.field .cell.rec:not(:has(.tcard)) { border-color: var(--gold); background: #f2b3001f; animation: recpulse 1s ease-in-out infinite alternate; }
+.field .cell.rec:not(:has(.tcard))::after { color: var(--gold); }
+@keyframes recpulse { to { background: #f2b30045; } }
+
+/* upgrade progress on a board/bench card */
+.hc-prog { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); z-index: 6; background: var(--gold); color: #000; border: 2px solid #000; font-weight: 700; font-size: max(9px, 11cqw); padding: 0 5px; line-height: 1.25; box-shadow: 1px 1px 0 #000; animation: pairpulse .7s infinite alternate; }
+
+/* quick-start guide */
+.tut { display: grid; gap: 8px; margin-top: 8px; }
+.tut-step { display: grid; grid-template-columns: 28px 40px 1fr; gap: 8px; align-items: start; background: #fff; border: 2px solid var(--ink); padding: 7px; }
+.tut-n { background: var(--red); color: #fff; font-family: var(--display); font-size: 18px; width: 28px; height: 28px; display: grid; place-items: center; }
+.tut-ic { background: var(--ink); color: var(--gold); width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; }
+.tut-ic .ic { width: 22px; height: 22px; }
+.tut-step b { font-family: var(--display); font-weight: 400; font-size: 19px; }
+.tut-step p { margin: 2px 0 0; font-size: 13px; line-height: 1.7; color: var(--ink3); }
+
+@media (max-width: 860px) and (orientation: portrait) {
+  .combat-ctrl { min-height: 0; }
+  .pb { padding: 2px 5px; gap: 2px 6px; min-height: 36px; font-size: 11.5px; }
+  .pb-tip { display: none; }
+  .pb.sel .pb-tip { display: block; flex: 1 1 100%; font-size: 10.5px; order: 3; }
+  .pb-btns .btn.small { padding: 2px 7px; font-size: 11px; }
+  .rolepill { height: 17px; font-size: 10px; padding: 0 4px; }
+}
+@media (max-width: 860px) and (orientation: portrait) {
+  .pb.sel .pb-tip { display: none; }
+  .pb.sel .pb-btns .btn.ghost { display: none; }     /* tap the unit again to deselect */
+  .pb { flex-wrap: nowrap; }
+  .pb-name { font-size: 11px; gap: 3px; min-width: 0; max-width: 46%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .pb.sel .pb-name .rolepill { display: none; }
+  .pb-btns { flex-wrap: nowrap; margin-inline-start: auto; }
+  .pb-count { font-size: 11px; white-space: nowrap; }
+}
+@media (max-width: 860px) and (orientation: portrait) {
+  .field-wrap { --cwv: clamp(48px, min(calc((100vh - 424px) / 4.44), calc((100vw - 40px) / 4)), 118px); --cwv: clamp(48px, min(calc((100dvh - 424px) / 4.44), calc((100vw - 40px) / 4)), 118px); }
+}
+@media (max-width: 860px) and (orientation: portrait) and (max-height: 680px) {
+  .shopbar { height: 140px; }
+  .tcard.hc.full { zoom: .58; }
+  .side .bslot { width: 42px; height: 46px; }
+  .side .post .pl > .st { font-size: 12px; }
+  .side .post { min-height: 26px; }
+  .field-wrap { --cwv: clamp(46px, min(calc((100vh - 404px) / 4.44), calc((100vw - 40px) / 4)), 118px); --cwv: clamp(46px, min(calc((100dvh - 404px) / 4.44), calc((100vw - 40px) / 4)), 118px); }
+}

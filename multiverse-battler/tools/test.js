@@ -158,6 +158,28 @@ t('after round 7 the higher hero life wins (tie -> rounds won)', () => {
   ok(m.isOver); eq(m.winner, 0);
 });
 
+t('autoArrange: guardians/fighters in front, ranged behind, level cap respected, nothing lost', () => {
+  const m = new AMB.Match({ seed: 41, players: [{ heroId: 'kagira' }, { heroId: 'orath' }] }); m.startRound();
+  const p = m.players[0]; p.level = 5;
+  const defs = ['moss_warden', 'ash_ronin', 'pixel_sniper', 'mist_witch', 'wave_caller', 'grid_hound', 'tide_priest'];
+  defs.forEach((d, i) => (p.bench[i % 6] = p.bench[i % 6] || { uid: 'z' + i, defId: d, star: 1 + (i % 2), items: [] }));
+  const before = m.allUnits(p).length;
+  m.autoArrange(0);
+  eq(Object.keys(p.board).length, Math.min(5, before));
+  eq(m.allUnits(p).length, before, 'no unit may disappear');
+  Object.entries(p.board).forEach(([slot, u]) => { const side = AMB.DATA.ROLES[AMB.DATA.UNITS[u.defId].role].side; if (side === 'front') ok(slot[0] === 'f', u.defId + ' should be in front'); if (side === 'back') ok(slot[0] === 'b', u.defId + ' should be behind'); });
+  ok(Object.keys(p.board).some((s) => s[0] === 'f'), 'a front line must exist');
+});
+t('autoArrange never uses the slot of a summoned hero', () => {
+  const m = new AMB.Match({ seed: 42, players: [{ heroId: 'kagira' }, { heroId: 'orath' }] }); m.startRound();
+  const p = m.players[0]; p.level = 4; p.summoned = true; p.heroSlot = 'f1';
+  ['moss_warden', 'ash_ronin', 'forge_bulwark', 'pixel_sniper'].forEach((d, i) => (p.bench[i] = { uid: 'q' + i, defId: d, star: 1, items: [] }));
+  m.autoArrange(0); ok(!p.board.f1, 'f1 belongs to the hero');
+});
+t('every role has a placement hint and a kind (shown on cards)', () => {
+  Object.values(AMB.DATA.ROLES).forEach((r) => { ok(r.place && ['front', 'back', 'any'].includes(r.side) && ['def', 'off'].includes(r.kind), r.id); });
+});
+
 console.log('economy');
 t('3 copies merge into a 2-star, keeping the board position', () => {
   const m = new AMB.Match({ seed: 11, players: [{ heroId: 'kagira' }, { heroId: 'orath' }] });

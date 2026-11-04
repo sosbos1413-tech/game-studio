@@ -117,6 +117,7 @@
         }));
       }
       side.hero = hf;
+      hf.startHp = hp;   // healing/regen can undo damage taken in THIS combat, but never raise a hero above the life it started with
       if (spec.summoned) {
         hf.floorHp = Math.max(0, hp - this.C.summonKnockout * scale);
       } else {
@@ -247,7 +248,7 @@
     heal(f, amount, quiet) {
       if (!f.alive || amount <= 0) return;
       const before = f.hp;
-      f.hp = Math.min(f.maxHp, f.hp + amount);
+      f.hp = Math.min(f.isHero && f.startHp != null ? f.startHp : f.maxHp, f.hp + amount);
       const done = f.hp - before;
       if (done > 0.5 && !quiet) this.emit({ type: 'heal', id: f.id, amount: Math.round(done) });
     }
@@ -420,7 +421,7 @@
           }
           if (!f.alive) continue;
         }
-        if (f.regenPct) f.hp = Math.min(f.maxHp, f.hp + (f.isHero ? Math.min(f.maxHp, 500) : f.maxHp) * f.regenPct * dt);
+        if (f.regenPct) f.hp = Math.min(f.isHero && f.startHp != null ? f.startHp : f.maxHp, f.hp + (f.isHero ? Math.min(f.maxHp, 500) : f.maxHp) * f.regenPct * dt);
         if (f.passive) continue;
         if (f.stun > 0) { f.stun -= dt; continue; }
 

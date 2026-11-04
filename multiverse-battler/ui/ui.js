@@ -220,6 +220,13 @@
     overlay(`<div class="ov-card"><h2 class="${cls}">${title}</h2>
       <div class="hint">الجولة ${rep.round} · مدة القتال ${fmt(rep.duration, 1)} ث</div>
       <table><tr><th></th><th>ضرر مباشر</th><th>ارتداد الخسارة</th><th>انهيار الصدع</th><th>الحياة</th></tr>${rows}</table>
+      ${(() => {
+        if (S.mode === 'hotseat') return '';
+        const me0 = rep.players[0];
+        if (rep.winner === 1 && me0.exposed) return `<p class="tip"><b>لماذا خسرت؟</b> سقطت وحداتك الأمامية فانكشف بطلك وصار قابلًا للهجوم. ضع حرّاسًا ومقاتلين في الصف الأمامي (4 وحدات كحد أقصى)، أو ارفع مستواك لتزيد وحداتك.</p>`;
+        if (rep.winner === 1) return `<p class="tip"><b>لماذا خسرت؟</b> قوة تشكيلة الخصم كانت أعلى. جرّب تفعيل التآزر (وحدات من نفس العالم أو الدور)، وجهّز معدات وقدرات البطل.</p>`;
+        return '';
+      })()}
       <p class="hint">الضرر المباشر = ضربات تلقاها البطل بعد انكشافه أو في الساحة. ارتداد الخسارة = ${CFG.damage.lossBase} + الجولة×${CFG.damage.lossPerRound} + نجوم وحدات الخصم الناجية.</p>
       <button class="btn primary big" data-act="${over ? 'toResults' : 'nextRound'}">${over ? 'عرض النتائج' : 'الجولة التالية'}</button></div>`);
   }

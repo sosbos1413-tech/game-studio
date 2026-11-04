@@ -68,6 +68,29 @@ t('combat is deterministic for a seed', () => {
   eq(JSON.stringify(a), JSON.stringify(b));
 });
 
+t('healing cannot raise a hero above the life it started the combat with', () => {
+  const c = new AMB.Combat([side([U('tide_priest', 'b1')], { summoned: true, heroSlot: 'f1', life: 90 }), side([])], { seed: 1, round: 3 });
+  const h = c.sides[0].hero;
+  c.heal(h, 5000);
+  eq(h.hp, 900, 'heal at full start life');
+  c.damage(null, h, 300);
+  c.heal(h, 5000);
+  eq(h.hp, 900, 'heal back to start life only');
+  ok(h.hp < h.maxHp, 'must stay under max life');
+});
+t('across 40 full AI matches a hero never ends a combat with more life than it began with', () => {
+  for (let sd = 1; sd <= 40; sd++) {
+    const m = new AMB.Match({ seed: sd, players: [{ heroId: ['merin', 'orath', 'zerokai', 'kagira'][sd % 4], isAI: true, aiStyle: 'mixed' }, { heroId: 'merin', isAI: true, aiStyle: 'mono' }] });
+    while (!m.isOver) {
+      m.startRound(); AMB.AI.prep(m, 0); AMB.AI.prep(m, 1);
+      const before = m.players.map((p) => p.life);
+      const res = m.createCombat(false).runToEnd();
+      res.sides.forEach((sd2, i) => ok(sd2.heroLife <= before[i] + 1e-6, `match ${sd} round ${m.round}: life ${before[i]} -> ${sd2.heroLife}`));
+      m.resolveCombat(res);
+    }
+  }
+});
+
 console.log('economy');
 t('3 copies merge into a 2-star, keeping the board position', () => {
   const m = new AMB.Match({ seed: 11, players: [{ heroId: 'kagira' }, { heroId: 'orath' }] });

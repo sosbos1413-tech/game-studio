@@ -1124,3 +1124,4 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 }
 .screen { overflow-x: clip; }
 .logo-rift { inset: -60px 0; }
+.ov-card .tip { background: #fff3c4; border: 2px solid var(--ink); padding: 8px 10px; margin: 6px 0; font-size: 13px; line-height: 1.7; text-align: right; }

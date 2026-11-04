@@ -1,5 +1,5 @@
 /*
- * Anime Multiverse Auto Battler — tunable configuration.
+ * ZOR (Zones Of Rift) — tunable configuration.
  * Every number that shapes balance or pacing lives here, so it can be changed
  * and re-tested (tools/simulate.js) without touching the engine.
  * All values are prototype defaults, NOT final rules.

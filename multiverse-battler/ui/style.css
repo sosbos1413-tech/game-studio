@@ -1108,3 +1108,19 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 /* overlays and modals scroll when taller than a small screen */
 .overlay { overflow-y: auto; align-items: safe center; -webkit-overflow-scrolling: touch; }
 .modal-back { overflow-y: auto; align-items: safe center; }
+
+/* three-letter logo: bigger, with room under the hero fan */
+.logo h1 { font-size: clamp(72px, 15vw, 118px); letter-spacing: 6px; line-height: 1; direction: ltr; }
+.logo { padding: 22px 0 10px; }
+.menu-heroes { padding-bottom: 40px; }
+@media (max-height: 820px) { .logo h1 { font-size: clamp(60px, 11vw, 92px); } }
+@media (max-width: 560px) {
+  .menu-wrap { margin-top: 0; max-width: 100%; }
+  .menu-buttons { max-width: min(320px, 100%); }
+  .menu-buttons .btn:nth-child(n) { transform: none; }
+  .menu-heroes { gap: 4px; }
+  .menu-heroes .tcard.hc.full { zoom: .6; }
+  .logo h1 { font-size: 74px; }
+}
+.screen { overflow-x: clip; }
+.logo-rift { inset: -60px 0; }

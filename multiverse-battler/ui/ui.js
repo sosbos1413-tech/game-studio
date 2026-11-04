@@ -146,7 +146,7 @@
 
   function endPrep() {
     if (S.phase !== 'prep' && S.phase !== 'resources') return;
-    cancelDrag();
+    commitDrag();
     const m = S.match;
     m.autoFill(S.v);
     S.sel = null;
@@ -1157,11 +1157,23 @@
       TD.el.style.opacity = '.3';
       try { document.body.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }   // keep receiving moves/up even if the card is re-rendered
     }
+    TD.lx = e.clientX; TD.ly = e.clientY;
     TD.ghost.style.left = e.clientX - TD.w / 2 + 'px';
     TD.ghost.style.top = e.clientY - TD.h * 0.8 + 'px';   // above the finger so it stays visible
     document.querySelectorAll('.drop').forEach((n) => n.classList.remove('drop'));
     const t = dropTarget(e.clientX, e.clientY); if (t) t.classList.add('drop');
   });
+  // drop the dragged card where the finger is (cell / bench / shop = sell)
+  function applyDrop(x, y) {
+    const t = dropTarget(x, y);
+    if (t && t.classList.contains('shopbar')) ACT.sell();
+    else if (t && t.dataset.drop) { const [zone, key] = t.dataset.drop.split(':'); if (zone === 'board') clickSlot(key); else clickBench(+key); }
+  }
+  // time ran out mid-drag: put the card down where the finger is, then clean up
+  function commitDrag() {
+    if (TD && TD.started && TD.lx != null) { try { applyDrop(TD.lx, TD.ly); } catch (err) { /* ignore */ } S.sel = null; S.noClick = true; setTimeout(() => { S.noClick = false; }, 350); }
+    cancelDrag();
+  }
   // called whenever the screen changes under the finger (timer ends, combat starts, overlays)
   function cancelDrag() {
     if (TD) { if (TD.el) TD.el.style.opacity = ''; try { document.body.releasePointerCapture(TD.id); } catch (err) { /* ignore */ } TD = null; }
@@ -1176,9 +1188,7 @@
     document.querySelectorAll('.drop').forEach((n) => n.classList.remove('drop'));
     d.ghost.remove(); d.el.style.opacity = '';
     S.noClick = true; setTimeout(() => { S.noClick = false; }, 350);
-    const t = cancel ? null : dropTarget(e.clientX, e.clientY);
-    if (t && t.classList.contains('shopbar')) ACT.sell();
-    else if (t && t.dataset.drop) { const [zone, key] = t.dataset.drop.split(':'); if (zone === 'board') clickSlot(key); else clickBench(+key); }
+    if (!cancel) applyDrop(e.clientX, e.clientY);
     S.sel = null; renderMatch();
   };
   document.addEventListener('pointerup', (e) => endTouch(e, false));

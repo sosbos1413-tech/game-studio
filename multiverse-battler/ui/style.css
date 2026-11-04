@@ -1093,3 +1093,14 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   .topbar .phases { flex-shrink: 1; }
 }
 @media (min-width: 861px) and (max-width: 1400px) { .topbar .phases, .topbar .lvl small { display: none; } }
+
+/* touch: cards can be dragged without the page scrolling/selecting; bigger "i" target */
+[data-drag] { touch-action: none; }
+.tcard { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+@media (pointer: coarse) { .hc-info { width: 26px; height: 26px; line-height: 22px; font-size: 14px; top: -10px; right: -9px; } }
+
+/* phone: only the shop ROW scrolls; the inner card groups must not capture the swipe */
+@media (max-width: 860px) and (orientation: portrait) {
+  .shop-row .shop-cards, .shop-row .item-cards { overflow: visible; }
+  .shop-row { overscroll-behavior-x: contain; touch-action: pan-x; }
+}

@@ -1128,6 +1128,49 @@
     if (zone === 'board') clickSlot(key); else clickBench(+key);
   });
 
+  // touch drag (phones/tablets): hold a board/bench card, move it, drop it on a cell, the bench, or the shop to sell
+  let TD = null;
+  document.addEventListener('click', (e) => { if (S.noClick) { e.stopPropagation(); e.preventDefault(); } }, true);
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' || !prepActive()) return;
+    const el = e.target.closest('[data-drag]');
+    if (el) TD = { el, id: e.pointerId, x: e.clientX, y: e.clientY, v: el.dataset.drag, ghost: null, started: false };
+  });
+  const dropTarget = (x, y) => { const t = document.elementFromPoint(x, y); return t ? t.closest('[data-drop], .shopbar') : null; };
+  document.addEventListener('pointermove', (e) => {
+    if (!TD || e.pointerId !== TD.id) return;
+    if (!TD.started) {
+      if (Math.hypot(e.clientX - TD.x, e.clientY - TD.y) < 10) return;
+      TD.started = true;
+      S.sel = TD.v === 'hero' ? { kind: 'hero' } : { kind: 'unit', uid: TD.v.slice(5) };
+      const r = TD.el.getBoundingClientRect();
+      TD.w = r.width; TD.h = r.height;
+      TD.ghost = TD.el.cloneNode(true);
+      TD.ghost.removeAttribute('data-drag'); TD.ghost.removeAttribute('draggable');
+      Object.assign(TD.ghost.style, { position: 'fixed', width: r.width + 'px', height: r.height + 'px', zIndex: 60, pointerEvents: 'none', opacity: '.9', transform: 'scale(1.15)', filter: 'drop-shadow(0 6px 8px #000a)' });
+      document.body.appendChild(TD.ghost);
+      TD.el.style.opacity = '.3';
+    }
+    TD.ghost.style.left = e.clientX - TD.w / 2 + 'px';
+    TD.ghost.style.top = e.clientY - TD.h * 0.8 + 'px';   // above the finger so it stays visible
+    document.querySelectorAll('.drop').forEach((n) => n.classList.remove('drop'));
+    const t = dropTarget(e.clientX, e.clientY); if (t) t.classList.add('drop');
+  });
+  const endTouch = (e, cancel) => {
+    if (!TD || e.pointerId !== TD.id) return;
+    const d = TD; TD = null;
+    if (!d.started) return;
+    document.querySelectorAll('.drop').forEach((n) => n.classList.remove('drop'));
+    d.ghost.remove(); d.el.style.opacity = '';
+    S.noClick = true; setTimeout(() => { S.noClick = false; }, 350);
+    const t = cancel ? null : dropTarget(e.clientX, e.clientY);
+    if (t && t.classList.contains('shopbar')) ACT.sell();
+    else if (t && t.dataset.drop) { const [zone, key] = t.dataset.drop.split(':'); if (zone === 'board') clickSlot(key); else clickBench(+key); }
+    S.sel = null; renderMatch();
+  };
+  document.addEventListener('pointerup', (e) => endTouch(e, false));
+  document.addEventListener('pointercancel', (e) => endTouch(e, true));
+
   // card tilt + glare under the mouse
   document.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse') return;

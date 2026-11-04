@@ -422,7 +422,7 @@
         let backlash = 0;
         const opp = result.sides[1 - i];
         if (result.winner === 1 - i && !sr.heroKilled) {
-          backlash = D.lossBase + Math.floor(this.round * D.lossPerRound) + opp.survivors.reduce((s, u) => s + u.star * D.perSurvivor, 0);
+          backlash = D.lossBase + Math.floor(this.round * D.lossPerRound) + Math.min(D.survivorCap, opp.survivors.reduce((s, u) => s + u.star * D.perSurvivor, 0));
         } else if (result.winner === null) backlash = D.drawBase + Math.floor(this.round / 3);
         let collapse = 0;
         if (this.round >= M.collapseStartRound) {
@@ -456,7 +456,8 @@
       // game over checks
       const dead = this.players.map((p) => p.life <= 0);
       if (dead[0] || dead[1]) {
-        this.winner = dead[0] && dead[1] ? null : dead[0] ? 1 : 0;
+        // both heroes fell in the same round (rift collapse): the round's winner takes the match; a drawn round is a draw
+        this.winner = dead[0] && dead[1] ? (report.winner != null ? report.winner : null) : dead[0] ? 1 : 0;
       } else if (this.round >= M.maxRounds) {
         const [a, b] = this.players.map((p) => p.life);
         this.winner = a === b ? null : a > b ? 0 : 1;

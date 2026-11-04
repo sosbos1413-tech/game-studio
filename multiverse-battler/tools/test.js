@@ -91,6 +91,15 @@ t('across 40 full AI matches a hero never ends a combat with more life than it b
   }
 });
 
+t('if both heroes fall in the same round, the round winner takes the match', () => {
+  const m = new AMB.Match({ seed: 21, players: [{ heroId: 'kagira' }, { heroId: 'orath' }] });
+  m.startRound(); m.round = AMB.CONFIG.match.collapseStartRound + 4;   // collapse hits both for a lot
+  m.players[0].life = 6; m.players[1].life = 6;
+  const res = { winner: 0, duration: 10, sides: [{ heroLife: 6, heroKilled: false, survivors: [], abilitiesFired: [], exposed: false }, { heroLife: 6, heroKilled: false, survivors: [], abilitiesFired: [], exposed: false }], unitDamage: {} };
+  m.resolveCombat(res);
+  ok(m.isOver); eq(m.winner, 0, 'round winner should win');
+});
+
 console.log('economy');
 t('3 copies merge into a 2-star, keeping the board position', () => {
   const m = new AMB.Match({ seed: 11, players: [{ heroId: 'kagira' }, { heroId: 'orath' }] });

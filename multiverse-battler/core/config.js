@@ -15,8 +15,8 @@
       prepSeconds: 30,          // prep timer (shop + formation) vs AI
       hotseatPrepSeconds: 35,   // prep timer per player in same-device PvP
       maxRounds: 18,            // hard cap: higher life wins, tie = draw
-      collapseStartRound: 10,   // "Rift Collapse" anti-stall: both heroes bleed each round
-      collapseDamage: [4, 7, 10, 14, 18, 23, 28, 34, 40],
+      collapseStartRound: 8,  // "Rift Collapse" anti-stall: both heroes bleed each round
+      collapseDamage: [3, 6, 10, 15, 21, 28, 36, 45],
       roundResultSeconds: 2.5,
     },
 
@@ -72,8 +72,8 @@
       heroHpScale: 10,          // 1 hero life = 10 battlefield HP
       commandPostFortify: 0.25, // damage multiplier vs a hero NOT summoned
       postDamageCapBase: 3,     // max life a command-post hero loses to hits in one combat
-      postDamageCapPerRound: 1,
-      summonKnockout: 15,       // a summoned hero retreats after losing this much life in one combat
+      postDamageCapPerRound: 0.5,
+      summonKnockout: 12,       // a summoned hero retreats after losing this much life in one combat
       manaPerAttack: 10,
       manaPerHit: 3,
       meleeRange: 1.15,
@@ -89,8 +89,9 @@
       // damage the losing hero takes at the end of a lost round (on top of
       // any direct hits received in combat)
       lossBase: 2,
-      lossPerRound: 0.5,
+      lossPerRound: 0.35,
       perSurvivor: 1,           // + per surviving enemy unit (star counts)
+      survivorCap: 6,           // ...but at most this much from survivors, so late rounds do not spiral
       drawBase: 2,
     },
 

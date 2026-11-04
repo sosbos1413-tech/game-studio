@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /*
  * Builds ONE self-contained file you can send to anyone:  node tools/build-single.js
- * -> dist/zor.html  (CSS, JS and all character images inlined; only the Google font is fetched when online,
+
+ * -> dist/zor.html and ../docs/index.html for GitHub Pages  (CSS, JS and all character images inlined; only the Google font is fetched when online,
  *    with system-font fallbacks, so it also works offline).
  */
 const fs = require('fs'), path = require('path');
@@ -25,4 +26,10 @@ html = html.replace(/<script src="([^"]+)"><\/script>/g, (m, src) => {
 });
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(root, 'dist', 'zor.html'), html);
+// GitHub Pages: <repo>/docs/index.html (the repo root belongs to another game, so only /docs is published)
+const docs = path.join(root, '..', 'docs');
+fs.mkdirSync(docs, { recursive: true });
+fs.writeFileSync(path.join(docs, 'index.html'), html);
+fs.writeFileSync(path.join(docs, '.nojekyll'), '');
+console.log('docs/index.html (GitHub Pages)');
 console.log('dist/zor.html', (html.length / 1048576).toFixed(2) + ' MB');

@@ -146,6 +146,7 @@
 
   function endPrep() {
     if (S.phase !== 'prep' && S.phase !== 'resources') return;
+    cancelDrag();
     const m = S.match;
     m.autoFill(S.v);
     S.sel = null;
@@ -155,7 +156,7 @@
   }
 
   setInterval(() => {
-    if (S.screen !== 'match' || S.phase !== 'prep') return;
+    if (S.screen !== 'match' || S.phase !== 'prep') { if (document.querySelector('.drag-ghost')) cancelDrag(); return; }
     const el = document.querySelector('.timer');
     if (S.paused) return;
     const left = Math.max(0, S.deadline - Date.now());
@@ -166,6 +167,7 @@
   // ======================================================================= combat playback
   function startCombat() {
     const m = S.match;
+    cancelDrag();
     closeOverlay();
     S.combatViewer = 0;
     S.v = 0;
@@ -199,6 +201,7 @@
 
   function finishCombat() {
     if (S.phase !== 'combat') return;
+    cancelDrag();
     cancelAnimationFrame(S.raf);
     S.phase = 'result';
     const m = S.match;
@@ -1149,17 +1152,26 @@
       TD.ghost = TD.el.cloneNode(true);
       TD.ghost.removeAttribute('data-drag'); TD.ghost.removeAttribute('draggable');
       Object.assign(TD.ghost.style, { position: 'fixed', width: r.width + 'px', height: r.height + 'px', zIndex: 60, pointerEvents: 'none', opacity: '.9', transform: 'scale(1.15)', filter: 'drop-shadow(0 6px 8px #000a)' });
+      TD.ghost.classList.add('drag-ghost');
       document.body.appendChild(TD.ghost);
       TD.el.style.opacity = '.3';
+      try { document.body.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }   // keep receiving moves/up even if the card is re-rendered
     }
     TD.ghost.style.left = e.clientX - TD.w / 2 + 'px';
     TD.ghost.style.top = e.clientY - TD.h * 0.8 + 'px';   // above the finger so it stays visible
     document.querySelectorAll('.drop').forEach((n) => n.classList.remove('drop'));
     const t = dropTarget(e.clientX, e.clientY); if (t) t.classList.add('drop');
   });
+  // called whenever the screen changes under the finger (timer ends, combat starts, overlays)
+  function cancelDrag() {
+    if (TD) { if (TD.el) TD.el.style.opacity = ''; try { document.body.releasePointerCapture(TD.id); } catch (err) { /* ignore */ } TD = null; }
+    document.querySelectorAll('.drag-ghost').forEach((n) => n.remove());
+    document.querySelectorAll('.drop').forEach((n) => n.classList.remove('drop'));
+  }
   const endTouch = (e, cancel) => {
-    if (!TD || e.pointerId !== TD.id) return;
+    if (!TD || e.pointerId !== TD.id) { if (!TD) document.querySelectorAll('.drag-ghost').forEach((n) => n.remove()); return; }
     const d = TD; TD = null;
+    try { document.body.releasePointerCapture(d.id); } catch (err) { /* ignore */ }
     if (!d.started) return;
     document.querySelectorAll('.drop').forEach((n) => n.classList.remove('drop'));
     d.ghost.remove(); d.el.style.opacity = '';

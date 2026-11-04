@@ -204,6 +204,7 @@
     const rep = m.resolveCombat(S.combat.result);
     S.lastReport = rep;
     renderMatch(true);
+    if (rep.winner != null) sfx(S.mode === 'hotseat' || rep.winner === 0 ? 'win' : 'lose');
     const names = m.players.map((p) => p.name);
     let title, cls;
     if (rep.winner === null) { title = 'تعادل'; cls = ''; }
@@ -325,6 +326,54 @@
   }
   function flash(el, cls, ms) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
 
+  // ---- sound (synthesised with WebAudio; starts after the first tap/click)
+  const SND = { ctx: null, on: true, last: {} };
+  try { SND.on = localStorage.getItem('amb_sound') !== '0'; } catch (e) { /* storage blocked */ }
+  function audio() {
+    if (!SND.on) return null;
+    try {
+      if (!SND.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; SND.ctx = new AC(); }
+      if (SND.ctx.state === 'suspended') SND.ctx.resume();
+      return SND.ctx;
+    } catch (e) { return null; }
+  }
+  function tone(c, o) {
+    const t0 = c.currentTime + (o.at || 0), osc = c.createOscillator(), g = c.createGain();
+    osc.type = o.type || 'sine'; osc.frequency.setValueAtTime(o.f, t0);
+    if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t0 + o.d);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(o.v || 0.15, t0 + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.d);
+    osc.connect(g); g.connect(c.destination); osc.start(t0); osc.stop(t0 + o.d + 0.02);
+  }
+  function noise(c, d, v, hp) {
+    const n = Math.floor(c.sampleRate * d), buf = c.createBuffer(1, n, c.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = c.createBufferSource(), g = c.createGain(), f = c.createBiquadFilter();
+    f.type = 'highpass'; f.frequency.value = hp || 800; g.gain.value = v;
+    src.buffer = buf; src.connect(f); f.connect(g); g.connect(c.destination); src.start();
+  }
+  const SFX = {
+    click: (c) => tone(c, { f: 520, to: 780, d: 0.06, v: 0.08, type: 'triangle' }),
+    buy: (c) => { tone(c, { f: 660, d: 0.07, v: 0.1, type: 'square' }); tone(c, { f: 990, d: 0.12, v: 0.1, type: 'square', at: 0.06 }); },
+    reroll: (c) => noise(c, 0.18, 0.06, 2500),
+    hit: (c) => { noise(c, 0.07, 0.12, 1200); tone(c, { f: 170, to: 80, d: 0.07, v: 0.1, type: 'square' }); },
+    crit: (c) => { noise(c, 0.14, 0.2, 700); tone(c, { f: 300, to: 60, d: 0.18, v: 0.18, type: 'sawtooth' }); tone(c, { f: 1200, d: 0.08, v: 0.08, type: 'triangle' }); },
+    cast: (c) => { tone(c, { f: 300, to: 900, d: 0.3, v: 0.1, type: 'sawtooth' }); tone(c, { f: 600, to: 1800, d: 0.3, v: 0.05, type: 'triangle', at: 0.04 }); },
+    heal: (c) => { tone(c, { f: 660, d: 0.12, v: 0.08 }); tone(c, { f: 880, d: 0.16, v: 0.08, at: 0.09 }); tone(c, { f: 1320, d: 0.2, v: 0.06, at: 0.18 }); },
+    death: (c) => { noise(c, 0.3, 0.14, 300); tone(c, { f: 220, to: 40, d: 0.35, v: 0.16, type: 'sawtooth' }); },
+    merge: (c) => { [523, 659, 784, 1047].forEach((f, i) => tone(c, { f, d: 0.22, v: 0.12, type: 'triangle', at: i * 0.07 })); noise(c, 0.25, 0.06, 4000); },
+    banner: (c) => { tone(c, { f: 90, to: 50, d: 0.35, v: 0.2, type: 'sawtooth' }); noise(c, 0.25, 0.08, 500); },
+    win: (c) => { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(c, { f, d: 0.28, v: 0.13, type: 'triangle', at: i * 0.11 })); },
+    lose: (c) => { [392, 330, 262, 196].forEach((f, i) => tone(c, { f, d: 0.34, v: 0.13, type: 'sawtooth', at: i * 0.16 })); },
+  };
+  function sfx(name) {
+    const c = audio(); if (!c || !SFX[name]) return;
+    const now = performance.now(), gap = { hit: 70, crit: 120, heal: 150, cast: 120, death: 120 }[name] || 0;
+    if (gap && now - (SND.last[name] || 0) < gap) return;   // many hits in one tick = one sound
+    SND.last[name] = now;
+    try { SFX[name](c); } catch (e) { /* ignore */ }
+  }
+  function soundBtn() { return `<button class="btn small" data-act="sound" title="الصوت">${SND.on ? '🔊' : '🔇'}</button>`; }
+
   // ---- visual effects (pure presentation)
   function burst(el, color, n, o) {
     o = o || {};
@@ -348,6 +397,7 @@
     b.className = 'round-banner ' + (cls || '');
     b.innerHTML = '<span>' + text + '</span>';
     document.body.appendChild(b);
+    sfx(cls === 'merge' ? 'merge' : 'banner');
     setTimeout(() => b.remove(), 1500);
   }
 
@@ -387,15 +437,16 @@
         flash(el, 'hit', 110);
         if (e.amount >= 4 || e.crit) burst(el, e.crit ? '#ffd24a' : e.skill ? '#ff6b73' : '#ffffff', e.crit ? 12 : e.skill ? 8 : 3, { r: e.crit ? 34 : 22 });
         if (e.crit || f.isHero) flash($('field'), 'shake', 260);
+        sfx(e.crit ? 'crit' : 'hit');
       } else if (e.type === 'death' && f && el) {
-        burst(el, '#a9a9a9', 16, { r: 38, s: 7 }); burst(el, '#ff6b73', 6, { r: 30 });
+        burst(el, '#a9a9a9', 16, { r: 38, s: 7 }); burst(el, '#ff6b73', 6, { r: 30 }); sfx('death');
         if (f.isHero) flash($('field'), 'shake', 400);
       } else if (e.type === 'heal' && f && el) {
         floatAt(el, '+' + e.amount, 'heal');
-        burst(el, '#5bf08b', 5, { up: true, cls: 'plus', r: 22, s: 7 });
+        burst(el, '#5bf08b', 5, { up: true, cls: 'plus', r: 22, s: 7 }); sfx('heal');
       } else if (e.type === 'cast' && f && el) {
         flash(el, 'cast', 500); floatAt(el, e.name, 'label', 26);
-        burst(el, (WORLDS[f.world] || {}).color || '#ffd24a', 14, { r: 44, s: 6 });
+        burst(el, (WORLDS[f.world] || {}).color || '#ffd24a', 14, { r: 44, s: 6 }); sfx('cast');
       } else if (e.type === 'attack' && byId[e.from] && byId[e.to]) {
         const ea = anchorEl(byId[e.from]), eb = anchorEl(byId[e.to]);
         if (!ea || !eb) continue;
@@ -403,7 +454,9 @@
         const L = Math.hypot(b.x - a.x, b.y - a.y) || 1;
         ea.style.setProperty('--dx', ((b.x - a.x) / L) * 9 + 'px');
         ea.style.setProperty('--dy', ((b.y - a.y) / L) * 9 + 'px');
-        flash(ea, 'atk', 180);
+        ea.style.setProperty('--bx', (-(b.x - a.x) / L) * 4 + 'px'); ea.style.setProperty('--by', (-(b.y - a.y) / L) * 4 + 'px');
+        flash(ea, 'atk', 230);
+        if (!e.ranged) { const ring = document.createElement('i'); ring.className = 'impact'; const rb = eb.getBoundingClientRect(); ring.style.left = rb.left + rb.width / 2 + 'px'; ring.style.top = rb.top + rb.height / 2 + 'px'; document.body.appendChild(ring); setTimeout(() => ring.remove(), 330); }
         const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y); ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
         ln.setAttribute('stroke', byId[e.from].side === S.combatViewer ? '#5fe3ff' : '#ff8a90');
@@ -465,6 +518,7 @@
       <span class="lvl" title="المستوى = الحد الأقصى للوحدات في الساحة"><span class="lw">مستوى</span> ${p.level} <span class="xpbar"><i style="width:${need ? (p.xp / need) * 100 : 100}%"></i></span> <small style="color:var(--muted)">${need ? p.xp + '/' + need : 'MAX'}</small></span>
       <button class="btn small mob-only" data-act="panels" title="التآزر وقدرات البطل">${S.panels ? 'إغلاق' : 'البطل'}</button>
       <button class="btn small" data-act="pause" title="إيقاف مؤقت">${S.paused ? '▶' : '⏸'}</button>
+      ${soundBtn()}
       <button class="btn small" data-act="menuMatch">☰</button>`;
   }
 
@@ -845,7 +899,11 @@
         <div class="mini-board">${b.map((u, k) => `<div class="mini">${portrait(UNITS[u.defId], { k: 'rb' + i + k })}<div>${stars(u.star)}</div></div>`).join('')}</div></div>`;
     }).join('');
     const tl = m.history.map((r) => `<span class="${r.winner === null ? 'wd' : r.winner === 0 ? 'w0' : 'w1'}">${r.round}</span>`).join('');
-    $('results').innerHTML = `<div class="res-banner"><h1>${title}</h1><p class="hint">${m.round} جولات · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة ${S.mode === 'friendly' ? '· مباراة ودية (لم تُسجَّل)' : ''}</p>
+    const myWin = S.mode === 'hotseat' ? m.winner != null : m.winner === 0;
+    const wi = S.mode === 'hotseat' && m.winner != null ? m.winner : 0;   // vs AI: always show your own hero
+    const heroDef = HEROES[m.players[wi].heroId];
+    const stage = `<div class="res-stage ${m.winner == null ? 'draw' : myWin ? 'victory' : 'defeat'}" style="--wc:${WORLDS[heroDef.world].color}"><div class="res-rays"></div><div class="res-hero">${portrait(heroDef, { bare: true, k: 'resh' })}<i class="sheen"></i></div><div class="res-hname">${heroDef.name}</div></div>`;
+    $('results').innerHTML = `${stage}<div class="res-banner"><h1>${title}</h1><p class="hint">${m.round} جولات · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة ${S.mode === 'friendly' ? '· مباراة ودية (لم تُسجَّل)' : ''}</p>
       <div class="timeline">${tl}</div><p class="hint">أخضر = فوز ${esc(m.players[0].name)} · أحمر = فوز ${esc(m.players[1].name)}</p></div>
       <div class="res-cols">${cols}</div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px">
@@ -853,6 +911,8 @@
         <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
         <button class="btn big ghost" data-act="go" data-to="menu">القائمة الرئيسية</button></div>`;
     show('results');
+    if (m.winner != null) { sfx(myWin ? 'win' : 'lose'); }
+    if (myWin) setTimeout(() => { const h = document.querySelector('.res-hero'); if (h) ['#ffd24a', '#ff4f8b', '#5fe3ff', '#7bd46a', '#ffffff'].forEach((c) => burst(h, c, 14, { r: 150, s: 8 })); }, 250);
   }
 
   function renderStats() {
@@ -953,6 +1013,7 @@
       const r = S.match.buy(S.v, +d.idx);
       S.pop = null;
       if (res(r)) {
+        sfx('buy');
         if (r.merged && r.merged.length) {
           r.merged.forEach((u) => toast(`تطوير! ${UNITS[u.defId].name} ${'★'.repeat(u.star)}`, 'good'));
           S.pop = { uid: r.merged[r.merged.length - 1].uid, merged: true };
@@ -967,7 +1028,8 @@
     },
     buyFromUpg: (d) => { const r = S.match.buy(S.v, +d.idx); if (res(r) && r.merged && r.merged.length) toast(`تطوير! ${UNITS[r.merged[r.merged.length - 1].defId].name} ${'★'.repeat(r.merged[r.merged.length - 1].star)}`, 'good'); renderMatch(); upgradesModal(); },
     buyItem: (d) => { if (prepActive() && res(S.match.buyItem(S.v, +d.idx))) renderMatch(); },
-    reroll: () => { if (prepActive() && res(S.match.reroll(S.v))) renderMatch(); },
+    reroll: () => { if (prepActive() && res(S.match.reroll(S.v))) { sfx('reroll'); renderMatch(); } },
+    sound: () => { SND.on = !SND.on; try { localStorage.setItem('amb_sound', SND.on ? '1' : '0'); } catch (e) { /* ignore */ } if (SND.on) sfx('click'); document.querySelectorAll('[data-act="sound"]').forEach((b) => (b.textContent = (SND.on ? '🔊' : '🔇') + (b.id === 'menu-sound' ? ' الصوت' : ''))); },
     xp: () => { if (prepActive()) { const lv = me().level; if (res(S.match.buyXp(S.v))) { if (me().level > lv) toast(`المستوى ${me().level}! يمكنك وضع ${me().level} وحدات`, 'good'); renderMatch(); } } },
     lock: () => { if (prepActive()) { S.match.toggleLock(S.v); renderMatch(); } },
     ready: () => prepActive() && endPrep(),
@@ -1020,6 +1082,7 @@
   };
 
   document.addEventListener('click', (e) => {
+    if (e.target.closest && e.target.closest('.btn') && !e.target.closest('[data-act="sound"]')) sfx('click');
     if (e.target === $('modal-back')) { ACT.closeModal(); return; }
     const el = e.target.closest('[data-act]');
     if (!el) { if (S.sel && S.screen === 'match' && !e.target.closest('.panel,.shopbar,.field,.bench-row,.modal')) { S.sel = null; renderMatch(); } return; }
@@ -1080,6 +1143,7 @@
   (function fillMenu() {
     const el = $('menu-heroes');
     if (el) el.innerHTML = Object.values(HEROES).map((h, i) => cardHTML(h, { k: 'menu' + i })).join('');
+    const ms = $('menu-sound'); if (ms) ms.textContent = SND.on ? '🔊 الصوت' : '🔇 الصوت';
   })();
 
   // debug / testing hook

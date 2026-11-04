@@ -901,7 +901,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 .mob-only { display: none; }
 @media (max-width: 860px) and (orientation: portrait) {
   .mob-only { display: inline-block; }
-  html, body { height: 100%; overflow: hidden; }
+  html:has(body.in-match), body.in-match { height: 100%; overflow: hidden; }
   #scr-match.active { height: 100vh; height: 100dvh; min-height: 0; padding: 3px; gap: 4px; overflow: hidden; }
   .topbar { flex-wrap: nowrap; padding: 2px 6px; gap: 5px; height: 42px; min-height: 0; overflow: hidden; align-items: center; }
   .topbar .phases, .topbar .lifechip, .topbar .xpbar, .topbar .lvl small, .topbar .tb-spacer { display: none; }
@@ -1104,3 +1104,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   .shop-row .shop-cards, .shop-row .item-cards { overflow: visible; }
   .shop-row { overscroll-behavior-x: contain; touch-action: pan-x; }
 }
+
+/* overlays and modals scroll when taller than a small screen */
+.overlay { overflow-y: auto; align-items: safe center; -webkit-overflow-scrolling: touch; }
+.modal-back { overflow-y: auto; align-items: safe center; }

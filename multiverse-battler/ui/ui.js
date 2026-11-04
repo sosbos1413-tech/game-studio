@@ -29,6 +29,7 @@
   function show(screen) {
     document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === 'scr-' + screen));
     S.screen = screen;
+    document.body.classList.toggle('in-match', screen === 'match');   // page scroll is locked only during a match
     window.scrollTo(0, 0);
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on'); }

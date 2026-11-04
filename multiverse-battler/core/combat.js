@@ -78,6 +78,8 @@
         if (hero.passive.id === 'ancient_bark' && pos.row === 'front') mods.hpPct += 0.15;
         if (spec.summoned) mods.atkPct += HC.summonAuraAtk;
         spells.forEach((sp) => { if (sp.type === 'buffAll') mods.atkPct += sp.atkPct; });
+        const bl = spec.blessings || {};
+        mods.atkPct += bl.atkPct || 0; mods.hpPct += bl.hpPct || 0; mods.asPct += bl.asPct || 0;   // stage-reward blessings
 
         const sm = AMB.CONFIG.stars.mult[u.star];
         const maxHp = def.hp * sm * (1 + mods.hpPct);
@@ -97,6 +99,7 @@
       const hMods = EMPTY_MODS();
       syn.list.forEach((sy) => sy.effects.forEach((eff) => { if (eff.scope === 'all') hMods[eff.stat] += eff.value; }));
       spells.forEach((sp) => { if (sp.type === 'buffAll') hMods.atkPct += sp.atkPct; });
+      hMods.atkPct += (spec.blessings || {}).atkPct || 0; hMods.asPct += (spec.blessings || {}).asPct || 0;
       const hp = spec.life * scale;
       const base = { uid: 'hero' + s, defId: hero.id, name: hero.name, role: 'hero', world: hero.world, star: 0,
         isHero: true, maxHp: spec.maxLife * scale, hp, maxMana: Infinity, mana: 0, skill: null };

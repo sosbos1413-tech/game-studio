@@ -106,6 +106,33 @@
     }
   }
 
+  // ---- stage rewards (draft 1 of 3)
+  function rewardHTML(id, stage) {
+    const R = AMB.DATA.REWARDS[id], m = S.match;
+    const unit = id === 'unit' ? `<span class="rw-tag">فئة ${R.tiers[stage]}</span>` : '';
+    const bless = id.startsWith('bless') ? '<span class="rw-tag perm">دائمة</span>' : '';
+    return { R, text: m.rewardText(id, stage), tags: unit + bless };
+  }
+  function showRewards(pi) {
+    const m = S.match, p = m.players[pi], o = p.rewardOffer, st = AMB.CONFIG.match.stages[o.stage];
+    S.rewardFor = pi;
+    overlay(`<div class="ov-card rw"><h2>🎁 مكافأة مرحلة «${st.name}»</h2>
+      <p class="hint">${S.mode === 'hotseat' ? esc(p.name) + ': ' : ''}اختر مكافأة واحدة.${o.trailing ? ' <b style="color:var(--red)">خيار إضافي لأنك متأخر بالحياة.</b>' : ''}</p>
+      <div class="rw-grid">${o.options.map((id, i) => { const r = rewardHTML(id, o.stage); return `<button class="rw-card ${id.startsWith('bless') ? 'bless' : id}" data-act="claimReward" data-idx="${i}"><span class="rw-ic">${icon(r.R.icon)}</span><b>${r.R.name}</b><span class="rw-tx">${r.text}</span>${r.tags}</button>`; }).join('')}</div></div>`);
+  }
+  function rewardHandoff(pi) {
+    const p = S.match.players[pi];
+    overlay(`<div class="ov-card"><h2>دور ${esc(p.name)}</h2><p class="hint">سلّم الجهاز لـ ${esc(p.name)} لاختيار المكافأة.</p>
+      <button class="btn primary big" data-act="rewardGo" data-pi="${pi}">أنا جاهز</button></div>`);
+  }
+  function afterReward() {
+    const m = S.match;
+    if (S.mode === 'hotseat' && S.rewardQueue.length) { rewardHandoff(S.rewardQueue.shift()); return; }
+    closeOverlay();
+    if (S.mode !== 'hotseat') { /* AI already picked */ }
+    nextRound();
+  }
+
   function handoff(pi) {
     const p = S.match.players[pi];
     S.v = pi;
@@ -125,7 +152,10 @@
     S.phase = 'resources';
     S.paused = false;
     renderMatch();
-    banner('الجولة ' + S.match.round);
+    { const st = S.match.stageInfo(), first = st.rounds[0] === S.match.round;
+      if (st.id === 'finale') banner('الحسم!<small>جولة أخيرة: الخسارة هنا تتضاعف</small>', 'fight');
+      else if (first) banner(`${st.name}<small>الجولة ${S.match.round} من ${CFG.match.maxRounds}</small>`);
+      else banner('الجولة ' + S.match.round); }
     const p = me();
     const inc = p.lastIncome;
     if (inc) {
@@ -215,11 +245,11 @@
     else if (S.mode === 'hotseat') { title = `فاز ${esc(names[rep.winner])} بالجولة`; cls = 'win'; }
     else { title = rep.winner === 0 ? 'فزت بالجولة!' : 'خسرت الجولة'; cls = rep.winner === 0 ? 'win' : 'lose'; }
     const rows = rep.players.map((r, i) => `<tr><td>${esc(names[i])} ${r.heroKilled ? '— <b style="color:var(--red)">سقط البطل!</b>' : ''}</td>
-      <td>${fmt(r.direct, 1)}</td><td>${r.backlash}</td><td>${r.collapse || '-'}</td><td><b>${lifeStr(r.lifeAfter)}</b></td></tr>`).join('');
+      <td>${fmt(r.direct, 1)}</td><td>${r.backlash}</td><td><b>${lifeStr(r.lifeAfter)}</b></td></tr>`).join('');
     const over = m.isOver;
     overlay(`<div class="ov-card"><h2 class="${cls}">${title}</h2>
       <div class="hint">الجولة ${rep.round} · مدة القتال ${fmt(rep.duration, 1)} ث</div>
-      <table><tr><th></th><th>ضرر مباشر</th><th>ارتداد الخسارة</th><th>انهيار الصدع</th><th>الحياة</th></tr>${rows}</table>
+      <table><tr><th></th><th>ضرر مباشر</th><th>ارتداد الخسارة</th><th>الحياة</th></tr>${rows}</table>
       ${(() => {
         if (S.mode === 'hotseat') return '';
         const me0 = rep.players[0];
@@ -227,8 +257,9 @@
         if (rep.winner === 1) return `<p class="tip"><b>لماذا خسرت؟</b> قوة تشكيلة الخصم كانت أعلى. جرّب تفعيل التآزر (وحدات من نفس العالم أو الدور)، وجهّز معدات وقدرات البطل.</p>`;
         return '';
       })()}
-      <p class="hint">الضرر المباشر = ضربات تلقاها البطل بعد انكشافه أو في الساحة. ارتداد الخسارة = ${CFG.damage.lossBase} + الجولة×${CFG.damage.lossPerRound} + نجوم وحدات الخصم الناجية.</p>
-      <button class="btn primary big" data-act="${over ? 'toResults' : 'nextRound'}">${over ? 'عرض النتائج' : 'الجولة التالية'}</button></div>`);
+      ${rep.finale ? `<p class="tip"><b>جولة الحسم:</b> ارتداد الخسارة تضاعف ×${CFG.match.finaleLossMult}. ${over ? 'الأعلى حياة يفوز.' : ''}</p>` : ''}
+      <p class="hint">الضرر المباشر = ضربات تلقاها البطل بعد انكشافه أو في الساحة. ارتداد الخسارة = ${CFG.damage.lossBase} + الجولة×${CFG.damage.lossPerRound} + نجوم وحدات الخصم الناجية (حتى ${CFG.damage.survivorCap}).</p>
+      <button class="btn primary big" data-act="${over ? 'toResults' : m.rewardPending ? 'rewards' : 'nextRound'}">${over ? 'عرض النتائج' : m.rewardPending ? '🎁 اختر مكافأتك' : 'الجولة التالية'}</button></div>`);
   }
 
   // ---- card helpers shared by shop / bench / field / codex
@@ -518,7 +549,8 @@
     const left = ph === 'prep' ? Math.ceil(Math.max(0, S.deadline - Date.now()) / 1000) + 's' : '—';
     const avail = p.essence - m.reservedEssence(p);
     $('topbar').innerHTML = `
-      <span class="tb-round">الجولة ${m.round}</span>
+      <span class="tb-round">الجولة ${m.round}<small>/${CFG.match.maxRounds}</small></span>
+      <span class="stagechip" title="المراحل: كل مرحلة تنتهي بمكافأة تختارها (ما عدا الأخيرة)"><b>${m.stageInfo().name}</b><span class="pips">${[1, 2, 3, 4, 5, 6, 7].map((r) => `<i class="pip ${r < m.round ? 'done' : r === m.round ? 'now' : ''} ${CFG.match.stages.some((st) => st.rounds[1] === r && r < 7) ? 'gap' : ''}"></i>`).join('')}</span></span>
       <div class="phases">${phases}</div>
       <span class="timer" title="مؤقت مرحلة التجهيز">${S.paused ? '⏸' : left}</span>
       <span class="tb-spacer"></span>
@@ -868,7 +900,7 @@
       <div class="skillbox"><b>البطل:</b> يبقى في مركز القيادة ولا يمكن استهدافه ما دام لديك وحدة حية في الصف الأمامي. إذا سقط خط الدفاع يصبح مكشوفًا. يمكنك استدعاؤه للساحة ليقاتل بنفسه — مكسب كبير ومخاطرة حقيقية.</div>
       <div class="skillbox"><b>القدرات:</b> جهّز قدرات البطل واختر متى تُفعّل (بداية القتال، بعد 5 ثوانٍ، عند سقوط أول حليف، عند انكشاف البطل). تستهلك الجوهر.</div>
       <div class="skillbox"><b>التآزر:</b> وحدات من نفس العالم أو الدور تفعّل مكافآت. وحدات عالم بطلك تكتسب رنينًا. وجود 3–4 عوالم مختلفة يفعّل "تقارب العوالم" فلا تكون التشكيلات المختلطة أضعف.</div>
-      <div class="skillbox"><b>إنهاء المباريات الطويلة:</b> بعد ${CFG.combat.furyStart} ثانية من القتال يتصاعد الضرر (الغضب). من الجولة ${CFG.match.collapseStartRound} يخسر البطلان حياة إضافية كل جولة (انهيار الصدع). الحد الأقصى ${CFG.match.maxRounds} جولة.</div>`);
+      <div class="skillbox"><b>المراحل والمكافآت:</b> المباراة ${CFG.match.maxRounds} جولات في 4 مراحل: ${CFG.match.stages.map((x) => x.name + ' (' + (x.rounds[0] === x.rounds[1] ? 'الجولة ' + x.rounds[0] : 'الجولتان ' + x.rounds[0] + '–' + x.rounds[1]) + ')').join('، ')}. بعد كل مرحلة (عدا الأخيرة) تختار <b>مكافأة من 3</b>: وحدة مجانية، ذهب، خبرة، جوهر، معدة، <b>بركة دائمة</b> للفريق، أو شفاء للبطل. جولة الحسم تضاعف ارتداد الخسارة ×${CFG.match.finaleLossMult}. إن لم يسقط بطل قبلها، يفوز الأعلى حياة. وفي القتال نفسه يتصاعد الضرر بعد ${CFG.combat.furyStart} ثانية (الغضب).</div>`);
   }
 
   function matchMenu() {
@@ -907,6 +939,7 @@
         <div class="kv"><span>الوحدات المشتراة / التحديثات</span><b>${p.stats.unitsBought} / ${p.stats.rerolls}</b></div>
         <div class="kv"><span>المستوى النهائي</span><b>${p.level}</b></div>
         <div class="hint" style="margin-top:6px">التآزر النهائي: ${syn || '—'}</div>
+        <div class="hint">المكافآت: ${p.rewardLog.length ? p.rewardLog.map((r) => AMB.DATA.REWARDS[r.id].name).join('، ') : '—'}</div>
         <div class="mini-board">${b.map((u, k) => `<div class="mini">${portrait(UNITS[u.defId], { k: 'rb' + i + k })}<div>${stars(u.star)}</div></div>`).join('')}</div></div>`;
     }).join('');
     const tl = m.history.map((r) => `<span class="${r.winner === null ? 'wd' : r.winner === 0 ? 'w0' : 'w1'}">${r.round}</span>`).join('');
@@ -1081,6 +1114,21 @@
     speed: (d) => { S.speed = +d.v; renderCombatCtrl(); },
     skip: () => skipCombat(),
     nextRound: () => { closeOverlay(); if (S.match.isOver) showResults(); else nextRound(); },
+    rewards: () => {
+      const m = S.match; closeOverlay();
+      if (S.mode === 'hotseat') { S.rewardQueue = [1]; rewardHandoff(0); }
+      else { S.rewardQueue = []; showRewards(0); }
+    },
+    rewardGo: (d) => showRewards(+d.pi),
+    claimReward: (d) => {
+      const m = S.match, pi = S.rewardFor, r = m.claimReward(pi, +d.idx);
+      if (!r.ok) { toast(r.reason, 'err'); return; }
+      sfx('merge');
+      let msg = 'استلمت: ' + r.text; if (r.item) msg += ' — ' + AMB.DATA.ITEMS[r.item].name;
+      toast(S.mode === 'hotseat' ? m.players[pi].name + ': ' + msg : msg, 'good');
+      if (S.mode !== 'hotseat') { const a = AMB.AI.claimReward(m, 1); if (a && a.ok) setTimeout(() => toast('الخصم اختار: ' + AMB.DATA.REWARDS[a.id].name, ''), 700); }
+      afterReward();
+    },
     toResults: () => showResults(),
     again: () => { S.picks = [S.picks[0], S.picks[1]]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
     statsExport: () => {

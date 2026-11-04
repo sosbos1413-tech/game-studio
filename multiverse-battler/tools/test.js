@@ -100,6 +100,64 @@ t('if both heroes fall in the same round, the round winner takes the match', () 
   ok(m.isOver); eq(m.winner, 0, 'round winner should win');
 });
 
+console.log('stages & rewards');
+const sim1 = (seed) => new AMB.Match({ seed, players: [{ heroId: 'kagira' }, { heroId: 'merin' }] });
+t('7 rounds in 4 stages: rounds map to the right stage', () => {
+  const m = sim1(31);
+  eq(AMB.CONFIG.match.maxRounds, 7);
+  eq([1, 2, 3, 4, 5, 6, 7].map((r) => m.stageIndex(r)).join(''), '0011223');
+  ok(m.isFinale(7) && !m.isFinale(6));
+});
+t('reward drafts appear only after rounds 2, 4 and 6, with 3 distinct options incl. a unit', () => {
+  const m = sim1(32); const seen = [];
+  while (!m.isOver) {
+    m.startRound(); AMB.AI.prep(m, 0); AMB.AI.prep(m, 1);
+    m.resolveCombat(m.createCombat(false).runToEnd());
+    if (m.rewardPending) { seen.push(m.round); m.players.forEach((p) => { const o = p.rewardOffer.options; ok(o.length >= 3 && o.length <= 4); eq(new Set(o).size, o.length, 'options must be distinct'); ok(o.includes('unit')); }); AMB.AI.claimRewards(m); }
+  }
+  ok(seen.every((r) => [2, 4, 6].includes(r)), 'drafts at ' + seen);
+  ok(m.round <= 7);
+});
+t('claiming: gold, xp, heal (capped), unit (bench + shared pool) and blessing', () => {
+  const m = sim1(33); m.startRound();
+  const p = m.players[0];
+  const give = (id) => { p.rewardOffer = { stage: 0, options: [id], claimed: false }; return m.claimReward(0, 0); };
+  const g0 = p.gold; ok(give('gold').ok); eq(p.gold, g0 + AMB.DATA.REWARDS.gold.n[0]);
+  const x0 = p.xp; give('xp'); ok(p.xp > x0 || p.level > 3);
+  p.life = 95; give('heal'); eq(p.life, 100, 'heal is capped at max life');
+  const pool0 = Object.values(m.pool).reduce((a, b) => a + b, 0); const n0 = m.allUnits(p).length; give('unit');
+  eq(m.allUnits(p).length, n0 + 1); eq(Object.values(m.pool).reduce((a, b) => a + b, 0), pool0 - 1);
+  give('bless_atk'); ok(p.blessings.atkPct > 0);
+  ok(!m.claimReward(0, 0).ok, 'cannot claim twice');
+});
+t('a blessing really makes the team stronger in combat', () => {
+  const mk = (bl) => new AMB.Combat([side([U('ash_ronin', 'f1')], { blessings: bl }), side([U('thorn_fox', 'f1')])], { seed: 4, round: 3, record: false });
+  const a = mk({ atkPct: 0, hpPct: 0, asPct: 0 }), b = mk({ atkPct: 0.5, hpPct: 0.5, asPct: 0.5 });
+  const unit = (c) => c.fighters.find((f) => f.defId === 'ash_ronin');
+  ok(unit(b).atk > unit(a).atk * 1.4 && unit(b).maxHp > unit(a).maxHp * 1.4 && unit(b).as > unit(a).as * 1.4);
+});
+t('the finale multiplies the life lost by the loser of the round', () => {
+  const run = (round) => {
+    const m = sim1(34); m.startRound(); m.round = round; m.players.forEach((p) => (p.life = 100));
+    const loser = { heroLife: 100, heroKilled: false, survivors: [{ defId: 'ash_ronin', star: 1 }], abilitiesFired: [], exposed: false };
+    const rep = m.resolveCombat({ winner: 1, duration: 10, sides: [loser, { heroLife: 100, heroKilled: false, survivors: [{ defId: 'ash_ronin', star: 1 }], abilitiesFired: [], exposed: false }], unitDamage: {} });
+    return rep.players[0].backlash;
+  };
+  const mult = AMB.CONFIG.match.finaleLossMult;
+  AMB.CONFIG.match.finaleLossMult = 1; const plain = run(7);
+  AMB.CONFIG.match.finaleLossMult = mult; const finale = run(7);
+  ok(finale > plain, `finale backlash ${finale} should exceed ${plain}`);
+  ok(Math.abs(finale - Math.round(plain * mult)) <= 1, 'should be about x' + mult);
+  const r6 = run(6); ok(r6 <= plain, 'round 6 is not multiplied');
+});
+t('after round 7 the higher hero life wins (tie -> rounds won)', () => {
+  const m = sim1(35); m.startRound(); m.round = 7; m.players[0].life = 60; m.players[1].life = 40;
+  const sd = { heroLife: 0, heroKilled: false, survivors: [], abilitiesFired: [], exposed: false };
+  m.players[0].life = 60; m.players[1].life = 40;
+  m.resolveCombat({ winner: null, duration: 30, sides: [Object.assign({}, sd, { heroLife: 60 }), Object.assign({}, sd, { heroLife: 40 })], unitDamage: {} });
+  ok(m.isOver); eq(m.winner, 0);
+});
+
 console.log('economy');
 t('3 copies merge into a 2-star, keeping the board position', () => {
   const m = new AMB.Match({ seed: 11, players: [{ heroId: 'kagira' }, { heroId: 'orath' }] });

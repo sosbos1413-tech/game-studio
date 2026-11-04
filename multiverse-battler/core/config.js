@@ -12,12 +12,22 @@
 
     match: {
       heroLife: 100,            // life total of every hero
-      prepSeconds: 30,          // prep timer (shop + formation) vs AI
-      hotseatPrepSeconds: 35,   // prep timer per player in same-device PvP
-      maxRounds: 18,            // hard cap: higher life wins, tie = draw
-      collapseStartRound: 8,  // "Rift Collapse" anti-stall: both heroes bleed each round
+      prepSeconds: 40,          // prep timer (shop + formation) vs AI
+      hotseatPrepSeconds: 45,   // prep timer per player in same-device PvP
+      maxRounds: 7,             // the whole match: 7 rounds in 4 stages. After round 7 the higher hero life wins
+      collapseStartRound: 99,   // unused now (the finale replaces rift collapse); kept so old tuning still loads
       collapseDamage: [3, 6, 10, 15, 21, 28, 36, 45],
       roundResultSeconds: 2.5,
+      // stages: the 7 rounds are grouped; a reward draft follows every stage except the last
+      stages: [
+        { id: 'spark', name: 'الشرارة', rounds: [1, 2] },
+        { id: 'blaze', name: 'الاشتعال', rounds: [3, 4] },
+        { id: 'rift', name: 'الصدع', rounds: [5, 6] },
+        { id: 'finale', name: 'الحسم', rounds: [7, 7] },
+      ],
+      catchUpGap: 20,           // trailing by this much life (or more) at a reward draft => a 4th option
+      catchUpExtraGold: 0,
+      finaleLossMult: 1.5,      // life lost by the loser of the final round is multiplied
     },
 
     economy: {
@@ -72,7 +82,7 @@
       heroHpScale: 10,          // 1 hero life = 10 battlefield HP
       commandPostFortify: 0.25, // damage multiplier vs a hero NOT summoned
       postDamageCapBase: 3,     // max life a command-post hero loses to hits in one combat
-      postDamageCapPerRound: 0.5,
+      postDamageCapPerRound: 1,
       summonKnockout: 12,       // a summoned hero retreats after losing this much life in one combat
       manaPerAttack: 10,
       manaPerHit: 3,
@@ -88,8 +98,8 @@
     damage: {
       // damage the losing hero takes at the end of a lost round (on top of
       // any direct hits received in combat)
-      lossBase: 2,
-      lossPerRound: 0.35,
+      lossBase: 3,
+      lossPerRound: 0.6,
       perSurvivor: 1,           // + per surviving enemy unit (star counts)
       survivorCap: 6,           // ...but at most this much from survivors, so late rounds do not spiral
       drawBase: 2,

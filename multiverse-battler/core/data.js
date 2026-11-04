@@ -163,22 +163,22 @@
     },
     merin: {
       id: 'merin', name: 'ميران', title: 'حارس المدّ الصامت', world: 'tide', style: 'صمود — ظلّ هادئ يحمي الفريق: دروع وعلاج ومعارك طويلة',
-      board: { atk: 78, as: 0.8, range: 3, def: 0.1, crit: 0.05 },
+      board: { atk: 86, as: 0.8, range: 3, def: 0.1, crit: 0.05 },
       passive: { id: 'deep_reserve', name: 'مخزون عميق', text: '+1 جوهر إضافي كل جولة.' },
       abilities: [
-        { id: 'tidal_ward', name: 'حاجز المدّ', cost: 3, type: 'shieldAllies', amount: 160, scale: 20,
-          text: 'درع لجميع الحلفاء (160 + 20 لكل جولة).' },
-        { id: 'moon_spring', name: 'ينبوع القمر', cost: 4, type: 'healAllies', pct: 0.3,
-          text: 'يعالج جميع الحلفاء بنسبة 30% من صحتهم القصوى.' },
+        { id: 'tidal_ward', name: 'حاجز المدّ', cost: 3, type: 'shieldAllies', amount: 200, scale: 25,
+          text: 'درع لجميع الحلفاء (200 + 25 لكل جولة).' },
+        { id: 'moon_spring', name: 'ينبوع القمر', cost: 4, type: 'healAllies', pct: 0.36,
+          text: 'يعالج جميع الحلفاء بنسبة 36% من صحتهم القصوى.' },
       ],
     },
     zerokai: {
       id: 'zerokai', name: 'زيرو-كاي', title: 'الظلّ المشفّر', world: 'neon', style: 'إيقاع — غامض يسبق خصمه بخطوة، اقتصاد مرن وسرعة',
-      board: { atk: 80, as: 0.85, range: 4, def: 0.05, crit: 0.15 },
+      board: { atk: 74, as: 0.85, range: 4, def: 0.05, crit: 0.15 },
       passive: { id: 'free_reroll', name: 'وصول خلفي', text: 'أول تحديث للمتجر في كل جولة مجاني.' },
       abilities: [
-        { id: 'overclock', name: 'كسر السرعة', cost: 3, type: 'buffAllies', asPct: 0.3, dur: 5,
-          text: '+30% سرعة هجوم لجميع الحلفاء لمدة 5 ثوانٍ.' },
+        { id: 'overclock', name: 'كسر السرعة', cost: 3, type: 'buffAllies', asPct: 0.25, dur: 5,
+          text: '+25% سرعة هجوم لجميع الحلفاء لمدة 5 ثوانٍ.' },
         { id: 'system_crash', name: 'انهيار النظام', cost: 5, type: 'stunEnemies', dur: 1.5,
           text: 'يشلّ جميع الأعداء لمدة 1.5 ثانية.' },
       ],
@@ -271,5 +271,27 @@
       { n: 4, effects: [{ scope: 'all', stat: 'atkPct', value: 0.2 }, { scope: 'all', stat: 'hpPct', value: 0.2 }], text: '4 عوالم: الجميع +20% هجوم وصحة' }] },
   };
 
-  AMB.DATA = { WORLDS, ROLES, ROLE_BASE, TIER_MULT, UNITS, HEROES, ITEMS, SYNERGIES, ABILITY_TRIGGERS };
+  /*
+   * Stage rewards: after each of the first 3 stages every player drafts 1 of 3 offers.
+   * values are per stage [stage 1, stage 2, stage 3]. kind -> effect in core/match.js (claimReward).
+   */
+  const REWARDS = {
+    unit:     { id: 'unit', icon: 'crown', name: 'مجنّد مجاني', tiers: [1, 2, 3], text: (v, st) => `وحدة فئة ${v.tiers[st]} مجانًا (من عالم بطلك غالبًا)` },
+    gold:     { id: 'gold', icon: 'coin', name: 'كنز', n: [6, 8, 10], text: (v, st) => `+${v.n[st]} ذهب فورًا` },
+    xp:       { id: 'xp', icon: 'star', name: 'تدريب مكثّف', n: [6, 8, 10], text: (v, st) => `+${v.n[st]} خبرة` },
+    essence:  { id: 'essence', icon: 'essence', name: 'جوهر نقي', n: [3, 3, 4], text: (v, st) => `+${v.n[st]} جوهر لقدرات البطل` },
+    item:     { id: 'item', icon: 'shield', name: 'غنيمة', text: () => 'معدة عشوائية تضعها على أي وحدة' },
+    bless_atk:{ id: 'bless_atk', icon: 'sword', name: 'بركة الغضب', pct: [0.08, 0.1, 0.12], text: (v, st) => `الفريق كله +${Math.round(v.pct[st] * 100)}% هجوم لبقية المباراة` },
+    bless_hp: { id: 'bless_hp', icon: 'heart', name: 'بركة الحجر', pct: [0.1, 0.12, 0.15], text: (v, st) => `الفريق كله +${Math.round(v.pct[st] * 100)}% صحة لبقية المباراة` },
+    bless_as: { id: 'bless_as', icon: 'wind', name: 'بركة الريح', pct: [0.08, 0.1, 0.12], text: (v, st) => `الفريق كله +${Math.round(v.pct[st] * 100)}% سرعة هجوم لبقية المباراة` },
+    heal:     { id: 'heal', icon: 'cross', name: 'ماء الحياة', n: [10, 12, 15], text: (v, st) => `يستعيد بطلك ${v.n[st]} حياة` },
+  };
+  // which rewards can appear in each stage (one "unit" is always offered)
+  const REWARD_POOLS = [
+    ['gold', 'xp', 'item', 'bless_hp'],
+    ['item', 'essence', 'bless_atk', 'bless_hp', 'xp'],
+    ['bless_atk', 'bless_hp', 'bless_as', 'heal', 'xp', 'essence'],
+  ];
+
+  AMB.DATA = { REWARDS, REWARD_POOLS, WORLDS, ROLES, ROLE_BASE, TIER_MULT, UNITS, HEROES, ITEMS, SYNERGIES, ABILITY_TRIGGERS };
 })();

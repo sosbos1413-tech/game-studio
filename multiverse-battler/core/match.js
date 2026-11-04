@@ -27,6 +27,7 @@
       winStreak: 0, lossStreak: 0, lastIncome: null,
       stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, wins: 0, losses: 0, draws: 0 },
       alive: true,
+      blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
     };
   }
 
@@ -50,6 +51,7 @@
     // ================================================================ round flow
     startRound() {
       const E = AMB.CONFIG.economy;
+      if (this.rewardPending && AMB.AI && AMB.AI.claimRewards) AMB.AI.claimRewards(this);   // never leave a draft open
       this.round++;
       this.phase = 'resources';
       this.players.forEach((p) => {
@@ -396,6 +398,7 @@
         heroId: p.heroId, life: p.life, maxLife: p.maxLife, summoned: p.summoned, heroSlot: p.heroSlot,
         units: Object.entries(p.board).map(([slot, u]) => ({ uid: u.uid, defId: u.defId, star: u.star, items: u.items.slice(), slot })),
         spells: p.armedSpells.slice(),
+        blessings: Object.assign({}, p.blessings),
         abilities: Object.entries(p.abilities).map(([id, trigger]) => ({ id, trigger })),
       };
     }
@@ -423,6 +426,7 @@
         const opp = result.sides[1 - i];
         if (result.winner === 1 - i && !sr.heroKilled) {
           backlash = D.lossBase + Math.floor(this.round * D.lossPerRound) + Math.min(D.survivorCap, opp.survivors.reduce((s, u) => s + u.star * D.perSurvivor, 0));
+          if (this.isFinale()) backlash = Math.round(backlash * M.finaleLossMult);
         } else if (result.winner === null) backlash = D.drawBase + Math.floor(this.round / 3);
         let collapse = 0;
         if (this.round >= M.collapseStartRound) {
@@ -460,10 +464,77 @@
         this.winner = dead[0] && dead[1] ? (report.winner != null ? report.winner : null) : dead[0] ? 1 : 0;
       } else if (this.round >= M.maxRounds) {
         const [a, b] = this.players.map((p) => p.life);
-        this.winner = a === b ? null : a > b ? 0 : 1;
+        if (a !== b) this.winner = a > b ? 0 : 1;
+        else { const w = this.players.map((p) => p.stats.wins); this.winner = w[0] === w[1] ? null : w[0] > w[1] ? 0 : 1; }   // tie-break: rounds won
       }
       if (this.winner !== undefined) { this.phase = 'over'; this.endedAt = Date.now(); }
+      else this.offerRewards();
+      report.finale = this.isFinale(report.round);
       return report;
+    }
+
+    // ================================================================ stages & rewards
+    stageIndex(round) { const st = AMB.CONFIG.match.stages; const r = round == null ? this.round : round; const i = st.findIndex((x) => r >= x.rounds[0] && r <= x.rounds[1]); return i < 0 ? st.length - 1 : i; }
+    stageInfo(round) { return AMB.CONFIG.match.stages[this.stageIndex(round)]; }
+    isFinale(round) { return this.stageInfo(round).id === 'finale'; }
+    /** true while any player still has an unclaimed reward draft */
+    get rewardPending() { return this.players.some((p) => p.rewardOffer && !p.rewardOffer.claimed); }
+
+    /** Build 3 distinct offers per player after the last round of a stage (not the final stage). */
+    offerRewards() {
+      const si = this.stageIndex(this.round);
+      if (si >= AMB.CONFIG.match.stages.length - 1) return false;
+      if (this.round !== AMB.CONFIG.match.stages[si].rounds[1]) return false;   // only at the end of a stage
+      const R = AMB.DATA.REWARDS, M = AMB.CONFIG.match;
+      this.players.forEach((p, pi) => {
+        const trailing = this.players[1 - pi].life - p.life >= M.catchUpGap;   // comeback help: a 4th option
+        const pool = AMB.DATA.REWARD_POOLS[si].filter((id) => id !== 'heal' || p.life < p.maxLife);
+        const picks = ['unit'];
+        const rest = pool.slice();
+        while (picks.length < (trailing ? 4 : 3) && rest.length) picks.push(rest.splice(this.rng.int(rest.length), 1)[0]);
+        for (let i = picks.length - 1; i > 0; i--) { const j = this.rng.int(i + 1); [picks[i], picks[j]] = [picks[j], picks[i]]; }
+        p.rewardOffer = { stage: si, options: picks, claimed: false, trailing };
+      });
+      return true;
+    }
+
+    rewardText(id, stage) { const r = AMB.DATA.REWARDS[id]; return r.text(r, stage); }
+
+    claimReward(pi, idx) {
+      const p = this.players[pi], o = p.rewardOffer;
+      if (!o || o.claimed) return this._fail('لا توجد مكافأة');
+      const id = o.options[idx]; if (!id) return this._fail('خيار غير صالح');
+      const R = AMB.DATA.REWARDS[id], st = o.stage, out = { ok: true, id, text: R.name + ' — ' + this.rewardText(id, st) };
+      switch (id) {
+        case 'gold': p.gold += R.n[st]; break;
+        case 'xp': this._gainXp(p, R.n[st]); break;
+        case 'essence': p.essence = Math.min(AMB.CONFIG.economy.essenceMax + 3, p.essence + R.n[st]); break;
+        case 'heal': p.life = Math.min(p.maxLife, p.life + R.n[st]); break;
+        case 'item': { const ids = Object.keys(AMB.DATA.ITEMS); const pick = this.rng.pick(ids); if (p.items.length < AMB.CONFIG.economy.itemBenchSize) p.items.push(pick); else p.gold += 3; out.item = pick; break; }
+        case 'bless_atk': p.blessings.atkPct += R.pct[st]; break;
+        case 'bless_hp': p.blessings.hpPct += R.pct[st]; break;
+        case 'bless_as': p.blessings.asPct += R.pct[st]; break;
+        case 'unit': {
+          const tier = R.tiers[st], hero = AMB.DATA.HEROES[p.heroId];
+          const entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier && this.pool[u.id] > 0).map((u) => [u.id, u.world === hero.world ? 2 : 1]);
+          const any = entries.length ? entries : Object.values(AMB.DATA.UNITS).filter((u) => this.pool[u.id] > 0).map((u) => [u.id, 1]);
+          const defId = this.rng.weighted(any);
+          if (defId) { out.unit = defId; out.text += ' → ' + AMB.DATA.UNITS[defId].name; this._grantUnit(p, defId); }
+          break;
+        }
+      }
+      o.claimed = true; o.chosen = id;
+      p.rewardLog.push({ round: this.round, id, stage: st });
+      return out;
+    }
+
+    /** a free unit goes to the bench (merging if it completes a trio); if there is no room it converts to its gold cost */
+    _grantUnit(p, defId) {
+      this.pool[defId]--;
+      const unit = { uid: AMB.util.uid('u'), defId, star: 1, items: [] };
+      const idx = p.bench.indexOf(null);
+      if (idx >= 0) p.bench[idx] = unit; else p._overflow = unit;
+      this._merge(p, unit);
     }
 
     get isOver() { return this.phase === 'over'; }

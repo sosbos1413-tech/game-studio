@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Rule tests for the core (no browser needed):  node tools/test.js */
 const path = require('path');
-['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
+['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -313,6 +313,81 @@ t('a full AI vs AI match always terminates within the round cap', () => {
     while (!m.isOver) { m.startRound(); AMB.AI.prep(m, 0); AMB.AI.prep(m, 1); m.resolveCombat(m.createCombat(false).runToEnd()); }
     ok(m.round <= AMB.CONFIG.match.maxRounds);
   }
+});
+
+
+console.log('unified save, wallet, events');
+const MEM = () => AMB.Save.memoryStorage();
+t('save: defaults, live update, survives reload', () => {
+  AMB.Save.register('_t', { defaults: () => ({ best: 0, list: [] }) });
+  const mem = MEM();
+  const a = AMB.Save.create(mem);
+  eq(a.get('_t').best, 0);
+  a.update('_t', (s) => { s.best = 7; s.list.push('x'); });
+  const b = AMB.Save.create(mem);
+  eq(b.get('_t').best, 7); eq(b.get('_t').list[0], 'x');
+});
+t('save: new default keys are added to older saves without touching saved values', () => {
+  const mem = MEM();
+  AMB.Save.register('_g', { defaults: () => ({ a: 1 }) });
+  AMB.Save.create(mem).update('_g', (s) => { s.a = 5; });
+  AMB.Save.register('_g', { defaults: () => ({ a: 1, b: { c: 2 } }) });
+  const s = AMB.Save.create(mem).get('_g');
+  eq(s.a, 5); eq(s.b.c, 2);
+});
+t('save: migrations run once, in order', () => {
+  const mem = MEM();
+  AMB.Save.register('_m', { version: 1, defaults: () => ({ n: 1 }) });
+  AMB.Save.create(mem).update('_m', (s) => { s.n = 10; });
+  let calls = 0;
+  AMB.Save.register('_m', { version: 2, defaults: () => ({ total: 0 }), migrate: (old, from) => { calls++; eq(from, 1); return { total: old.n * 2 }; } });
+  const sv = AMB.Save.create(mem);
+  eq(sv.get('_m').total, 20);
+  AMB.Save.create(mem).get('_m');
+  eq(calls, 1, 'migration count');
+});
+t('save: corrupt data starts fresh and keeps a copy of the bad data', () => {
+  const mem = MEM();
+  mem.setItem(AMB.Save.KEY, '{not json');
+  const sv = AMB.Save.create(mem);
+  ok(sv.wasCorrupt); eq(mem.getItem(AMB.Save.KEY + '_corrupt'), '{not json');
+  eq(sv.systems().length, 0);
+});
+t('save: old battle-pass progress is carried into the unified save', () => {
+  const mem = MEM();
+  const old = AMB.Pass.create(mem);       // old builds used their own key
+  old.addXp(250);
+  const sv = AMB.Save.create(mem);
+  const p = AMB.Pass.create(sv.storageFor('pass'));
+  eq(p.level(), old.level()); ok(p.level() >= 3);
+  p.addXp(100);
+  const p2 = AMB.Pass.create(AMB.Save.create(mem).storageFor('pass'));
+  eq(p2.level(), p.level(), 'pass progress saved through the unified save');
+});
+t('save: export / import round trip, bad import rejected', () => {
+  const a = AMB.Save.create(MEM()); a.update('wallet', (s) => { s.balances.shards = 42; });
+  const b = AMB.Save.create(MEM()); b.importJSON(a.exportJSON());
+  eq(b.get('wallet').balances.shards, 42);
+  let threw = false; try { b.importJSON('[1,2]'); } catch (e) { threw = true; }
+  ok(threw); eq(b.get('wallet').balances.shards, 42);
+});
+t('wallet: add/spend are all-or-nothing, unknown currency rejected, events fire', () => {
+  const p = AMB.Profile.boot(MEM());
+  const seen = []; p.events.on('currency', (e) => seen.push(e.n));
+  eq(p.wallet.balance('shards'), 0);
+  p.wallet.add('shards', 120, 'test'); eq(p.wallet.balance('shards'), 120);
+  p.wallet.add('shards', -50); p.wallet.add('shards', 0); eq(p.wallet.balance('shards'), 120, 'non-positive ignored');
+  ok(!p.wallet.spend({ shards: 500 })); eq(p.wallet.balance('shards'), 120);
+  ok(p.wallet.spend({ shards: 100 })); eq(p.wallet.balance('shards'), 20);
+  let threw = false; try { p.wallet.add('gold_coins', 5); } catch (e) { threw = true; }
+  ok(threw); eq(seen.join(), '120');
+  eq(AMB.Profile.boot(MEM()).wallet.balance('shards'), 0, 'fresh profile');
+});
+t('events: a throwing listener does not stop the others', () => {
+  const ev = AMB.Events(); let n = 0;
+  ev.on('x', () => { throw new Error('boom'); }); ev.on('x', () => n++);
+  const ce = console.error; console.error = () => {}; ev.emit('x'); console.error = ce;
+  eq(n, 1);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

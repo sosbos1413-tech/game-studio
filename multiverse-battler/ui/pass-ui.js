@@ -6,7 +6,7 @@
   const AMB = globalThis.AMB;
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const store = (() => { try { const k = '__amb_t'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch (e) { const m = {}; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); } }; } })();
+  const store = AMB.save.storageFor('pass');   // battle pass lives inside the unified save (core/save.js)
   const pass = (AMB.pass = AMB.Pass.create(store));
   const P = AMB.Pass, C = P.COSMETICS, TYPE = pass.TYPE_NAME;
   const { icon, portrait } = AMB.art;

@@ -50,15 +50,22 @@
   const opp = () => S.match.players[1 - S.v];
   const res = (r) => { if (!r.ok) toast(r.reason, 'err'); return r.ok; };
 
+  // hero ownership (core/collection.js): player 1 picks among owned heroes; a brand-new player first picks a starter.
+  // Player 2 on the same device is a guest and may use any hero.
+  const starterPick = () => S.pickIdx === 0 && AMB.collection && AMB.collection.needsStarter();
+  const heroLocked = (id) => S.pickIdx === 0 && AMB.collection && !starterPick() && !AMB.collection.owned(id);
   function renderHeroSelect() {
-    const who = S.mode === 'hotseat' ? `اللاعب ${S.pickIdx + 1}: اختر بطلك` : 'اختر بطلك';
+    const who = starterPick() ? 'اختر بطلك الأول — اختيار دائم، والباقين تفتحهم من الباكجات أو الباتل باس'
+      : S.mode === 'hotseat' ? `اللاعب ${S.pickIdx + 1}: اختر بطلك${S.pickIdx === 1 ? ' (ضيف: كل الأبطال متاحة)' : ''}` : 'اختر بطلك';
     $('hero-title').textContent = who;
+    if (S.picks[S.pickIdx] && heroLocked(S.picks[S.pickIdx])) S.picks[S.pickIdx] = null;
     const cur = S.picks[S.pickIdx];
     $('hero-grid').innerHTML = Object.values(HEROES).map((h) => {
       const W = WORLDS[h.world];
       const other = S.mode === 'hotseat' && S.pickIdx === 1 && S.picks[0] === h.id ? '<span class="pick-badge">اختيار اللاعب 1</span>' : '';
       const units = Object.values(UNITS).filter((u) => u.world === h.world).map((u) => u.name).join('، ');
-      return `<div class="hero-card ${cur === h.id ? 'sel' : ''}" style="--wc:${W.color}" data-act="pickHero" data-id="${h.id}">${other}
+      const lock = heroLocked(h.id) ? '<span class="hero-lock">🔒 مقفل<small>ليجندري: من الباكجات أو الباتل باس</small></span>' : '';
+      return `<div class="hero-card ${cur === h.id ? 'sel' : ''} ${lock ? 'locked' : ''}" style="--wc:${W.color}" data-act="pickHero" data-id="${h.id}">${other}${lock}
         ${portrait(h, { k: 'hs' })}
         <h3>${h.name}</h3><div class="title">${h.title}</div>
         <div class="world">${W.name}</div>
@@ -70,7 +77,7 @@
       </div>`;
     }).join('');
     $('hero-confirm').disabled = !cur;
-    $('hero-confirm').textContent = S.mode === 'hotseat' && S.pickIdx === 0 ? 'تأكيد والانتقال للاعب 2' : 'ابدأ المباراة';
+    $('hero-confirm').textContent = starterPick() ? 'اعتمده بطلي الأول' : S.mode === 'hotseat' && S.pickIdx === 0 ? 'تأكيد والانتقال للاعب 2' : 'ابدأ المباراة';
   }
 
   function startMatch() {
@@ -1121,10 +1128,18 @@
     tutorial: () => showTutorial(),
     diff: (d) => { S.difficulty = d.v; document.querySelectorAll('#diff-seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === d.v)); },
     mode: (d) => { S.mode = d.v; S.picks = [null, null]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
-    pickHero: (d, el, e) => { if (e.target.closest('[data-act="heroInfo"]')) return; S.picks[S.pickIdx] = d.id; renderHeroSelect(); },
+    pickHero: (d, el, e) => {
+      if (e.target.closest('[data-act="heroInfo"]')) return;
+      if (heroLocked(d.id)) { toast('هذا البطل مقفل: افتحه من الباكجات (ليجندري) أو الباتل باس', 'err'); return; }
+      S.picks[S.pickIdx] = d.id; renderHeroSelect();
+    },
     heroInfo: (d, el, e) => { e.stopPropagation(); heroDetail(d.id); },
     heroConfirm: () => {
-      if (!S.picks[S.pickIdx]) return;
+      if (!S.picks[S.pickIdx] || heroLocked(S.picks[S.pickIdx])) return;
+      if (starterPick()) {   // one-time starter choice, then continue to the match as usual
+        AMB.collection.chooseStarter(S.picks[0]); sfx('merge'); toast(`${HEROES[S.picks[0]].name} صار بطلك! افتح الباقين من الباكجات أو الباتل باس`, 'good');
+        renderHeroSelect(); return;
+      }
       if (S.mode === 'hotseat' && S.pickIdx === 0) { S.pickIdx = 1; renderHeroSelect(); return; }
       startMatch();
     },

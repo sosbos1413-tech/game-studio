@@ -11,7 +11,7 @@
 
   AMB.Save.register('collection', {
     version: 1,
-    defaults: () => ({ cards: {}, upgrades: 0 }),   // cards[id] = { owned, level, copies, got }
+    defaults: () => ({ cards: {}, upgrades: 0, starterHero: null }),   // cards[id] = { owned, level, copies, got }
   });
 
   const defOf = (id) => AMB.DATA.UNITS[id] || AMB.DATA.HEROES[id] || null;
@@ -29,7 +29,25 @@
       rarity: (id) => defOf(id).rarity,
       rarityInfo: R,
       maxLevel: (id) => R(id).copies.length + 1,
-      owned(id) { if (!defOf(id)) return false; return EC().cards.allUnlocked || !!(st().cards[id] && st().cards[id].owned); },
+      owned(id) {
+        const d = defOf(id); if (!d) return false;
+        if (EC().cards.allUnlocked) return true;
+        if (st().cards[id] && st().cards[id].owned) return true;
+        return !!d.role && !d.exclusive && EC().cards.starter.rarities.includes(d.rarity);   // starter units
+      },
+      /** first-play hero choice (one time) */
+      needsStarter: () => !st().starterHero,
+      starterHero: () => st().starterHero,
+      chooseStarter(heroId) {
+        if (!AMB.DATA.HEROES[heroId] || st().starterHero) return false;
+        save.update('collection', (s) => { s.starterHero = heroId; const c = rec(s, heroId); c.owned = true; });
+        emit('cardAdded', { id: heroId, isNew: true, copies: 0, starter: true });
+        return true;
+      },
+      ownedHeroes: () => Object.keys(AMB.DATA.HEROES).filter((id) => api.owned(id)),
+      ownedUnits: () => Object.keys(AMB.DATA.UNITS).filter((id) => api.owned(id)),
+      /** battle-pass character rewards give the card (unlock or +1 copy) */
+      grantPassReward(r) { if (r && r.type === 'avatar' && defOf(r.id)) return api.add(r.id, 1); return null; },
       level: (id) => (st().cards[id] && st().cards[id].level) || 1,
       copies: (id) => (st().cards[id] && st().cards[id].copies) || 0,
       /** copies needed for the next level, or 0 when maxed */
@@ -43,7 +61,7 @@
         if (n <= 0) return null;
         const res = save.update('collection', (s) => {
           const c = rec(s, id); c.got += n;
-          const isNew = !c.owned && !EC().cards.allUnlocked;
+          const isNew = !api.owned(id);   // starter units are owned without a record
           if (!c.owned) { c.owned = true; if (isNew) n -= 1; }
           c.copies += n;
           return { id, isNew, copies: n };

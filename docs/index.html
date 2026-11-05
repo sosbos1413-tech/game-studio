@@ -1353,7 +1353,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 .hc-rar { position: absolute; z-index: 6; top: -9px; left: 50%; transform: translateX(-50%); padding: 0 8px; font: 700 10px/16px system-ui; color: #fff; white-space: nowrap;
   background: linear-gradient(var(--m2, #888), var(--m3, #333)); border: 2px solid #000; border-radius: 9px; text-shadow: 1px 1px 0 #000; }
 .hc-lvl { position: absolute; z-index: 6; bottom: -11px; left: 50%; transform: translateX(-50%); padding: 0 6px; font: 800 12px/18px system-ui; background: #000; color: var(--gold); border: 2px solid var(--rc, var(--gold)); border-radius: 6px; direction: ltr; }
-.tcard.unowned { filter: grayscale(1) brightness(.45); }
+.tcard.hc.unowned, .tcard.hc.full.unowned { filter: grayscale(1) brightness(.5) !important; }
 .collection { max-width: 1200px; margin: 0 auto; padding: 0 10px 40px; color: var(--paper); }
 .col-head { background: var(--ink2); border: 3px solid var(--paper); box-shadow: var(--hard); padding: 12px 16px; margin-bottom: 18px; }
 .col-head .hint { color: var(--paper3); margin: 6px 0; } .col-ready { color: var(--gold); font-weight: 700; }
@@ -1424,6 +1424,14 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   .pk-main { grid-template-columns: 1fr; } .pk-art { width: 180px; height: 250px; } .pk-logo { font-size: 50px; }
   .rv { width: 116px; } .rv-row { gap: 14px 4px; } .rv-wrap h2 { font-size: 26px; } .rv-tag { font-size: 11px; padding: 2px 6px; }
 }
+
+/* ======================================================================= locked characters */
+.hero-card.locked { filter: grayscale(.85) brightness(.7); cursor: not-allowed; position: relative; }
+.hero-card.locked .portrait { opacity: .6; }
+.hero-lock { position: absolute; z-index: 3; top: 10px; inset-inline-start: 10px; background: #000; color: #fff; border: 2px solid var(--gold); padding: 3px 10px; font-weight: 700; display: flex; flex-direction: column; line-height: 1.2; }
+.hero-lock small { font-size: 11px; color: var(--gold); font-weight: 400; }
+.col-starter { background: var(--red); color: #fff; padding: 6px 10px; margin-bottom: 8px; font-weight: 700; }
+.cp-lock { font-size: 12px; text-align: center; }
 
 </style>
 </head>
@@ -2630,6 +2638,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       alive: true,
       blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
       cardPower: opts.cardPower || null,   // { defId: mult } from the collection — progression fights only
+      allowed: opts.allowedUnits ? new Set(opts.allowedUnits) : null,   // units this player owns — progression fights only
     };
   }
 
@@ -2640,7 +2649,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       this.rng = AMB.util.RNG(this.seed);
       // card levels/rarity power exist only in progression fights (campaign, tower, events); quick and same-device matches stay even
       this.progression = !!opts.progression;
-      this.players = opts.players.map((p, i) => newPlayer(i, this.progression ? p : Object.assign({}, p, { cardPower: null })));
+      this.players = opts.players.map((p, i) => newPlayer(i, this.progression ? p : Object.assign({}, p, { cardPower: null, allowedUnits: null })));
       this.round = 0;
       this.phase = 'idle';
       this.pool = {};
@@ -2691,10 +2700,11 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
     _drawUnit(p) {
       const odds = AMB.CONFIG.economy.tierOdds[p.level];
       const tier = this.rng.weighted(odds.map((w, i) => [i + 1, w]).filter((e) => e[1] > 0));
-      let entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier).map((u) => [u.id, this.pool[u.id]]);
+      const mine = (u) => !p.allowed || p.allowed.has(u.id);   // progression: only units the player owns
+      let entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier && mine(u)).map((u) => [u.id, this.pool[u.id]]);
       let pick = this.rng.weighted(entries);
-      if (!pick) { // tier exhausted: fall back to any available unit
-        entries = Object.values(AMB.DATA.UNITS).map((u) => [u.id, this.pool[u.id]]);
+      if (!pick) { // tier exhausted (or none owned in it): fall back to any available unit you own
+        entries = Object.values(AMB.DATA.UNITS).filter(mine).map((u) => [u.id, this.pool[u.id]]);
         pick = this.rng.weighted(entries);
       }
       return pick;
@@ -3146,8 +3156,9 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         case 'bless_as': p.blessings.asPct += R.pct[st]; break;
         case 'unit': {
           const tier = R.tiers[st], hero = AMB.DATA.HEROES[p.heroId];
-          const entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier && this.pool[u.id] > 0).map((u) => [u.id, u.world === hero.world ? 2 : 1]);
-          const any = entries.length ? entries : Object.values(AMB.DATA.UNITS).filter((u) => this.pool[u.id] > 0).map((u) => [u.id, 1]);
+          const mine = (u) => !p.allowed || p.allowed.has(u.id);
+          const entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier && this.pool[u.id] > 0 && mine(u)).map((u) => [u.id, u.world === hero.world ? 2 : 1]);
+          const any = entries.length ? entries : Object.values(AMB.DATA.UNITS).filter((u) => this.pool[u.id] > 0 && mine(u)).map((u) => [u.id, 1]);
           const defId = this.rng.weighted(any);
           if (defId) { out.unit = defId; out.text += ' → ' + AMB.DATA.UNITS[defId].name; this._grantUnit(p, defId); }
           break;
@@ -3608,7 +3619,11 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
     maxedRefund: { common: 5, rare: 10, epic: 25, legendary: 60 },
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
-      allUnlocked: true,       // phase 3 switches this off (start with one character, unlock the rest)
+      allUnlocked: false,      // true = every card owned (dev / testing)
+      // what a new player owns: these rarities (units) + ONE hero they pick at first play.
+      // Everything else comes from packs or the battle pass. Locks: hero choice in every mode (player 1),
+      // shop units only in progression fights; quick/same-device matches keep every unit.
+      starter: { rarities: ['common'] },
     },
   };
 
@@ -3676,7 +3691,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 
   AMB.Save.register('collection', {
     version: 1,
-    defaults: () => ({ cards: {}, upgrades: 0 }),   // cards[id] = { owned, level, copies, got }
+    defaults: () => ({ cards: {}, upgrades: 0, starterHero: null }),   // cards[id] = { owned, level, copies, got }
   });
 
   const defOf = (id) => AMB.DATA.UNITS[id] || AMB.DATA.HEROES[id] || null;
@@ -3694,7 +3709,25 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       rarity: (id) => defOf(id).rarity,
       rarityInfo: R,
       maxLevel: (id) => R(id).copies.length + 1,
-      owned(id) { if (!defOf(id)) return false; return EC().cards.allUnlocked || !!(st().cards[id] && st().cards[id].owned); },
+      owned(id) {
+        const d = defOf(id); if (!d) return false;
+        if (EC().cards.allUnlocked) return true;
+        if (st().cards[id] && st().cards[id].owned) return true;
+        return !!d.role && !d.exclusive && EC().cards.starter.rarities.includes(d.rarity);   // starter units
+      },
+      /** first-play hero choice (one time) */
+      needsStarter: () => !st().starterHero,
+      starterHero: () => st().starterHero,
+      chooseStarter(heroId) {
+        if (!AMB.DATA.HEROES[heroId] || st().starterHero) return false;
+        save.update('collection', (s) => { s.starterHero = heroId; const c = rec(s, heroId); c.owned = true; });
+        emit('cardAdded', { id: heroId, isNew: true, copies: 0, starter: true });
+        return true;
+      },
+      ownedHeroes: () => Object.keys(AMB.DATA.HEROES).filter((id) => api.owned(id)),
+      ownedUnits: () => Object.keys(AMB.DATA.UNITS).filter((id) => api.owned(id)),
+      /** battle-pass character rewards give the card (unlock or +1 copy) */
+      grantPassReward(r) { if (r && r.type === 'avatar' && defOf(r.id)) return api.add(r.id, 1); return null; },
       level: (id) => (st().cards[id] && st().cards[id].level) || 1,
       copies: (id) => (st().cards[id] && st().cards[id].copies) || 0,
       /** copies needed for the next level, or 0 when maxed */
@@ -3708,7 +3741,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         if (n <= 0) return null;
         const res = save.update('collection', (s) => {
           const c = rec(s, id); c.got += n;
-          const isNew = !c.owned && !EC().cards.allUnlocked;
+          const isNew = !api.owned(id);   // starter units are owned without a record
           if (!c.owned) { c.owned = true; if (isNew) n -= 1; }
           c.copies += n;
           return { id, isNew, copies: n };
@@ -3944,7 +3977,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
     if (r.type === 'avatar') return AMB.DATA ? ((AMB.DATA.UNITS[r.id] || AMB.DATA.HEROES[r.id] || {}).name || r.id) : r.id;
     return (COSMETICS[r.type] && COSMETICS[r.type][r.id] ? COSMETICS[r.type][r.id].name : r.id);
   }
-  const TYPE_NAME = { title: 'لقب', frame: 'إطار', arena: 'ثيم ساحة', fx: 'تأثير فوز', avatar: 'صورة رمزية', perk: 'ميزة' };
+  const TYPE_NAME = { title: 'لقب', frame: 'إطار', arena: 'ثيم ساحة', fx: 'تأثير فوز', avatar: 'شخصية', perk: 'ميزة' };
 
   // ------------------------------------------------------------- missions
   const DAILY = [
@@ -3986,7 +4019,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   const blank = (now) => ({ v: 1, season: SEASON.id, start: now, xp: 0, premium: false, claimed: { free: [], premium: [] }, claimedMissions: [], daily: { key: 0, p: {} }, weekly: { key: 0, p: {} },
     firstWinDay: 0, matches: 0, equip: { title: 'default', frame: 'default', arena: 'default', fx: 'default', avatar: null } });
 
-  function create(storage, nowFn) {
+  function create(storage, nowFn, onReward) {
     const now = nowFn || (() => Date.now());
     let st;
     try { st = JSON.parse(storage.getItem(KEY)); } catch (e) { st = null; }
@@ -4055,7 +4088,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         if (track === 'premium' && !st.premium) return false;
         return !st.claimed[track].includes(level) && !!api.reward(level, track);
       },
-      claim(level, track) { if (!api.canClaim(level, track)) return null; st.claimed[track].push(level); save(); return api.reward(level, track); },
+      claim(level, track) { if (!api.canClaim(level, track)) return null; st.claimed[track].push(level); save(); const r = api.reward(level, track); if (onReward) { try { onReward(r, level, track); } catch (e) { /* reward hook never blocks claiming */ } } return r; },
       claimAll() { const got = []; for (let l = 1; l <= api.level(); l++) ['free', 'premium'].forEach((t) => { const r = api.claim(l, t); if (r) got.push({ level: l, track: t, reward: r }); }); return got; },
       isClaimed: (level, track) => st.claimed[track].includes(level),
       unclaimedCount() { let n = 0; for (let l = 1; l <= api.level(); l++) ['free', 'premium'].forEach((t) => { if (api.canClaim(l, t)) n++; }); return n + api.dailyMissions().concat(api.weeklyMissions()).filter((m) => m.done && !m.claimed).length; },
@@ -4579,15 +4612,22 @@ AMB.IMAGES = {
   const opp = () => S.match.players[1 - S.v];
   const res = (r) => { if (!r.ok) toast(r.reason, 'err'); return r.ok; };
 
+  // hero ownership (core/collection.js): player 1 picks among owned heroes; a brand-new player first picks a starter.
+  // Player 2 on the same device is a guest and may use any hero.
+  const starterPick = () => S.pickIdx === 0 && AMB.collection && AMB.collection.needsStarter();
+  const heroLocked = (id) => S.pickIdx === 0 && AMB.collection && !starterPick() && !AMB.collection.owned(id);
   function renderHeroSelect() {
-    const who = S.mode === 'hotseat' ? `اللاعب ${S.pickIdx + 1}: اختر بطلك` : 'اختر بطلك';
+    const who = starterPick() ? 'اختر بطلك الأول — اختيار دائم، والباقين تفتحهم من الباكجات أو الباتل باس'
+      : S.mode === 'hotseat' ? `اللاعب ${S.pickIdx + 1}: اختر بطلك${S.pickIdx === 1 ? ' (ضيف: كل الأبطال متاحة)' : ''}` : 'اختر بطلك';
     $('hero-title').textContent = who;
+    if (S.picks[S.pickIdx] && heroLocked(S.picks[S.pickIdx])) S.picks[S.pickIdx] = null;
     const cur = S.picks[S.pickIdx];
     $('hero-grid').innerHTML = Object.values(HEROES).map((h) => {
       const W = WORLDS[h.world];
       const other = S.mode === 'hotseat' && S.pickIdx === 1 && S.picks[0] === h.id ? '<span class="pick-badge">اختيار اللاعب 1</span>' : '';
       const units = Object.values(UNITS).filter((u) => u.world === h.world).map((u) => u.name).join('، ');
-      return `<div class="hero-card ${cur === h.id ? 'sel' : ''}" style="--wc:${W.color}" data-act="pickHero" data-id="${h.id}">${other}
+      const lock = heroLocked(h.id) ? '<span class="hero-lock">🔒 مقفل<small>ليجندري: من الباكجات أو الباتل باس</small></span>' : '';
+      return `<div class="hero-card ${cur === h.id ? 'sel' : ''} ${lock ? 'locked' : ''}" style="--wc:${W.color}" data-act="pickHero" data-id="${h.id}">${other}${lock}
         ${portrait(h, { k: 'hs' })}
         <h3>${h.name}</h3><div class="title">${h.title}</div>
         <div class="world">${W.name}</div>
@@ -4599,7 +4639,7 @@ AMB.IMAGES = {
       </div>`;
     }).join('');
     $('hero-confirm').disabled = !cur;
-    $('hero-confirm').textContent = S.mode === 'hotseat' && S.pickIdx === 0 ? 'تأكيد والانتقال للاعب 2' : 'ابدأ المباراة';
+    $('hero-confirm').textContent = starterPick() ? 'اعتمده بطلي الأول' : S.mode === 'hotseat' && S.pickIdx === 0 ? 'تأكيد والانتقال للاعب 2' : 'ابدأ المباراة';
   }
 
   function startMatch() {
@@ -5650,10 +5690,18 @@ AMB.IMAGES = {
     tutorial: () => showTutorial(),
     diff: (d) => { S.difficulty = d.v; document.querySelectorAll('#diff-seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === d.v)); },
     mode: (d) => { S.mode = d.v; S.picks = [null, null]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
-    pickHero: (d, el, e) => { if (e.target.closest('[data-act="heroInfo"]')) return; S.picks[S.pickIdx] = d.id; renderHeroSelect(); },
+    pickHero: (d, el, e) => {
+      if (e.target.closest('[data-act="heroInfo"]')) return;
+      if (heroLocked(d.id)) { toast('هذا البطل مقفل: افتحه من الباكجات (ليجندري) أو الباتل باس', 'err'); return; }
+      S.picks[S.pickIdx] = d.id; renderHeroSelect();
+    },
     heroInfo: (d, el, e) => { e.stopPropagation(); heroDetail(d.id); },
     heroConfirm: () => {
-      if (!S.picks[S.pickIdx]) return;
+      if (!S.picks[S.pickIdx] || heroLocked(S.picks[S.pickIdx])) return;
+      if (starterPick()) {   // one-time starter choice, then continue to the match as usual
+        AMB.collection.chooseStarter(S.picks[0]); sfx('merge'); toast(`${HEROES[S.picks[0]].name} صار بطلك! افتح الباقين من الباكجات أو الباتل باس`, 'good');
+        renderHeroSelect(); return;
+      }
       if (S.mode === 'hotseat' && S.pickIdx === 0) { S.pickIdx = 1; renderHeroSelect(); return; }
       startMatch();
     },
@@ -5911,7 +5959,10 @@ AMB.IMAGES = {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const store = AMB.save.storageFor('pass');   // battle pass lives inside the unified save (core/save.js)
-  const pass = (AMB.pass = AMB.Pass.create(store));
+  // character rewards also give the card (unlock or +1 copy) — see core/collection.js
+  const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => AMB.collection && AMB.collection.grantPassReward(r)));
+  // rewards claimed before characters could be unlocked: make sure those characters are owned
+  if (AMB.collection) ['free', 'premium'].forEach((t) => (pass.state().claimed[t] || []).forEach((l) => { const r = pass.reward(l, t); if (r && r.type === 'avatar' && !AMB.collection.owned(r.id)) AMB.collection.grantPassReward(r); }));
   const P = AMB.Pass, C = P.COSMETICS, TYPE = pass.TYPE_NAME;
   const { icon, portrait } = AMB.art;
   const UI = () => globalThis.AMB_UI;
@@ -6092,12 +6143,18 @@ AMB.IMAGES = {
 
   const pct = (a, b) => (b ? Math.min(100, Math.round((a / b) * 100)) : 100);
 
+  // where can a locked card come from?
+  function unlockHint(id) {
+    const P = AMB.Pass; let src = '';
+    if (P) for (const [tr, tbl] of [['free', P.FREE], ['premium', P.PREMIUM]]) for (const [lv, r] of Object.entries(tbl)) if (!src && r.type === 'avatar' && r.id === id) src = tr === 'free' ? `الباتل باس: مستوى ${lv}` : `بريميوم مستوى ${lv}`;
+    return src ? `باكجات · ${src}` : 'من الباكجات';
+  }
   function tile(id) {
     const d = C.def(id), owned = C.owned(id), lv = C.level(id), need = C.needed(id), have = C.copies(id), max = C.isMax(id);
     const card = UI().cardHTML(d, { k: 'col' + id, lvl: owned ? lv : 0, cls: owned ? '' : 'unowned', attrs: `data-act="${d.role ? 'detail' : 'heroInfo'}" data-id="${id}"` });
     const bar = max ? '<div class="cp-bar max"><i style="width:100%"></i><span>المستوى الأقصى</span></div>'
       : `<div class="cp-bar ${have >= need ? 'ready' : ''}"><i style="width:${pct(have, need)}%"></i><span>${have} / ${need}</span></div>`;
-    const btn = !owned ? '<span class="cp-lock">🔒 غير مملوكة</span>'
+    const btn = !owned ? `<span class="cp-lock">🔒 ${unlockHint(id)}</span>`
       : max ? '' : `<button class="btn small ${C.canUpgrade(id) ? 'primary' : ''}" data-act="colUpgrade" data-id="${id}" ${C.canUpgrade(id) ? '' : 'disabled'}>طوّر ← Lv ${lv + 1}</button>`;
     const bonus = Math.round((C.power(id) - 1) * 100);
     return `<div class="cp-tile" data-card="${id}">${card}${owned ? bar : ''}<div class="cp-foot">${btn}<span class="cp-pow" title="قوة البطاقة في الحملة والبرج">${bonus > 0 ? '+' + bonus + '%' : '±0%'}</span></div></div>`;
@@ -6110,6 +6167,7 @@ AMB.IMAGES = {
     const ready = C.ids().filter((id) => C.canUpgrade(id)).length;
     const fb = (v, n, col) => `<button class="btn small ${filter === v ? 'on' : ''}" data-act="colFilter" data-v="${v}" ${col ? `style="--rc:${col}"` : ''}>${n}</button>`;
     root.innerHTML = `<div class="col-head">
+        ${C.needsStarter() ? '<div class="col-starter">ما اخترت بطلك الأول للحين: اضغط «العب» واختر واحد من الأربعة.</div>' : ''}
         <div><b>${C.ownedCount()} / ${C.ids().length}</b> بطاقة · ${ready ? `<span class="col-ready">${ready} جاهزة للتطوير</span>` : 'لا توجد ترقيات جاهزة'}</div>
         <p class="hint">النسخ المكررة تطوّر البطاقة. كل مستوى +${Math.round(AMB.ECONOMY.cards.levelBonus * 100)}% صحة وهجوم، والندرة الأعلى أقوى لكنها تحتاج نسخًا أكثر.
         <b>المستويات والندرة تُحتسب في الحملة والبرج والأحداث فقط</b>، أما المباراة السريعة وعلى نفس الجهاز فالكل متساوٍ.</p>

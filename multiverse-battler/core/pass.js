@@ -87,7 +87,7 @@
     if (r.type === 'avatar') return AMB.DATA ? ((AMB.DATA.UNITS[r.id] || AMB.DATA.HEROES[r.id] || {}).name || r.id) : r.id;
     return (COSMETICS[r.type] && COSMETICS[r.type][r.id] ? COSMETICS[r.type][r.id].name : r.id);
   }
-  const TYPE_NAME = { title: 'لقب', frame: 'إطار', arena: 'ثيم ساحة', fx: 'تأثير فوز', avatar: 'صورة رمزية', perk: 'ميزة' };
+  const TYPE_NAME = { title: 'لقب', frame: 'إطار', arena: 'ثيم ساحة', fx: 'تأثير فوز', avatar: 'شخصية', perk: 'ميزة' };
 
   // ------------------------------------------------------------- missions
   const DAILY = [
@@ -129,7 +129,7 @@
   const blank = (now) => ({ v: 1, season: SEASON.id, start: now, xp: 0, premium: false, claimed: { free: [], premium: [] }, claimedMissions: [], daily: { key: 0, p: {} }, weekly: { key: 0, p: {} },
     firstWinDay: 0, matches: 0, equip: { title: 'default', frame: 'default', arena: 'default', fx: 'default', avatar: null } });
 
-  function create(storage, nowFn) {
+  function create(storage, nowFn, onReward) {
     const now = nowFn || (() => Date.now());
     let st;
     try { st = JSON.parse(storage.getItem(KEY)); } catch (e) { st = null; }
@@ -198,7 +198,7 @@
         if (track === 'premium' && !st.premium) return false;
         return !st.claimed[track].includes(level) && !!api.reward(level, track);
       },
-      claim(level, track) { if (!api.canClaim(level, track)) return null; st.claimed[track].push(level); save(); return api.reward(level, track); },
+      claim(level, track) { if (!api.canClaim(level, track)) return null; st.claimed[track].push(level); save(); const r = api.reward(level, track); if (onReward) { try { onReward(r, level, track); } catch (e) { /* reward hook never blocks claiming */ } } return r; },
       claimAll() { const got = []; for (let l = 1; l <= api.level(); l++) ['free', 'premium'].forEach((t) => { const r = api.claim(l, t); if (r) got.push({ level: l, track: t, reward: r }); }); return got; },
       isClaimed: (level, track) => st.claimed[track].includes(level),
       unclaimedCount() { let n = 0; for (let l = 1; l <= api.level(); l++) ['free', 'premium'].forEach((t) => { if (api.canClaim(l, t)) n++; }); return n + api.dailyMissions().concat(api.weeklyMissions()).filter((m) => m.done && !m.claimed).length; },

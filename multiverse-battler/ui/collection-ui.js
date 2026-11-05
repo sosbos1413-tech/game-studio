@@ -11,12 +11,18 @@
 
   const pct = (a, b) => (b ? Math.min(100, Math.round((a / b) * 100)) : 100);
 
+  // where can a locked card come from?
+  function unlockHint(id) {
+    const P = AMB.Pass; let src = '';
+    if (P) for (const [tr, tbl] of [['free', P.FREE], ['premium', P.PREMIUM]]) for (const [lv, r] of Object.entries(tbl)) if (!src && r.type === 'avatar' && r.id === id) src = tr === 'free' ? `الباتل باس: مستوى ${lv}` : `بريميوم مستوى ${lv}`;
+    return src ? `باكجات · ${src}` : 'من الباكجات';
+  }
   function tile(id) {
     const d = C.def(id), owned = C.owned(id), lv = C.level(id), need = C.needed(id), have = C.copies(id), max = C.isMax(id);
     const card = UI().cardHTML(d, { k: 'col' + id, lvl: owned ? lv : 0, cls: owned ? '' : 'unowned', attrs: `data-act="${d.role ? 'detail' : 'heroInfo'}" data-id="${id}"` });
     const bar = max ? '<div class="cp-bar max"><i style="width:100%"></i><span>المستوى الأقصى</span></div>'
       : `<div class="cp-bar ${have >= need ? 'ready' : ''}"><i style="width:${pct(have, need)}%"></i><span>${have} / ${need}</span></div>`;
-    const btn = !owned ? '<span class="cp-lock">🔒 غير مملوكة</span>'
+    const btn = !owned ? `<span class="cp-lock">🔒 ${unlockHint(id)}</span>`
       : max ? '' : `<button class="btn small ${C.canUpgrade(id) ? 'primary' : ''}" data-act="colUpgrade" data-id="${id}" ${C.canUpgrade(id) ? '' : 'disabled'}>طوّر ← Lv ${lv + 1}</button>`;
     const bonus = Math.round((C.power(id) - 1) * 100);
     return `<div class="cp-tile" data-card="${id}">${card}${owned ? bar : ''}<div class="cp-foot">${btn}<span class="cp-pow" title="قوة البطاقة في الحملة والبرج">${bonus > 0 ? '+' + bonus + '%' : '±0%'}</span></div></div>`;
@@ -29,6 +35,7 @@
     const ready = C.ids().filter((id) => C.canUpgrade(id)).length;
     const fb = (v, n, col) => `<button class="btn small ${filter === v ? 'on' : ''}" data-act="colFilter" data-v="${v}" ${col ? `style="--rc:${col}"` : ''}>${n}</button>`;
     root.innerHTML = `<div class="col-head">
+        ${C.needsStarter() ? '<div class="col-starter">ما اخترت بطلك الأول للحين: اضغط «العب» واختر واحد من الأربعة.</div>' : ''}
         <div><b>${C.ownedCount()} / ${C.ids().length}</b> بطاقة · ${ready ? `<span class="col-ready">${ready} جاهزة للتطوير</span>` : 'لا توجد ترقيات جاهزة'}</div>
         <p class="hint">النسخ المكررة تطوّر البطاقة. كل مستوى +${Math.round(AMB.ECONOMY.cards.levelBonus * 100)}% صحة وهجوم، والندرة الأعلى أقوى لكنها تحتاج نسخًا أكثر.
         <b>المستويات والندرة تُحتسب في الحملة والبرج والأحداث فقط</b>، أما المباراة السريعة وعلى نفس الجهاز فالكل متساوٍ.</p>

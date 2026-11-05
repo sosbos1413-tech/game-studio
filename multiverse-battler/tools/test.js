@@ -429,7 +429,7 @@ t('collection: power = rarity × level bonus', () => {
   const C = AMB.Profile.boot(MEM()).collection;
   eq(C.power('ash_ronin'), 1);
   eq(C.power('kagira'), RAR().legendary.power);
-  C.add('caldera_seer', 4); C.upgrade('caldera_seer');
+  C.add('caldera_seer', 5); ok(C.upgrade('caldera_seer'), 'upgrade');   // first copy unlocks, 4 more = level 2
   ok(Math.abs(C.power('caldera_seer') - RAR().epic.power * (1 + AMB.ECONOMY.cards.levelBonus)) < 1e-9);
   eq(C.powerMap().caldera_seer, Math.round(C.power('caldera_seer') * 1000) / 1000);
 });
@@ -512,6 +512,57 @@ t('packs: exclusive cards never drop', () => {
   AMB.DATA.UNITS.ash_ronin.exclusive = true;
   try { const p = rich(11); for (let i = 0; i < 400; i++) p.packs.open('basic').cards.forEach((c) => ok(c.id !== 'ash_ronin', 'exclusive dropped')); }
   finally { delete AMB.DATA.UNITS.ash_ronin.exclusive; }
+});
+
+console.log('unlocking characters');
+t('new player: commons owned, no hero, nothing else until chosen/unlocked', () => {
+  const C = AMB.Profile.boot(MEM()).collection;
+  Object.values(AMB.DATA.UNITS).forEach((u) => eq(C.owned(u.id), u.rarity === 'common', u.id));
+  eq(C.ownedHeroes().length, 0); ok(C.needsStarter());
+  ok(C.chooseStarter('merin')); ok(!C.chooseStarter('orath'), 'starter is one-time');
+  eq(C.ownedHeroes().join(), 'merin'); ok(!C.needsStarter()); eq(C.level('merin'), 1); eq(C.copies('merin'), 0);
+});
+t('first copy unlocks a card (not counted as an upgrade copy); later copies are upgrade copies', () => {
+  const C = AMB.Profile.boot(MEM()).collection;
+  const r1 = C.add('chrome_ronin', 1); ok(r1.isNew); ok(C.owned('chrome_ronin')); eq(C.copies('chrome_ronin'), 0);
+  const r2 = C.add('chrome_ronin', 2); ok(!r2.isNew); eq(C.copies('chrome_ronin'), 2);
+  const r3 = C.add('ash_ronin', 1); ok(!r3.isNew, 'starter common is already owned'); eq(C.copies('ash_ronin'), 1);
+  eq(C.ownedUnits().length, 9);
+});
+t('packs can unlock heroes and higher-rarity units (shown as new)', () => {
+  const p = rich(5); let newIds = new Set();
+  for (let i = 0; i < 40; i++) p.packs.open('basic').cards.forEach((c) => { if (c.isNew) { ok(!newIds.has(c.id), 'new twice: ' + c.id); newIds.add(c.id); } });
+  ok([...newIds].every((id) => AMB.DATA.HEROES[id] || AMB.DATA.UNITS[id].rarity !== 'common'));
+  ok(p.collection.ownedHeroes().length >= 1, 'pity guarantees at least one legendary (hero) in 40 packs');
+});
+t('battle pass character rewards unlock the card', () => {
+  const prof = AMB.Profile.boot(MEM());
+  const pass = AMB.Pass.create(prof.save.storageFor('pass'), null, (r) => prof.collection.grantPassReward(r));
+  const lv = Object.entries(AMB.Pass.FREE).find(([, r]) => r.type === 'avatar' && AMB.DATA.UNITS[r.id] && AMB.DATA.UNITS[r.id].rarity !== 'common');
+  ok(lv, 'free track has a non-common character');
+  ok(!prof.collection.owned(lv[1].id));
+  pass.addXp(AMB.Pass.SEASON.xpPerLevel * (+lv[0]));
+  pass.claimAll();
+  ok(prof.collection.owned(lv[1].id), 'pass reward unlocked ' + lv[1].id);
+});
+t('progression shop only offers owned units; quick matches offer everything', () => {
+  const owned = Object.values(AMB.DATA.UNITS).filter((u) => u.rarity === 'common').map((u) => u.id);
+  const seen = (prog) => {
+    const ids = new Set();
+    for (let s = 1; s <= 6; s++) {
+      const m = new AMB.Match({ seed: s, progression: prog, players: [{ heroId: 'orath', allowedUnits: owned }, { heroId: 'merin', isAI: true }] });
+      while (!m.isOver && m.round < 7) {
+        m.startRound();
+        for (let k = 0; k < 6; k++) { m.players[0].shop.forEach((id) => id && ids.add(id)); m.players[0].gold += 2; m.reroll(0); }
+        (m.players[0].rewardOffer ? [m.players[0].rewardOffer] : []).forEach(() => { const r = m.claimReward(0, 0); if (r && r.unit) ids.add(r.unit); });
+        AMB.AI.prep(m, 1); m.resolveCombat(m.createCombat(false).runToEnd());
+      }
+    }
+    return ids;
+  };
+  const prog = seen(true);
+  ok([...prog].every((id) => owned.includes(id)), 'progression shop showed a locked unit: ' + [...prog].filter((id) => !owned.includes(id)));
+  ok([...seen(false)].some((id) => !owned.includes(id)), 'quick match should still offer every unit');
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

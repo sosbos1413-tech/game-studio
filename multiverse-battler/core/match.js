@@ -29,6 +29,7 @@
       alive: true,
       blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
       cardPower: opts.cardPower || null,   // { defId: mult } from the collection — progression fights only
+      allowed: opts.allowedUnits ? new Set(opts.allowedUnits) : null,   // units this player owns — progression fights only
     };
   }
 
@@ -39,7 +40,7 @@
       this.rng = AMB.util.RNG(this.seed);
       // card levels/rarity power exist only in progression fights (campaign, tower, events); quick and same-device matches stay even
       this.progression = !!opts.progression;
-      this.players = opts.players.map((p, i) => newPlayer(i, this.progression ? p : Object.assign({}, p, { cardPower: null })));
+      this.players = opts.players.map((p, i) => newPlayer(i, this.progression ? p : Object.assign({}, p, { cardPower: null, allowedUnits: null })));
       this.round = 0;
       this.phase = 'idle';
       this.pool = {};
@@ -90,10 +91,11 @@
     _drawUnit(p) {
       const odds = AMB.CONFIG.economy.tierOdds[p.level];
       const tier = this.rng.weighted(odds.map((w, i) => [i + 1, w]).filter((e) => e[1] > 0));
-      let entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier).map((u) => [u.id, this.pool[u.id]]);
+      const mine = (u) => !p.allowed || p.allowed.has(u.id);   // progression: only units the player owns
+      let entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier && mine(u)).map((u) => [u.id, this.pool[u.id]]);
       let pick = this.rng.weighted(entries);
-      if (!pick) { // tier exhausted: fall back to any available unit
-        entries = Object.values(AMB.DATA.UNITS).map((u) => [u.id, this.pool[u.id]]);
+      if (!pick) { // tier exhausted (or none owned in it): fall back to any available unit you own
+        entries = Object.values(AMB.DATA.UNITS).filter(mine).map((u) => [u.id, this.pool[u.id]]);
         pick = this.rng.weighted(entries);
       }
       return pick;
@@ -545,8 +547,9 @@
         case 'bless_as': p.blessings.asPct += R.pct[st]; break;
         case 'unit': {
           const tier = R.tiers[st], hero = AMB.DATA.HEROES[p.heroId];
-          const entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier && this.pool[u.id] > 0).map((u) => [u.id, u.world === hero.world ? 2 : 1]);
-          const any = entries.length ? entries : Object.values(AMB.DATA.UNITS).filter((u) => this.pool[u.id] > 0).map((u) => [u.id, 1]);
+          const mine = (u) => !p.allowed || p.allowed.has(u.id);
+          const entries = Object.values(AMB.DATA.UNITS).filter((u) => u.tier === tier && this.pool[u.id] > 0 && mine(u)).map((u) => [u.id, u.world === hero.world ? 2 : 1]);
+          const any = entries.length ? entries : Object.values(AMB.DATA.UNITS).filter((u) => this.pool[u.id] > 0 && mine(u)).map((u) => [u.id, 1]);
           const defId = this.rng.weighted(any);
           if (defId) { out.unit = defId; out.text += ' → ' + AMB.DATA.UNITS[defId].name; this._grantUnit(p, defId); }
           break;

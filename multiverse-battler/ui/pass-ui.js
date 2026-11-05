@@ -7,7 +7,10 @@
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const store = AMB.save.storageFor('pass');   // battle pass lives inside the unified save (core/save.js)
-  const pass = (AMB.pass = AMB.Pass.create(store));
+  // character rewards also give the card (unlock or +1 copy) — see core/collection.js
+  const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => AMB.collection && AMB.collection.grantPassReward(r)));
+  // rewards claimed before characters could be unlocked: make sure those characters are owned
+  if (AMB.collection) ['free', 'premium'].forEach((t) => (pass.state().claimed[t] || []).forEach((l) => { const r = pass.reward(l, t); if (r && r.type === 'avatar' && !AMB.collection.owned(r.id)) AMB.collection.grantPassReward(r); }));
   const P = AMB.Pass, C = P.COSMETICS, TYPE = pass.TYPE_NAME;
   const { icon, portrait } = AMB.art;
   const UI = () => globalThis.AMB_UI;

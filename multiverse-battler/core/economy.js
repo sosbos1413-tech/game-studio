@@ -33,7 +33,11 @@
     maxedRefund: { common: 5, rare: 10, epic: 25, legendary: 60 },
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
-      allUnlocked: true,       // phase 3 switches this off (start with one character, unlock the rest)
+      allUnlocked: false,      // true = every card owned (dev / testing)
+      // what a new player owns: these rarities (units) + ONE hero they pick at first play.
+      // Everything else comes from packs or the battle pass. Locks: hero choice in every mode (player 1),
+      // shop units only in progression fights; quick/same-device matches keep every unit.
+      starter: { rarities: ['common'] },
     },
   };
 

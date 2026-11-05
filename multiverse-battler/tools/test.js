@@ -353,6 +353,25 @@ t('save: corrupt data starts fresh and keeps a copy of the bad data', () => {
   ok(sv.wasCorrupt); eq(mem.getItem(AMB.Save.KEY + '_corrupt'), '{not json');
   eq(sv.systems().length, 0);
 });
+t('save: a daily backup is kept and used when the main save gets corrupted', () => {
+  const D = 864e5; let now = new Date(2026, 10, 5, 10).getTime();
+  const mem = MEM();
+  AMB.Save.register('_bk', { defaults: () => ({ n: 0 }) });
+  const a = AMB.Save.create(mem, () => now); a.update('_bk', (s) => { s.n = 1; });
+  now += D;                                  // next day: yesterday's state (n = 1) becomes the backup
+  const b = AMB.Save.create(mem, () => now); b.update('_bk', (s) => { s.n = 2; });
+  ok(mem.getItem(AMB.Save.KEY + '_bak'), 'backup exists');
+  mem.setItem(AMB.Save.KEY, '{broken');
+  const c = AMB.Save.create(mem, () => now);
+  ok(c.recovered && c.wasCorrupt, 'recovered from backup'); eq(c.get('_bk').n, 1);
+  ok(c.updated() >= 0);
+});
+t('save: importing keeps the previous save recoverable', () => {
+  const mem = MEM(); const a = AMB.Save.create(mem); a.update('wallet', (s) => { s.balances.shards = 11; });
+  const other = AMB.Save.create(MEM()); other.update('wallet', (s) => { s.balances.shards = 99; });
+  a.importJSON(other.exportJSON()); eq(a.get('wallet').balances.shards, 99);
+  eq(JSON.parse(mem.getItem(AMB.Save.KEY + '_preimport')).systems.wallet.balances.shards, 11);
+});
 t('save: old battle-pass progress is carried into the unified save', () => {
   const mem = MEM();
   const old = AMB.Pass.create(mem);       // old builds used their own key

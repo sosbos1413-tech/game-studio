@@ -1563,3 +1563,10 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
 .al-items-h { color: var(--gold); font: 400 24px var(--display); margin: 8px 0; }
 @media (max-width: 700px) { .al-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .al-rw { flex-basis: 100%; } }
 .al-tile.miss .tcard.hc.full { filter: grayscale(1) brightness(.16) contrast(1.4) drop-shadow(0 0 3px #ffffff33) !important; }
+
+/* ======================================================================= save screen + update banner */
+#menu-save { position: relative; }
+.save-box { padding: 10px 12px; margin: 8px 0; border: 3px solid var(--ink); font-size: 14px; } .save-box.ok { background: #cfe9cf; } .save-box.warn { background: #ffe9a8; }
+.save-kv { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #0003; font-size: 14px; }
+.save-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.upd-banner { position: fixed; z-index: 90; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--paper); border: 3px solid var(--gold); box-shadow: var(--hard); padding: 8px 14px; font-size: 14px; max-width: calc(100vw - 24px); }

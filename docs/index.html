@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<meta name="zor-build" content="63435e3881">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#121010">
 <meta name="description" content="ZOR — لعبة بطاقات استراتيجية 1 ضد 1 بقتال تلقائي بين أربعة عوالم. ٧ جولات، ٥ دقائق.">
@@ -1578,6 +1579,13 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
 @media (max-width: 700px) { .al-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .al-rw { flex-basis: 100%; } }
 .al-tile.miss .tcard.hc.full { filter: grayscale(1) brightness(.16) contrast(1.4) drop-shadow(0 0 3px #ffffff33) !important; }
 
+/* ======================================================================= save screen + update banner */
+#menu-save { position: relative; }
+.save-box { padding: 10px 12px; margin: 8px 0; border: 3px solid var(--ink); font-size: 14px; } .save-box.ok { background: #cfe9cf; } .save-box.warn { background: #ffe9a8; }
+.save-kv { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #0003; font-size: 14px; }
+.save-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.upd-banner { position: fixed; z-index: 90; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--paper); border: 3px solid var(--gold); box-shadow: var(--hard); padding: 8px 14px; font-size: 14px; max-width: calc(100vw - 24px); }
+
 </style>
 </head>
 <body>
@@ -1603,6 +1611,7 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
         <button class="mtile mt-prog" data-act="loginOpen" id="menu-login"><span class="mt-ic">🎁</span><span class="mt-l">الدخول اليومي</span></button>
         <button class="mtile" data-act="go" data-to="codex" id="menu-album"><span class="mt-ic">📖</span><span class="mt-l">الألبوم</span></button>
         <button class="mtile" data-act="go" data-to="stats"><span class="mt-ic">📊</span><span class="mt-l">الإحصائيات</span></button>
+        <button class="mtile" data-act="saveOpen" id="menu-save"><span class="mt-ic">💾</span><span class="mt-l">الحفظ</span></button>
         <button class="mtile" data-act="howto"><span class="mt-ic">❓</span><span class="mt-l">كيف ألعب؟</span></button>
         <button class="mtile" data-act="sound" id="menu-sound"><span class="mt-ic">🔊</span><span class="mt-l">الصوت</span></button>
       </div>
@@ -3854,10 +3863,19 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
   function create(storage, nowFn) {
     storage = storage || browserStorage();
     const now = nowFn || (() => Date.now());
-    let root = null, corrupt = false;
-    try { root = JSON.parse(storage.getItem(KEY)); } catch (e) { corrupt = true; }
+    let root = null, corrupt = false, recovered = false;
+    const rawNow = (() => { try { return storage.getItem(KEY); } catch (e) { return null; } })();
+    const dayOf = (t) => { const d = new Date(t); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+    try { root = JSON.parse(rawNow); } catch (e) { corrupt = true; }
     if (root !== null && (!isObj(root) || !isObj(root.systems))) { corrupt = true; root = null; }
-    if (corrupt) { try { storage.setItem(KEY + '_corrupt', String(storage.getItem(KEY))); } catch (e) { /* ignore */ } }
+    if (corrupt) {
+      try { storage.setItem(KEY + '_corrupt', String(rawNow)); } catch (e) { /* ignore */ }
+      // restore the automatic daily backup if there is one
+      try { const bak = JSON.parse(storage.getItem(KEY + '_bak')); if (isObj(bak) && isObj(bak.systems)) { root = bak; recovered = true; } } catch (e) { /* no usable backup */ }
+    } else if (root && root.bakDay !== dayOf(now())) {
+      // automatic backup: once a day keep a copy of the save as it was before today's changes
+      try { storage.setItem(KEY + '_bak', rawNow); } catch (e) { /* ignore */ }
+    }
     if (!root) {
       root = { v: VERSION, created: now(), systems: {}, sysV: {} };
       // bring over data saved by older versions of the game (e.g. the battle pass)
@@ -3866,9 +3884,11 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
       }
     }
     root.sysV = root.sysV || {};
+    root.bakDay = dayOf(now());
     let listeners = [];
 
-    const write = () => { try { storage.setItem(KEY, JSON.stringify(root)); return true; } catch (e) { return false; } };
+    // every change is written to storage at once (nothing to "save" by hand); `updated` shows in the save screen
+    const write = () => { try { root.updated = now(); storage.setItem(KEY, JSON.stringify(root)); return true; } catch (e) { return false; } };
     write();
 
     /** State of one system: migrated + defaults filled. The returned object is live: change it, then call save.write(). */
@@ -3903,10 +3923,11 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
     function importJSON(text) {
       const r = JSON.parse(text);
       if (!isObj(r) || !isObj(r.systems)) throw new Error('ملف حفظ غير صالح');
-      root = r; root.sysV = root.sysV || {}; write(); emit('*'); return true;
+      try { storage.setItem(KEY + '_preimport', JSON.stringify(root)); } catch (e) { /* ignore */ }   // the previous save stays recoverable
+      root = r; root.sysV = root.sysV || {}; root.bakDay = dayOf(now()); write(); emit('*'); return true;
     }
 
-    return { get, set, update, reset, write, storageFor, onChange, exportJSON, importJSON, wasCorrupt: corrupt, systems: () => Object.keys(root.systems), now };
+    return { get, set, update, reset, write, storageFor, onChange, exportJSON, importJSON, wasCorrupt: corrupt, recovered, updated: () => root.updated || 0, systems: () => Object.keys(root.systems), now };
   }
 
   AMB.Save = { create, register, KEY, VERSION, LEGACY, REGISTRY, memoryStorage, browserStorage };
@@ -7426,6 +7447,131 @@ AMB.IMAGES = {
   AMB.AlbumUI = { render, refreshMenu, installActions };
   if (UI()) installActions();
   refreshMenu();
+})();
+
+</script>
+<script>
+/*
+ * "الحفظ" screen: progress is written to this browser after EVERY change (nothing to press). Here you see that,
+ * ask the browser not to clear it, and move it between links/devices with a backup file.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const $ = (id) => document.getElementById(id);
+  const UI = () => globalThis.AMB_UI;
+  let persisted = null;
+
+  // ask the browser to keep our storage (it may otherwise clear it when the device is low on space)
+  function askPersist() {
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then((ok) => { persisted = !!ok; }); } catch (e) { /* ignore */ }
+  }
+  const fmt = (t) => { if (!t) return '—'; const d = new Date(t); return d.toLocaleDateString('ar') + ' ' + d.toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }); };
+  const sizeKB = () => { try { return Math.max(1, Math.round((localStorage.getItem(AMB.Save.KEY) || '').length / 1024)); } catch (e) { return 0; } };
+
+  function open() {
+    const sv = AMB.save;
+    UI().modal(`<h2>💾 الحفظ</h2>
+      <div class="save-box ok">✓ <b>الحفظ تلقائي</b>: كل تقدّمك يُحفظ فورًا بعد أي تغيير، ما تحتاج تضغط شي.</div>
+      <div class="save-kv"><span>آخر حفظ</span><b>${fmt(sv.updated())}</b></div>
+      <div class="save-kv"><span>حجم البيانات</span><b style="direction:ltr">${sizeKB()} KB</b></div>
+      <div class="save-kv"><span>الحماية من المسح التلقائي</span><b>${persisted === null ? 'غير معروفة' : persisted ? 'مفعّلة ✓' : 'يقرّرها المتصفح'}</b></div>
+      <div class="save-kv"><span>نسخة احتياطية يومية</span><b>تلقائية ✓</b></div>
+      ${sv.recovered ? '<div class="save-box warn">تمّت استعادة تقدّمك من النسخة الاحتياطية بعد خلل في الحفظ.</div>' : ''}
+      <h3>نقل التقدّم</h3>
+      <p class="hint">الحفظ مرتبط بهذا المتصفح وهذا الرابط. لو فتحت اللعبة من رابط أو جهاز ثاني ما يظهر تقدّمك، انقله بملف.</p>
+      <div class="save-btns">
+        <button class="btn primary" data-act="saveExport">⬇ نزّل نسخة احتياطية</button>
+        <button class="btn" data-act="saveImport">⬆ استرجع من ملف</button>
+        <input type="file" id="save-file" accept="application/json,.json" hidden>
+      </div>`);
+    const f = $('save-file');
+    if (f) f.onchange = () => {
+      const file = f.files && f.files[0]; if (!file) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try { AMB.save.importJSON(String(rd.result)); UI().toast('تم استرجاع التقدّم ✓ — جاري إعادة التحميل', 'good'); setTimeout(() => location.reload(), 900); }
+        catch (e) { UI().toast('الملف غير صالح', 'err'); }
+      };
+      rd.readAsText(file);
+    };
+  }
+
+  function installActions() {
+    const ui = UI(); if (!ui || ui.ACT.saveOpen) return;
+    Object.assign(ui.ACT, {
+      saveOpen: () => open(),
+      saveExport: () => {
+        const blob = new Blob([AMB.save.exportJSON()], { type: 'application/json' });
+        const a = document.createElement('a'), d = new Date();
+        a.href = URL.createObjectURL(blob);
+        a.download = `zor-save-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`;
+        document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+        ui.toast('تم تنزيل النسخة الاحتياطية', 'good');
+      },
+      saveImport: () => { const f = $('save-file'); if (f) f.click(); },
+    });
+  }
+
+  // flush on leaving the page (every change is already written; this is just a safety net)
+  const flush = () => { try { AMB.save.write(); } catch (e) { /* ignore */ } };
+  window.addEventListener('pagehide', flush);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  document.addEventListener('pointerdown', function once() { askPersist(); document.removeEventListener('pointerdown', once); }, { once: true });
+
+  AMB.SaveUI = { open, installActions };
+  if (UI()) installActions();
+})();
+
+</script>
+<script>
+/*
+ * Automatic updates. The built game (docs/index.html, dist/zor.html) carries a build id in
+ * <meta name="zor-build"> and is published next to version.json. While the game is open it checks
+ * that file (at start, when you come back to the tab, and every 5 minutes). A new version is applied
+ * by itself when you are NOT in a match (progress is saved instantly, nothing is lost); during a match
+ * a small banner waits until you are back at the menus. Only runs when served over http(s).
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const meta = document.querySelector('meta[name="zor-build"]');
+  if (!meta || !/^https?:$/.test(location.protocol)) return;
+  const mine = meta.content;
+  let pending = null, banner = null;
+  const ss = { get: (k) => { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /* ignore */ } }, del: (k) => { try { sessionStorage.removeItem(k); } catch (e) { /* ignore */ } } };
+  const UI = () => globalThis.AMB_UI;
+  const busy = () => { const u = UI(); return !u || u.S.screen === 'match' || u.S.screen === 'hero' || document.getElementById('overlay').classList.contains('on'); };
+
+  function showBanner(text, withBtn) {
+    if (!banner) { banner = document.createElement('div'); banner.className = 'upd-banner'; document.body.appendChild(banner); }
+    banner.innerHTML = `<span>${text}</span>${withBtn ? '<button class="btn small primary" id="upd-now">حدّث الآن</button>' : ''}`;
+    const b = banner.querySelector('#upd-now'); if (b) b.onclick = () => apply(pending);
+  }
+  function apply(v) { ss.set('zor_upd', v); location.replace(location.pathname + '?v=' + encodeURIComponent(v)); }   // the query string skips a stale cached copy
+
+  function tick() {
+    if (!pending) return;
+    if (busy()) { showBanner('🔄 فيه تحديث جديد — يتطبّق بعد المباراة'); return; }
+    if (ss.get('zor_upd') === pending) { showBanner('🔄 فيه تحديث جديد', true); return; }   // already tried once for this version: let the player decide
+    const v = pending; pending = null;
+    showBanner('🔄 جاري تحديث اللعبة… تقدّمك محفوظ');
+    setTimeout(() => apply(v), 1200);
+  }
+  async function check() {
+    try {
+      const r = await fetch('version.json?' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      if (j && j.v && j.v !== mine) { pending = j.v; tick(); }
+    } catch (e) { /* offline: try later */ }
+  }
+
+  // after an update: say so once
+  if (ss.get('zor_upd') === mine) { ss.del('zor_upd'); window.addEventListener('load', () => setTimeout(() => UI() && UI().toast('تم تحديث اللعبة ✓', 'good'), 800)); }
+  setTimeout(check, 2500);
+  setInterval(check, 5 * 60 * 1000);
+  setInterval(tick, 3000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  AMB.Update = { check, build: mine };
 })();
 
 </script>

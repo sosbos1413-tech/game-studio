@@ -42,10 +42,19 @@
   function create(storage, nowFn) {
     storage = storage || browserStorage();
     const now = nowFn || (() => Date.now());
-    let root = null, corrupt = false;
-    try { root = JSON.parse(storage.getItem(KEY)); } catch (e) { corrupt = true; }
+    let root = null, corrupt = false, recovered = false;
+    const rawNow = (() => { try { return storage.getItem(KEY); } catch (e) { return null; } })();
+    const dayOf = (t) => { const d = new Date(t); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+    try { root = JSON.parse(rawNow); } catch (e) { corrupt = true; }
     if (root !== null && (!isObj(root) || !isObj(root.systems))) { corrupt = true; root = null; }
-    if (corrupt) { try { storage.setItem(KEY + '_corrupt', String(storage.getItem(KEY))); } catch (e) { /* ignore */ } }
+    if (corrupt) {
+      try { storage.setItem(KEY + '_corrupt', String(rawNow)); } catch (e) { /* ignore */ }
+      // restore the automatic daily backup if there is one
+      try { const bak = JSON.parse(storage.getItem(KEY + '_bak')); if (isObj(bak) && isObj(bak.systems)) { root = bak; recovered = true; } } catch (e) { /* no usable backup */ }
+    } else if (root && root.bakDay !== dayOf(now())) {
+      // automatic backup: once a day keep a copy of the save as it was before today's changes
+      try { storage.setItem(KEY + '_bak', rawNow); } catch (e) { /* ignore */ }
+    }
     if (!root) {
       root = { v: VERSION, created: now(), systems: {}, sysV: {} };
       // bring over data saved by older versions of the game (e.g. the battle pass)
@@ -54,9 +63,11 @@
       }
     }
     root.sysV = root.sysV || {};
+    root.bakDay = dayOf(now());
     let listeners = [];
 
-    const write = () => { try { storage.setItem(KEY, JSON.stringify(root)); return true; } catch (e) { return false; } };
+    // every change is written to storage at once (nothing to "save" by hand); `updated` shows in the save screen
+    const write = () => { try { root.updated = now(); storage.setItem(KEY, JSON.stringify(root)); return true; } catch (e) { return false; } };
     write();
 
     /** State of one system: migrated + defaults filled. The returned object is live: change it, then call save.write(). */
@@ -91,10 +102,11 @@
     function importJSON(text) {
       const r = JSON.parse(text);
       if (!isObj(r) || !isObj(r.systems)) throw new Error('ملف حفظ غير صالح');
-      root = r; root.sysV = root.sysV || {}; write(); emit('*'); return true;
+      try { storage.setItem(KEY + '_preimport', JSON.stringify(root)); } catch (e) { /* ignore */ }   // the previous save stays recoverable
+      root = r; root.sysV = root.sysV || {}; root.bakDay = dayOf(now()); write(); emit('*'); return true;
     }
 
-    return { get, set, update, reset, write, storageFor, onChange, exportJSON, importJSON, wasCorrupt: corrupt, systems: () => Object.keys(root.systems), now };
+    return { get, set, update, reset, write, storageFor, onChange, exportJSON, importJSON, wasCorrupt: corrupt, recovered, updated: () => root.updated || 0, systems: () => Object.keys(root.systems), now };
   }
 
   AMB.Save = { create, register, KEY, VERSION, LEGACY, REGISTRY, memoryStorage, browserStorage };

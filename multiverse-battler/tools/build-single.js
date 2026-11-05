@@ -24,12 +24,20 @@ html = html.replace(/<script src="([^"]+)"><\/script>/g, (m, src) => {
   const code = src === 'assets/characters/manifest.js' ? manifest : read(src);
   return '<script>\n' + code.replace(/<\/script>/gi, '<\\/script>') + '\n</script>';
 });
+// build id: a hash of the final game; the page carries it and publishes it as version.json so an open game can update itself (ui/update-ui.js)
+const crypto = require('crypto');
+const buildId = crypto.createHash('sha1').update(html).digest('hex').slice(0, 10);
+html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="zor-build" content="' + buildId + '">');
+const versionJson = JSON.stringify({ v: buildId, built: new Date().toISOString() });
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
+fs.writeFileSync(path.join(root, 'dist', 'version.json'), versionJson);
 fs.writeFileSync(path.join(root, 'dist', 'zor.html'), html);
 // GitHub Pages: <repo>/docs/index.html (the repo root belongs to another game, so only /docs is published)
 const docs = path.join(root, '..', 'docs');
 fs.mkdirSync(docs, { recursive: true });
 fs.writeFileSync(path.join(docs, 'index.html'), html);
 fs.writeFileSync(path.join(docs, '.nojekyll'), '');
+fs.writeFileSync(path.join(docs, 'version.json'), versionJson);
+console.log('build', buildId);
 console.log('docs/index.html (GitHub Pages)');
 console.log('dist/zor.html', (html.length / 1048576).toFixed(2) + ' MB');

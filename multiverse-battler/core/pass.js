@@ -21,6 +21,7 @@
     frame: {
       default: { name: 'بدون إطار' },
       bronze: { name: 'إطار برونزي', c1: '#d9a066', c2: '#7a4a1f' },
+      alb_ember: { name: 'إطار الجمر', c1: '#ff7a45', c2: '#7a2208' }, alb_tide: { name: 'إطار المدّ', c1: '#3ec9ff', c2: '#12507a' }, alb_neon: { name: 'إطار النيون', c1: '#c45cff', c2: '#4a1d7a' }, alb_sylvan: { name: 'إطار الغابة', c1: '#52d67c', c2: '#1f5a2c' },
       silver: { name: 'إطار فضي', c1: '#e8eef7', c2: '#8794a8' },
       forest: { name: 'إطار الغابة', c1: '#8be07a', c2: '#2f7a2c' },
       ember: { name: 'إطار الجمر', c1: '#ffb347', c2: '#d9341c' },
@@ -57,6 +58,8 @@
       t_recruit: { name: 'مجنّد الصدع' }, t_junior: { name: 'قائد صغير' }, t_formation: { name: 'ماهر التشكيلات' },
       t_stars: { name: 'جامع النجوم' }, t_stages: { name: 'سيّد المراحل' }, t_rift: { name: 'سيّد الصدع' },
       t_elite: { name: 'نخبة الصدع' }, t_legend: { name: 'أسطورة العوالم' }, t_finale: { name: 'صاحب الحسم' },
+      // album rewards (core/album.js) — not part of the pass tracks
+      alb_ember: { name: 'جامع الجمر' }, alb_tide: { name: 'جامع المدّ' }, alb_neon: { name: 'جامع النيون' }, alb_sylvan: { name: 'جامع الغابة' }, alb_all: { name: 'جامع الصدع' },
     },
   };
 
@@ -136,7 +139,7 @@
   const blank = (now) => ({ v: 1, season: SEASON.id, start: now, xp: 0, premium: false, claimed: { free: [], premium: [] }, claimedMissions: [], daily: { key: 0, p: {} }, weekly: { key: 0, p: {} },
     firstWinDay: 0, matches: 0, equip: { title: 'default', frame: 'default', arena: 'default', fx: 'default', avatar: null } });
 
-  function create(storage, nowFn, onReward) {
+  function create(storage, nowFn, onReward, extraOwned) {
     const now = nowFn || (() => Date.now());
     let st;
     try { st = JSON.parse(storage.getItem(KEY)); } catch (e) { st = null; }
@@ -220,6 +223,7 @@
       owned(type) {
         const base = { title: ['default'], frame: ['default'], arena: ['default'], fx: ['default'], avatar: [] }[type].slice();
         ['free', 'premium'].forEach((t) => st.claimed[t].forEach((l) => { const r = api.reward(l, t); if (r && r.type === type && !base.includes(r.id)) base.push(r.id); }));
+        if (extraOwned) (extraOwned(type) || []).forEach((id) => { if (!base.includes(id)) base.push(id); });   // e.g. album rewards
         return base;
       },
       equipped: (type) => st.equip[type],

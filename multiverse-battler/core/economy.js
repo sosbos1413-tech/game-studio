@@ -37,6 +37,16 @@
       { shards: 30 }, { shards: 40 }, { shards: 50 }, { shards: 60 }, { shards: 80 }, { shards: 100 },
       { packs: 1, card: 'rare', big: true },
     ],
+    // album: own all 5 units of a world -> its reward (once); own all 20 -> the grand reward
+    album: {
+      worlds: {
+        ember: { shards: 150, title: 'alb_ember', frame: 'alb_ember' },
+        tide: { shards: 150, title: 'alb_tide', frame: 'alb_tide' },
+        neon: { shards: 150, title: 'alb_neon', frame: 'alb_neon' },
+        sylvan: { shards: 150, title: 'alb_sylvan', frame: 'alb_sylvan' },
+      },
+      all: { packs: 2, title: 'alb_all' },
+    },
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
       allUnlocked: false,      // true = every card owned (dev / testing)

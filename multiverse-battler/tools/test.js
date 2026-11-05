@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Rule tests for the core (no browser needed):  node tools/test.js */
 const path = require('path');
-['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'packs', 'levels', 'campaign', 'daily', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
+['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'packs', 'levels', 'campaign', 'daily', 'album', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -736,6 +736,43 @@ t('login calendar: one claim per day, rewards grow, missed days do not reset, da
   let last; for (let d = 3; d <= 7; d++) { now += D; last = prof2.login.claim(); eq(last.day, d); }
   eq(last.packs.length, 1); ok(['rare', 'epic', 'legendary'].includes(last.card.rarity));
   now += D; eq(prof2.login.claim().day, 1, 'new cycle'); eq(prof2.login.status().cycles, 1);
+});
+
+console.log('album');
+t('album: 5 units per world, progress counts owned units, starters count', () => {
+  const prof = AMB.Profile.boot(MEM()), A = prof.album;
+  eq(A.worlds().length, 4); A.worlds().forEach((w) => eq(A.units(w).length, 5, w));
+  eq(A.total().total, 20); eq(A.total().owned, 8, '8 starter commons');
+  eq(A.progress('ember').owned, 2, 'ash_ronin + forge_bulwark');
+  eq(A.state('ember'), 'locked');
+});
+t('album: world set reward is claimable once, gives shards + title + frame (equippable in the pass)', () => {
+  const prof = AMB.Profile.boot(MEM()), A = prof.album;
+  const pass = AMB.Pass.create(prof.save.storageFor('pass'), null, null, (type) => A.ownedCosmetics(type));
+  A.units('ember').forEach((id) => prof.collection.add(id, 1));
+  eq(A.state('ember'), 'ready'); eq(A.readyCount(), 1);
+  ok(!pass.owned('title').includes('alb_ember'), 'not before claiming');
+  const sh = prof.wallet.balance('shards');
+  const r = A.claim('ember'); ok(r); eq(prof.wallet.balance('shards'), sh + AMB.ECONOMY.album.worlds.ember.shards);
+  eq(A.claim('ember'), null, 'once only'); eq(A.state('ember'), 'claimed');
+  ok(pass.owned('title').includes('alb_ember') && pass.owned('frame').includes('alb_ember'));
+  ok(pass.equip('title', 'alb_ember') && pass.equip('frame', 'alb_ember'));
+  ok(AMB.Pass.COSMETICS.frame.alb_ember.c1 && AMB.Pass.COSMETICS.title.alb_all);
+  eq(A.claim('tide'), null, 'incomplete world cannot be claimed');
+});
+t('album: all 20 units = 2 free packs + grand title; saved across reloads', () => {
+  const mem = MEM(), prof = AMB.Profile.boot(mem), A = prof.album;
+  eq(A.claimAll(), null);
+  Object.keys(AMB.DATA.UNITS).forEach((id) => prof.collection.add(id, 1));
+  A.worlds().forEach((w) => A.claim(w));
+  eq(A.allState(), 'ready');
+  const opened = prof.packs.stats().opened;
+  const r = A.claimAll(); eq(r.packs.length, 2); eq(prof.packs.stats().opened, opened + 2); eq(A.claimAll(), null);
+  const A2 = AMB.Profile.boot(mem).album; eq(A2.allState(), 'claimed'); eq(A2.state('tide'), 'claimed'); ok(A2.ownedCosmetics('title').includes('alb_all'));
+});
+t('album: exclusive (event) cards are not part of any set', () => {
+  AMB.DATA.UNITS.thorn_fox.exclusive = true;
+  try { const A = AMB.Profile.boot(MEM()).album; eq(A.units('sylvan').length, 4); eq(A.total().total, 19); } finally { delete AMB.DATA.UNITS.thorn_fox.exclusive; }
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

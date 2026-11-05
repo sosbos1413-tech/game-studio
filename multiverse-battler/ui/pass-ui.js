@@ -11,7 +11,7 @@
   const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => {
     if (r.type === 'shards') { if (AMB.wallet) AMB.wallet.add('shards', r.n, 'mission'); return; }   // daily-mission shards
     if (AMB.collection) AMB.collection.grantPassReward(r);
-  }));
+  }, (type) => (AMB.album ? AMB.album.ownedCosmetics(type) : [])));
   if (AMB.events) AMB.Pass.wire(pass, AMB.events);   // missions also count campaign fights, upgrades, packs and stars
   // rewards claimed before characters could be unlocked: make sure those characters are owned
   if (AMB.collection) ['free', 'premium'].forEach((t) => (pass.state().claimed[t] || []).forEach((l) => { const r = pass.reward(l, t); if (r && r.type === 'avatar' && !AMB.collection.owned(r.id)) AMB.collection.grantPassReward(r); }));

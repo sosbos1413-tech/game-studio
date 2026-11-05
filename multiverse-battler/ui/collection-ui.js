@@ -70,7 +70,7 @@
     });
   }
 
-  AMB.CollectionUI = { render, refreshMenu, installActions };
+  AMB.CollectionUI = { render, refreshMenu, installActions, unlockHint };
   if (UI()) installActions();
   refreshMenu();
 })();

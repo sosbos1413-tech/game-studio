@@ -1556,6 +1556,28 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
 .pcell { height: 112px; }
 .mode-card p { margin: 6px 0 12px; }
 
+/* ======================================================================= album */
+#menu-album { position: relative; }
+.codex .al-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--ink2); border: 3px solid var(--paper); box-shadow: var(--hard); padding: 12px 16px; margin-bottom: 18px; color: var(--paper); }
+.al-total { flex: 1 1 200px; font-size: 18px; } .al-total b { font: 400 30px var(--display); color: var(--gold); }
+.al-bar { height: 10px; background: #000; border: 2px solid var(--paper3); margin: 4px 0; overflow: hidden; } .al-bar.big { height: 14px; }
+.al-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold2), var(--gold)); }
+.al-grand { flex: 2 1 260px; font-size: 14px; } .al-grand.claimed { color: var(--green); } .al-grand.ready { color: var(--gold); font-weight: 700; } .al-grand .btn { margin-inline-start: 8px; }
+.al-grand svg { width: 13px; height: 13px; vertical-align: -2px; color: var(--cyan); }
+.al-world { position: relative; border: 3px solid #000; box-shadow: 0 0 0 3px var(--wc), var(--hard); padding: 10px 16px 16px; margin-bottom: 22px; color: var(--paper);
+  background: radial-gradient(circle at 1px 1px, #ffffff10 1px, transparent 1.5px) 0 0 / 6px 6px, linear-gradient(120deg, color-mix(in srgb, var(--wc) 25%, #141010), #141010 70%); }
+.al-world header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.al-world h3 { margin: 0; font: 400 24px var(--display); color: #fff; text-shadow: 2px 2px 0 #000; }
+.al-count { font: 700 16px system-ui; direction: ltr; background: var(--wc); color: #000; padding: 0 10px; border: 2px solid #000; }
+.al-rw { font-size: 13px; color: var(--paper3); flex: 1; } .al-rw svg { width: 13px; height: 13px; vertical-align: -2px; color: var(--cyan); }
+.al-done { color: var(--green); font-weight: 700; }
+.al-world.ready { animation: none; box-shadow: 0 0 0 3px var(--gold), 0 0 20px var(--gold), var(--hard); }
+.al-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 12px; margin-top: 14px; }
+.al-tile { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 8px; } .al-hint { font-size: 11px; color: var(--paper3); text-align: center; }
+.al-items-h { color: var(--gold); font: 400 24px var(--display); margin: 8px 0; }
+@media (max-width: 700px) { .al-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .al-rw { flex-basis: 100%; } }
+.al-tile.miss .tcard.hc.full { filter: grayscale(1) brightness(.16) contrast(1.4) drop-shadow(0 0 3px #ffffff33) !important; }
+
 </style>
 </head>
 <body>
@@ -1579,7 +1601,7 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
         <button class="mtile mt-prog" data-act="go" data-to="cards" id="menu-cards"><span class="mt-ic">🃏</span><span class="mt-l">مجموعتي</span></button>
         <button class="mtile mt-prog" data-act="go" data-to="packs" id="menu-packs"><span class="mt-ic">📦</span><span class="mt-l">الباكجات</span></button>
         <button class="mtile mt-prog" data-act="loginOpen" id="menu-login"><span class="mt-ic">🎁</span><span class="mt-l">الدخول اليومي</span></button>
-        <button class="mtile" data-act="go" data-to="codex"><span class="mt-ic">📖</span><span class="mt-l">الشخصيات</span></button>
+        <button class="mtile" data-act="go" data-to="codex" id="menu-album"><span class="mt-ic">📖</span><span class="mt-l">الألبوم</span></button>
         <button class="mtile" data-act="go" data-to="stats"><span class="mt-ic">📊</span><span class="mt-l">الإحصائيات</span></button>
         <button class="mtile" data-act="howto"><span class="mt-ic">❓</span><span class="mt-l">كيف ألعب؟</span></button>
         <button class="mtile" data-act="sound" id="menu-sound"><span class="mt-ic">🔊</span><span class="mt-l">الصوت</span></button>
@@ -1695,7 +1717,7 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
 
   <!-- ============ CODEX ============ -->
   <section class="screen" id="scr-codex">
-    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>مكتبة الشخصيات</h2></header>
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الألبوم</h2></header>
     <div class="codex" id="codex"></div>
   </section>
 
@@ -3785,6 +3807,16 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
       { shards: 30 }, { shards: 40 }, { shards: 50 }, { shards: 60 }, { shards: 80 }, { shards: 100 },
       { packs: 1, card: 'rare', big: true },
     ],
+    // album: own all 5 units of a world -> its reward (once); own all 20 -> the grand reward
+    album: {
+      worlds: {
+        ember: { shards: 150, title: 'alb_ember', frame: 'alb_ember' },
+        tide: { shards: 150, title: 'alb_tide', frame: 'alb_tide' },
+        neon: { shards: 150, title: 'alb_neon', frame: 'alb_neon' },
+        sylvan: { shards: 150, title: 'alb_sylvan', frame: 'alb_sylvan' },
+      },
+      all: { packs: 2, title: 'alb_all' },
+    },
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
       allUnlocked: false,      // true = every card owned (dev / testing)
@@ -4317,6 +4349,67 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
 </script>
 <script>
 /*
+ * Card album: every card in the game; missing ones show as shadows. Own every unit of a world
+ * (5 each) to claim that world's set reward once: shards + a title + a frame in the world's colour.
+ * Own all 20 units: bonus packs + the title "جامع الصدع". Heroes are listed but belong to no set
+ * (they become playable characters in a later phase). Rewards: AMB.ECONOMY.album.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+
+  AMB.Save.register('album', { version: 1, defaults: () => ({ claimed: {}, all: false }) });
+
+  function Album(save, deps) {
+    deps = deps || {};
+    const st = () => save.get('album');
+    const A = () => AMB.ECONOMY.album;
+    const units = (world) => Object.values(AMB.DATA.UNITS).filter((u) => u.world === world && !u.exclusive).map((u) => u.id);
+    const api = {
+      worlds: () => Object.keys(AMB.DATA.WORLDS),
+      units,
+      /** { owned, total } for a world */
+      progress(world) { const ids = units(world); return { owned: ids.filter((id) => deps.collection.owned(id)).length, total: ids.length }; },
+      total() { const ids = Object.keys(AMB.DATA.UNITS).filter((id) => !AMB.DATA.UNITS[id].exclusive); return { owned: ids.filter((id) => deps.collection.owned(id)).length, total: ids.length }; },
+      heroes: () => Object.keys(AMB.DATA.HEROES).map((id) => ({ id, owned: deps.collection.owned(id) })),
+      reward: (world) => A().worlds[world],
+      /** 'claimed' | 'ready' | 'locked' */
+      state(world) { if (st().claimed[world]) return 'claimed'; const p = api.progress(world); return p.owned >= p.total ? 'ready' : 'locked'; },
+      allState() { if (st().all) return 'claimed'; const t = api.total(); return t.owned >= t.total ? 'ready' : 'locked'; },
+      readyCount() { return api.worlds().filter((w) => api.state(w) === 'ready').length + (api.allState() === 'ready' ? 1 : 0); },
+      /** cosmetic ids the album gave (the pass lists them as owned) */
+      ownedCosmetics(type) {
+        const out = [];
+        api.worlds().forEach((w) => { if (st().claimed[w] && A().worlds[w][type]) out.push(A().worlds[w][type]); });
+        if (st().all && A().all[type]) out.push(A().all[type]);
+        return out;
+      },
+      claim(world) {
+        if (api.state(world) !== 'ready') return null;
+        const rw = A().worlds[world];
+        save.update('album', (s) => { s.claimed[world] = true; });
+        if (rw.shards && deps.wallet) deps.wallet.add('shards', rw.shards, 'album');
+        if (deps.events) deps.events.emit('albumClaimed', { world, reward: rw });
+        return { world, reward: rw, packs: [] };
+      },
+      claimAll() {
+        if (api.allState() !== 'ready') return null;
+        const rw = A().all, out = { reward: rw, packs: [] };
+        save.update('album', (s) => { s.all = true; });
+        for (let i = 0; i < (rw.packs || 0); i++) if (deps.packs) out.packs.push(deps.packs.open('basic', { free: true }));
+        if (rw.shards && deps.wallet) deps.wallet.add('shards', rw.shards, 'album');
+        if (deps.events) deps.events.emit('albumClaimed', { world: '*', reward: rw });
+        return out;
+      },
+    };
+    return api;
+  }
+
+  AMB.Album = Album;
+})();
+
+</script>
+<script>
+/*
  * Player profile bootstrap: one save, one event bus, one wallet shared by
  * every progression system. In the browser it runs once on load and exposes
  * AMB.save / AMB.events / AMB.wallet. Tests call AMB.Profile.boot(memoryStorage).
@@ -4332,12 +4425,13 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
     // battle-pass XP from campaign rewards goes to the pass instance (created by the pass UI in the browser)
     const campaign = AMB.Campaign(save, { wallet, packs, collection, events, addPassXp: (n) => AMB.pass && AMB.pass.addXp(n) });
     const login = AMB.Login(save, { wallet, packs, collection, events, now: nowFn });
-    return { save, events, wallet, collection, packs, campaign, login };
+    const album = AMB.Album(save, { wallet, packs, collection, events });
+    return { save, events, wallet, collection, packs, campaign, login, album };
   }
   AMB.Profile = { boot };
   if (typeof document !== 'undefined' && !AMB.save) {
     const p = boot();
-    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs; AMB.campaign = p.campaign; AMB.login = p.login;
+    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs; AMB.campaign = p.campaign; AMB.login = p.login; AMB.album = p.album;
   }
 })();
 
@@ -4366,6 +4460,7 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
     frame: {
       default: { name: 'بدون إطار' },
       bronze: { name: 'إطار برونزي', c1: '#d9a066', c2: '#7a4a1f' },
+      alb_ember: { name: 'إطار الجمر', c1: '#ff7a45', c2: '#7a2208' }, alb_tide: { name: 'إطار المدّ', c1: '#3ec9ff', c2: '#12507a' }, alb_neon: { name: 'إطار النيون', c1: '#c45cff', c2: '#4a1d7a' }, alb_sylvan: { name: 'إطار الغابة', c1: '#52d67c', c2: '#1f5a2c' },
       silver: { name: 'إطار فضي', c1: '#e8eef7', c2: '#8794a8' },
       forest: { name: 'إطار الغابة', c1: '#8be07a', c2: '#2f7a2c' },
       ember: { name: 'إطار الجمر', c1: '#ffb347', c2: '#d9341c' },
@@ -4402,6 +4497,8 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
       t_recruit: { name: 'مجنّد الصدع' }, t_junior: { name: 'قائد صغير' }, t_formation: { name: 'ماهر التشكيلات' },
       t_stars: { name: 'جامع النجوم' }, t_stages: { name: 'سيّد المراحل' }, t_rift: { name: 'سيّد الصدع' },
       t_elite: { name: 'نخبة الصدع' }, t_legend: { name: 'أسطورة العوالم' }, t_finale: { name: 'صاحب الحسم' },
+      // album rewards (core/album.js) — not part of the pass tracks
+      alb_ember: { name: 'جامع الجمر' }, alb_tide: { name: 'جامع المدّ' }, alb_neon: { name: 'جامع النيون' }, alb_sylvan: { name: 'جامع الغابة' }, alb_all: { name: 'جامع الصدع' },
     },
   };
 
@@ -4481,7 +4578,7 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
   const blank = (now) => ({ v: 1, season: SEASON.id, start: now, xp: 0, premium: false, claimed: { free: [], premium: [] }, claimedMissions: [], daily: { key: 0, p: {} }, weekly: { key: 0, p: {} },
     firstWinDay: 0, matches: 0, equip: { title: 'default', frame: 'default', arena: 'default', fx: 'default', avatar: null } });
 
-  function create(storage, nowFn, onReward) {
+  function create(storage, nowFn, onReward, extraOwned) {
     const now = nowFn || (() => Date.now());
     let st;
     try { st = JSON.parse(storage.getItem(KEY)); } catch (e) { st = null; }
@@ -4565,6 +4662,7 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
       owned(type) {
         const base = { title: ['default'], frame: ['default'], arena: ['default'], fx: ['default'], avatar: [] }[type].slice();
         ['free', 'premium'].forEach((t) => st.claimed[t].forEach((l) => { const r = api.reward(l, t); if (r && r.type === type && !base.includes(r.id)) base.push(r.id); }));
+        if (extraOwned) (extraOwned(type) || []).forEach((id) => { if (!base.includes(id)) base.push(id); });   // e.g. album rewards
         return base;
       },
       equipped: (type) => st.equip[type],
@@ -6134,6 +6232,7 @@ AMB.IMAGES = {
   }
 
   function renderCodex() {
+    if (AMB.AlbumUI) { AMB.AlbumUI.render(); return; }
     const f = S.codexF;
     const fb = (kind, id, name) => `<button class="btn small ${f[kind] === id ? 'on' : ''}" data-act="codexF" data-k="${kind}" data-v="${id}">${name}</button>`;
     const units = Object.values(UNITS).filter((u) => (!f.world || u.world === f.world) && (!f.role || u.role === f.role)).sort((a, b) => a.tier - b.tier);
@@ -6446,7 +6545,7 @@ AMB.IMAGES = {
   })();
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay, startMatch, portrait, stars };
+  globalThis.AMB_UI = { S, ACT, itemsHTML: () => Object.values(ITEMS).map((it) => itemCardHTML(it)).join(''), renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay, startMatch, portrait, stars };
   if (AMB.PassUI) { AMB.PassUI.installActions(); AMB.PassUI.applyCosmetics(); AMB.PassUI.refreshMenu(); }
 })();
 
@@ -6465,7 +6564,7 @@ AMB.IMAGES = {
   const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => {
     if (r.type === 'shards') { if (AMB.wallet) AMB.wallet.add('shards', r.n, 'mission'); return; }   // daily-mission shards
     if (AMB.collection) AMB.collection.grantPassReward(r);
-  }));
+  }, (type) => (AMB.album ? AMB.album.ownedCosmetics(type) : [])));
   if (AMB.events) AMB.Pass.wire(pass, AMB.events);   // missions also count campaign fights, upgrades, packs and stars
   // rewards claimed before characters could be unlocked: make sure those characters are owned
   if (AMB.collection) ['free', 'premium'].forEach((t) => (pass.state().claimed[t] || []).forEach((l) => { const r = pass.reward(l, t); if (r && r.type === 'avatar' && !AMB.collection.owned(r.id)) AMB.collection.grantPassReward(r); }));
@@ -6713,7 +6812,7 @@ AMB.IMAGES = {
     });
   }
 
-  AMB.CollectionUI = { render, refreshMenu, installActions };
+  AMB.CollectionUI = { render, refreshMenu, installActions, unlockHint };
   if (UI()) installActions();
   refreshMenu();
 })();
@@ -7050,6 +7149,92 @@ AMB.IMAGES = {
   if (UI()) installActions();
   // the game opens on the menu: offer today's reward right away
   if (document.querySelector('#scr-menu.active')) onMenu(); else refreshMenu();
+})();
+
+</script>
+<script>
+/*
+ * "الألبوم": every card of the game. Cards you don't own are shadows. Own all 5 units of a world
+ * to claim its set reward; own all 20 for the grand reward. Logic: core/album.js.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const $ = (id) => document.getElementById(id);
+  const A = AMB.album, C = AMB.collection, RAR = AMB.ECONOMY.rarities, P = AMB.Pass;
+  const { icon } = AMB.art;
+  const UI = () => globalThis.AMB_UI;
+  const W = (id) => AMB.DATA.WORLDS[id];
+  const hint = (id) => (AMB.CollectionUI ? AMB.CollectionUI.unlockHint(id) : 'من الباكجات');
+
+  function cardTile(id) {
+    const d = C.def(id), owned = C.owned(id);
+    const card = UI().cardHTML(d, { k: 'alb' + id, lvl: owned ? C.level(id) : 0, cls: owned ? '' : 'unowned', attrs: `data-act="${d.role ? 'detail' : 'heroInfo'}" data-id="${id}"` });
+    return `<div class="al-tile ${owned ? '' : 'miss'}">${card}${owned ? '' : `<small class="al-hint">🔒 ${hint(id)}</small>`}</div>`;
+  }
+
+  function rewardText(rw) {
+    const bits = [];
+    if (rw.shards) bits.push(`${icon('gem')} ${rw.shards}`);
+    if (rw.packs) bits.push(`📦 ${rw.packs === 1 ? 'باكج' : rw.packs + ' باكجات'}`);
+    if (rw.title) bits.push(`لقب «${P.COSMETICS.title[rw.title].name}»`);
+    if (rw.frame) bits.push(`إطار`);
+    return bits.join(' · ');
+  }
+
+  function worldSection(w) {
+    const p = A.progress(w), st = A.state(w), rw = A.reward(w);
+    const btn = st === 'ready' ? `<button class="btn primary" data-act="albClaim" data-w="${w}">استلم الجائزة</button>` : st === 'claimed' ? '<span class="al-done">✓ تم الاستلام</span>' : '';
+    return `<section class="al-world ${st}" style="--wc:${W(w).color}">
+      <header><h3>${W(w).name}</h3><span class="al-count">${p.owned}/${p.total}</span><span class="al-rw">${rewardText(rw)}</span>${btn}</header>
+      <div class="al-bar"><i style="width:${(100 * p.owned) / p.total}%"></i></div>
+      <div class="al-grid">${A.units(w).sort((a, b) => AMB.DATA.UNITS[a].tier - AMB.DATA.UNITS[b].tier).map(cardTile).join('')}</div></section>`;
+  }
+
+  function render() {
+    const root = $('codex'); if (!root) return;
+    const t = A.total(), as = A.allState(), rwAll = AMB.ECONOMY.album.all;
+    root.innerHTML = `<div class="al-head"><div class="al-total"><b>${t.owned}/${t.total}</b> وحدة<div class="al-bar big"><i style="width:${(100 * t.owned) / t.total}%"></i></div></div>
+        <div class="al-grand ${as}">${as === 'claimed' ? '✓ ' : '🏆 '}كل الوحدات: ${rewardText(rwAll)}
+          ${as === 'ready' ? '<button class="btn primary" data-act="albClaimAll">استلم</button>' : ''}</div>
+        <button class="ibtn" data-act="info" data-k="albinfo" title="شرح">ⓘ</button></div>
+      ${A.worlds().map(worldSection).join('')}
+      <section class="al-world" style="--wc:#ff5a64"><header><h3>الأبطال</h3><span class="al-count">${C.ownedHeroes().length}/${A.heroes().length}</span></header>
+        <div class="al-grid">${A.heroes().map((h) => cardTile(h.id)).join('')}</div></section>
+      <h3 class="al-items-h">المعدات والتعاويذ</h3><div class="codex-grid">${UI().itemsHTML()}</div>`;
+    refreshMenu();
+  }
+
+  function refreshMenu() {
+    const b = $('menu-album'); if (!b) return;
+    const n = A.readyCount(), l = b.querySelector('.mt-l');
+    l.innerHTML = `الألبوم${n ? `<span class="dot">${n}</span>` : ''}`;
+  }
+
+  function celebrate(res, packs) {
+    const ui = UI();
+    ui.sfx('merge');
+    const cards = (packs || []).flatMap((p) => p.cards);
+    ui.overlay(`<div class="rv-wrap"><h2>🏆 جائزة الألبوم</h2><p class="cam-pay">${rewardText(res.reward)}</p>
+      ${cards.length ? `<div class="cam-pack-row">${cards.map((c, i) => `<div class="cu">${ui.portrait(C.def(c.id), { k: 'alr' + i + c.id })}<small style="color:${RAR[c.rarity].color}">${RAR[c.rarity].name}${c.isNew ? ' · جديدة!' : ''}</small></div>`).join('')}</div>` : ''}
+      ${res.reward.title ? `<p class="hint">جهّز اللقب والإطار من «ممر الصدع» ← «ملفي»</p>` : ''}
+      <div class="rv-btns"><button class="btn primary" data-act="packDone">تم</button></div></div>`);
+  }
+
+  AMB.TIPS = AMB.TIPS || {};
+  AMB.TIPS.albinfo = () => ({ title: 'الألبوم', html: `<p>كل بطاقات اللعبة هنا. البطاقة اللي ما تملكها تظهر ظلًا مع طريقة الحصول عليها.</p>
+    <p>اجمع <b>الوحدات الخمس</b> لأي عالم واستلم جائزته مرة واحدة (شظايا + لقب + إطار بلون العالم). وكل الوحدات العشرين = باكجين + لقب «جامع الصدع».</p>` });
+
+  function installActions() {
+    const ui = UI(); if (!ui || ui.ACT.albClaim) return;
+    Object.assign(ui.ACT, {
+      albClaim: (d) => { const r = A.claim(d.w); if (!r) return; celebrate(r); render(); ['PacksUI', 'PassUI'].forEach((k) => AMB[k] && AMB[k].refreshMenu && AMB[k].refreshMenu()); },
+      albClaimAll: () => { const r = A.claimAll(); if (!r) return; celebrate(r, r.packs); render(); ['PacksUI', 'CollectionUI'].forEach((k) => AMB[k] && AMB[k].refreshMenu && AMB[k].refreshMenu()); },
+    });
+  }
+
+  AMB.AlbumUI = { render, refreshMenu, installActions };
+  if (UI()) installActions();
+  refreshMenu();
 })();
 
 </script>

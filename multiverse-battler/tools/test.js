@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Rule tests for the core (no browser needed):  node tools/test.js */
 const path = require('path');
-['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'packs', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
+['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'packs', 'levels', 'campaign', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -563,6 +563,82 @@ t('progression shop only offers owned units; quick matches offer everything', ()
   const prog = seen(true);
   ok([...prog].every((id) => owned.includes(id)), 'progression shop showed a locked unit: ' + [...prog].filter((id) => !owned.includes(id)));
   ok([...seen(false)].some((id) => !owned.includes(id)), 'quick match should still offer every unit');
+});
+
+console.log('campaign levels & bosses');
+const runFight = (prof, fightId, hero, seed, forceWin) => {
+  const m = new AMB.Match(prof.campaign.matchOptions(fightId, hero || 'orath', seed || 1));
+  m.players[0].isAI = true;
+  while (!m.isOver) {
+    m.startRound(); AMB.AI.prep(m, 0); AMB.AI.prep(m, 1);
+    if (forceWin != null) { const c = m.createCombat(false).runToEnd(); c.winner = forceWin; m.resolveCombat(c); } else m.resolveCombat(m.createCombat(false).runToEnd());
+  }
+  return m;
+};
+t('levels data: 4 levels x (4 fights + boss), valid units/slots, boss slot free', () => {
+  const Ls = AMB.LEVELS.LEVELS; eq(Ls.length, 4);
+  Ls.forEach((l) => {
+    eq(l.fights.length, 5, l.id); ok(l.fights[4].boss && l.fights.slice(0, 4).every((f) => !f.boss), l.id + ' boss last');
+    ok(AMB.DATA.HEROES[l.hero] && AMB.LEVELS.BOSS[l.world], l.id);
+    l.fights.forEach((f) => {
+      ok(f.power > 0, f.id);
+      const slots = new Set();
+      f.units.forEach(([id, star, slot, from]) => { ok(AMB.DATA.UNITS[id], f.id + ' ' + id); ok(/^[fb][0-3]$/.test(slot), slot); ok(!slots.has(slot), f.id + ' dup slot ' + slot); slots.add(slot); ok(star >= 1 && star <= 3 && from >= 1 && from <= 3); });
+      if (f.boss) ok(!slots.has('b1'), f.id + ' boss hero slot b1 must be free');
+    });
+  });
+});
+t('short match: best of 3, scripted enemy line-up grows by round, boss on board with ability', () => {
+  const prof = AMB.Profile.boot(MEM());
+  const m = new AMB.Match(prof.campaign.matchOptions('l1boss', 'merin', 3));
+  m.startRound();
+  const e = m.players[1], f = AMB.LEVELS.LEVELS[0].fights[4];
+  eq(Object.keys(e.board).length, f.units.filter((u) => u[3] <= 1).length, 'round-1 units');
+  ok(e.summoned && e.heroSlot === 'b1'); ok(e.abilities.inferno_banner === 'start'); eq(e.blessings.atkPct, 0.2);
+  eq(m.players[0].level, Math.max(AMB.CONFIG.economy.startLevel, AMB.LEVELS.LEVELS[0].start.level), 'start level bonus');
+  AMB.AI.prep(m, 1); eq(e.shop.length, 0, 'scripted enemy never shops');
+  m.resolveCombat(m.createCombat(false).runToEnd());
+  if (!m.isOver) { m.startRound(); eq(Object.keys(e.board).length, f.units.filter((u) => u[3] <= 2).length, 'round-2 units'); }
+  for (let s = 1; s <= 15; s++) { const r = runFight(prof, 'l1f2', 'orath', s); ok(r.round <= 3, 'max 3 rounds'); ok(r.winner === null || Math.max(...r.players.map((p) => p.stats.wins)) >= 1); if (r.winner != null && r.round < 3) eq(r.players[r.winner].stats.wins, 2); }
+});
+t('campaign match uses the collection: card power + owned units; enemy power from the level', () => {
+  const prof = AMB.Profile.boot(MEM());
+  prof.collection.add('ash_ronin', 3); prof.collection.upgrade('ash_ronin');
+  const o = prof.campaign.matchOptions('l1f1', 'orath', 1);
+  ok(o.progression); eq(o.players[0].cardPower.ash_ronin, Math.round(prof.collection.power('ash_ronin') * 1000) / 1000);
+  ok(o.players[0].allowedUnits.every((id) => prof.collection.owned(id)));
+  eq(o.players[1].cardPower.ash_ronin, AMB.LEVELS.LEVELS[0].fights[0].power);
+});
+t('campaign: unlock order, first-win rewards, replay rewards, level bonus pack, saved', () => {
+  const mem = MEM(); let xp = 0;
+  const prof = AMB.Profile.boot(mem); const C = prof.campaign;
+  const cam = AMB.Campaign(prof.save, { wallet: prof.wallet, packs: prof.packs, collection: prof.collection, events: prof.events, addPassXp: (n) => (xp += n) });
+  ok(cam.isUnlocked('l1f1')); ok(!cam.isUnlocked('l1f2')); ok(!cam.isUnlocked('l2f1')); eq(cam.next(), 'l1f1');
+  const sh0 = prof.wallet.balance('shards');
+  const lost = cam.recordResult('l1f1', { won: false }); ok(!lost.won && !lost.shards); ok(!cam.isCleared('l1f1'));
+  const R = AMB.LEVELS.CAMPAIGN.rewards;
+  const w1 = cam.recordResult('l1f1', { won: true, lifeLeft: 80 });
+  ok(w1.first); eq(w1.shards, R.fight.shards); eq(xp, R.fight.passXp); ok(cam.isUnlocked('l1f2'));
+  const again = cam.recordResult('l1f1', { won: true, lifeLeft: 95 });
+  ok(!again.first); eq(again.shards, R.replay.shards); eq(xp, R.fight.passXp, 'no pass xp on replays');
+  eq(cam.stats('l1f1').attempts, 3); eq(cam.stats('l1f1').best.lifeLeft, 95);
+  ['l1f2', 'l1f3', 'l1f4'].forEach((id) => { ok(cam.isUnlocked(id), id); cam.recordResult(id, { won: true }); });
+  ok(!cam.isUnlocked('l2f1'), 'next level locked until the boss falls');
+  const before = prof.packs.stats().opened;
+  const boss = cam.recordResult('l1boss', { won: true });
+  ok(boss.boss && boss.levelComplete && boss.pack && boss.pack.cards.length === 5); eq(boss.shards, R.boss.shards);
+  eq(prof.packs.stats().opened, before + 1, 'bonus pack opened for free');
+  eq(prof.wallet.balance('shards'), sh0 + R.fight.shards * 4 + R.replay.shards + R.boss.shards + (boss.pack.refund || 0));
+  ok(cam.levelDone('l1') && cam.isUnlocked('l2f1')); eq(cam.next(), 'l2f1');
+  const again2 = cam.recordResult('l1boss', { won: true }); ok(!again2.levelComplete && !again2.pack, 'level bonus only once');
+  const cam2 = AMB.Profile.boot(mem).campaign; ok(cam2.levelDone('l1')); eq(cam2.next(), 'l2f1');
+});
+t('a real campaign fight runs end to end and pays out', () => {
+  const prof = AMB.Profile.boot(MEM());
+  const m = runFight(prof, 'l1f1', 'orath', 4, 0);
+  eq(m.winner, 0); eq(m.summary(0).mode, 'campaign');
+  const r = prof.campaign.recordResult('l1f1', Object.assign(m.summary(0), { lifeLeft: m.players[0].life }));
+  ok(r.first && r.shards > 0);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

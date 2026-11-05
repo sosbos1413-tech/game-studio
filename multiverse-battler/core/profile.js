@@ -11,11 +11,13 @@
     const wallet = AMB.Wallet(save, events);
     const collection = AMB.Collection(save, events);
     const packs = AMB.Packs(save, wallet, collection, events, rng);
-    return { save, events, wallet, collection, packs };
+    // battle-pass XP from campaign rewards goes to the pass instance (created by the pass UI in the browser)
+    const campaign = AMB.Campaign(save, { wallet, packs, collection, events, addPassXp: (n) => AMB.pass && AMB.pass.addXp(n) });
+    return { save, events, wallet, collection, packs, campaign };
   }
   AMB.Profile = { boot };
   if (typeof document !== 'undefined' && !AMB.save) {
     const p = boot();
-    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs;
+    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs; AMB.campaign = p.campaign;
   }
 })();

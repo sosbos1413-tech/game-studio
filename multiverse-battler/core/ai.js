@@ -96,6 +96,7 @@
 
   function prep(match, pi) {
     const p = match.players[pi];
+    if (p.lineup) return;   // scripted campaign enemy: its board is set by match.applyLineup
     const cfg = AMB.CONFIG.ai[p.difficulty] || AMB.CONFIG.ai.normal;
     const rng = AMB.util.RNG(match.seed + match.round * 7919 + pi * 31);
     const E = AMB.CONFIG.economy;

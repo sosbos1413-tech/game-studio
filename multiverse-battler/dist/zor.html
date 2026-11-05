@@ -1433,6 +1433,48 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 .col-starter { background: var(--red); color: #fff; padding: 6px 10px; margin-bottom: 8px; font-weight: 700; }
 .cp-lock { font-size: 12px; text-align: center; }
 
+/* ======================================================================= campaign «الحملة» */
+#menu-campaign small { font-size: 13px; opacity: .8; margin-inline-start: 8px; font-family: inherit; direction: ltr; display: inline-block; }
+.campaign { max-width: 1100px; margin: 0 auto; padding: 0 10px 40px; color: var(--paper); }
+.cam-note { background: var(--ink2); border: 3px solid var(--paper); box-shadow: var(--hard); padding: 10px 14px; margin-bottom: 18px; font-size: 14px; line-height: 1.7; }
+.cam-note svg, .cam-reward svg, .cam-pay svg { width: 14px; height: 14px; vertical-align: -2px; color: #5fe3ff; }
+.cam-levels { display: flex; flex-direction: column; gap: 18px; }
+.cam-level { position: relative; border: 3px solid #000; box-shadow: 0 0 0 3px var(--wc), var(--hard); padding: 12px 16px 16px;
+  background: radial-gradient(circle at 1px 1px, #ffffff10 1px, transparent 1.5px) 0 0 / 6px 6px, linear-gradient(120deg, color-mix(in srgb, var(--wc) 30%, #141010), #141010 70%); }
+.cam-level.locked { filter: grayscale(.85) brightness(.6); }
+.cam-level header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.cam-level h3 { margin: 0; font: 400 24px var(--display); color: #fff; text-shadow: 2px 2px 0 #000; } .cam-level header small { color: var(--paper3); }
+.cl-n { width: 40px; height: 40px; display: grid; place-items: center; font: 400 26px var(--display); background: var(--wc); color: #000; border: 3px solid #000; }
+.cl-lock { margin-inline-start: auto; font-size: 13px; color: var(--gold); }
+.cpath { display: flex; align-items: center; justify-content: space-between; gap: 0; padding: 6px 4px 24px; }
+.cline { flex: 1; height: 4px; background: repeating-linear-gradient(90deg, var(--paper3) 0 8px, transparent 8px 14px); min-width: 8px; }
+.cnode { position: relative; flex: none; width: 58px; height: 58px; border-radius: 50%; border: 3px solid #000; background: var(--paper); color: var(--ink); font: 400 26px var(--display); cursor: pointer; display: grid; place-items: center; box-shadow: 0 0 0 3px var(--wc); padding: 0; }
+.cnode.boss { width: 84px; height: 84px; overflow: visible; background: #000; box-shadow: 0 0 0 4px var(--gold), 0 0 18px var(--wc); }
+.cnode.boss .portrait { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
+.cnode.cleared { background: var(--wc); } .cnode.locked { cursor: not-allowed; opacity: .55; }
+.cnode.next { animation: pcpulse .8s infinite alternate; box-shadow: 0 0 0 4px var(--gold), 0 0 16px var(--gold); }
+.cnode .ck, .cnode .lk { position: absolute; top: -6px; inset-inline-end: -6px; font-style: normal; font-size: 14px; background: #000; color: var(--gold); border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; }
+.cn-name { position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); white-space: nowrap; font: 600 11px system-ui; color: var(--paper); text-shadow: 1px 1px 0 #000; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.cam-pv h2 { margin: 0; } .cam-pv h4 { margin: 14px 0 6px; }
+.boss-box { display: flex; gap: 12px; align-items: center; background: #000; color: #fff; border: 3px solid var(--gold); padding: 8px 12px; margin-top: 10px; }
+.boss-box .portrait { width: 64px; height: 64px; flex: none; } .boss-box p { margin: 4px 0; font-size: 14px; } .boss-box small { color: var(--gold); }
+.cam-units, .cam-pack-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cu { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 64px; font-size: 11px; text-align: center; }
+.cu .portrait { width: 56px; height: 56px; }
+.hchips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hchip { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border: 3px solid var(--ink); background: var(--paper2); cursor: pointer; font-family: inherit; font-weight: 700; }
+.hchip .portrait { width: 34px; height: 34px; } .hchip.on { background: var(--gold); box-shadow: var(--hard-sm); }
+.cam-go { text-align: center; margin-top: 16px; }
+.cam-pay { font-size: 20px; color: var(--gold); }
+.cam-pack { max-width: 560px; margin: 0 auto 16px; background: var(--ink2); color: var(--paper); border: 3px solid var(--gold); padding: 10px 14px; }
+.cam-pack-row { justify-content: center; margin-top: 8px; } .cam-pack small.r-legendary { color: #ff9f1a; } .cam-pack small.r-epic { color: #c084fc; }
+.cam-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+@media (max-width: 700px) {
+  .cpath { padding-bottom: 30px; } .cnode { width: 42px; height: 42px; font-size: 20px; } .cnode.boss { width: 62px; height: 62px; }
+  .cn-name { display: none; } .cnode.next .cn-name, .cnode.boss .cn-name { display: block; font-size: 10px; }
+  .cam-level h3 { font-size: 20px; }
+}
+
 </style>
 </head>
 <body>
@@ -1448,6 +1490,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       </div>
       <div class="menu-buttons">
         <button class="btn big primary" data-act="go" data-to="mode">العب</button>
+        <button class="btn big primary" data-act="go" data-to="campaign" id="menu-campaign">الحملة</button>
         <button class="btn big" data-act="go" data-to="pass" id="menu-pass">ممر الصدع</button>
         <button class="btn big" data-act="go" data-to="cards" id="menu-cards">مجموعتي</button>
         <button class="btn big" data-act="go" data-to="packs" id="menu-packs">الباكجات</button>
@@ -1552,6 +1595,11 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   <section class="screen" id="scr-packs">
     <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الباكجات</h2></header>
     <div class="packs" id="packs"></div>
+  </section>
+
+  <section class="screen" id="scr-campaign">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الحملة</h2></header>
+    <div class="campaign" id="campaign"></div>
   </section>
 
   <section class="screen" id="scr-stats">
@@ -2637,6 +2685,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, merges: 0, wins: 0, losses: 0, draws: 0 },
       alive: true,
       blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
+      lineup: opts.lineup || null,   // scripted enemy (campaign): { units:[[defId,star,slot,fromRound]], summon, blessings, abilities }
       cardPower: opts.cardPower || null,   // { defId: mult } from the collection — progression fights only
       allowed: opts.allowedUnits ? new Set(opts.allowedUnits) : null,   // units this player owns — progression fights only
     };
@@ -2649,6 +2698,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       this.rng = AMB.util.RNG(this.seed);
       // card levels/rarity power exist only in progression fights (campaign, tower, events); quick and same-device matches stay even
       this.progression = !!opts.progression;
+      this.rules = opts.rules || null;   // short-match rules (campaign): { maxRounds, winsNeeded, start: { gold, level } }
       this.players = opts.players.map((p, i) => newPlayer(i, this.progression ? p : Object.assign({}, p, { cardPower: null, allowedUnits: null })));
       this.round = 0;
       this.phase = 'idle';
@@ -2684,6 +2734,8 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         p.shopLocked = false;
         this._validateAbilities(p);
       });
+      if (this.rules && this.round === 1) this.players.forEach((p) => { const st = this.rules.start; if (!p.lineup && st) { p.gold += st.gold || 0; p.level = Math.max(p.level, st.level || 0); } });
+      this.players.forEach((p, i) => { if (p.lineup) this.applyLineup(i); });
       this.phase = 'prep';
     }
 
@@ -3102,6 +3154,13 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       if (dead[0] || dead[1]) {
         // both heroes fell in the same round (rift collapse): the round's winner takes the match; a drawn round is a draw
         this.winner = dead[0] && dead[1] ? (report.winner != null ? report.winner : null) : dead[0] ? 1 : 0;
+      } else if (this.rules) {   // short match: first to winsNeeded round wins; after maxRounds more round wins, then more life
+        const w = this.players.map((p) => p.stats.wins), need = this.rules.winsNeeded || 2;
+        if (w[0] >= need || w[1] >= need) this.winner = w[0] >= need ? 0 : 1;
+        else if (this.round >= this.rules.maxRounds) {
+          const [a, b] = this.players.map((p) => p.life);
+          this.winner = w[0] !== w[1] ? (w[0] > w[1] ? 0 : 1) : a !== b ? (a > b ? 0 : 1) : null;
+        }
       } else if (this.round >= M.maxRounds) {
         const [a, b] = this.players.map((p) => p.life);
         if (a !== b) this.winner = a > b ? 0 : 1;
@@ -3122,6 +3181,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 
     /** Build 3 distinct offers per player after the last round of a stage (not the final stage). */
     offerRewards() {
+      if (this.rules) return false;   // no reward drafts in short (campaign) matches
       const si = this.stageIndex(this.round);
       if (si >= AMB.CONFIG.match.stages.length - 1) return false;
       if (this.round !== AMB.CONFIG.match.stages[si].rounds[1]) return false;   // only at the end of a stage
@@ -3184,11 +3244,26 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       const board = last ? last.players[pi].board : [];
       const worlds = new Set(board.map((u) => AMB.DATA.UNITS[u.defId].world));
       const opp = this.players[1 - pi];
-      const mode = this.mode === 'friendly' ? 'friendly' : this.mode === 'hotseat' ? 'hotseat' : (opp.difficulty || 'normal');
+      const mode = this.rules ? 'campaign' : this.mode === 'friendly' ? 'friendly' : this.mode === 'hotseat' ? 'hotseat' : (opp.difficulty || 'normal');
       return { mode, won: this.winner === pi, roundsPlayed: this.round, roundsWon: p.stats.wins,
         finaleWon: !!(last && last.round >= AMB.CONFIG.match.maxRounds && last.winner === pi),
         buys: p.stats.unitsBought, rerolls: p.stats.rerolls, merges: p.stats.merges, summoned: this.history.some((r) => r.players[pi].summoned),
         stageRewards: p.rewardLog.length, damage: p.stats.damageDealt, worldsUsed: worlds.size };
+    }
+
+    /** Scripted (campaign) opponent: put the fixed line-up on the board for this round. */
+    applyLineup(pi) {
+      const p = this.players[pi], L = p.lineup;
+      p.board = {}; p.bench = p.bench.map(() => null); p.shop = []; p.itemShop = [];
+      L.units.forEach(([defId, star, slot, from], k) => {
+        if ((from || 1) > this.round) return;
+        p.board[slot] = { uid: 'e' + k + defId, defId, star: star || 1, items: [] };
+      });
+      p.level = Math.max(1, Object.keys(p.board).length);
+      p.summoned = !!L.summon; if (L.summon) p.heroSlot = L.summon;
+      p.blessings = Object.assign({ atkPct: 0, hpPct: 0, asPct: 0 }, L.blessings || {});
+      p.essence = 99; p.abilities = {};
+      (L.abilities || []).forEach((id) => (p.abilities[id] = 'start'));
     }
 
     get isOver() { return this.phase === 'over'; }
@@ -3300,6 +3375,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 
   function prep(match, pi) {
     const p = match.players[pi];
+    if (p.lineup) return;   // scripted campaign enemy: its board is set by match.applyLineup
     const cfg = AMB.CONFIG.ai[p.difficulty] || AMB.CONFIG.ai.normal;
     const rng = AMB.util.RNG(match.seed + match.round * 7919 + pi * 31);
     const E = AMB.CONFIG.economy;
@@ -3865,6 +3941,178 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 </script>
 <script>
 /*
+ * Campaign levels (data only — edit freely). One level per world: 4 fights + a boss.
+ * A fight is a short match (CAMPAIGN.rules) against a fixed enemy line-up:
+ *   units: [defId, star, slot, fromRound]   (slot: f0..f3 front, b0..b3 back; the unit joins from that round)
+ *   power: enemy stat multiplier, tuned by tools/tune-campaign.js so a reference player (starter cards in
+ *          levels 1-2, more/upgraded cards in 3-4) wins ~95%→60% of the fights and 40-55% of bosses.
+ *          It is NOT comparable between fights (line-ups differ); the player's card levels/rarity apply too.
+ *   boss:  the world's hero fights on the board with a special ability and bigger rewards.
+ * Rewards are paid in full on the first win only; replays pay `replay`.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+
+  const CAMPAIGN = {
+    rules: { maxRounds: 3, winsNeeded: 2 },          // best of 3 rounds
+    rewards: {
+      fight: { shards: 20, passXp: 20 },
+      boss: { shards: 60, passXp: 40 },
+      level: { pack: 'basic' },                       // bonus for clearing every fight of a level
+      replay: { shards: 5 },
+    },
+  };
+
+  // boss specials: stat blessings + hero abilities fired at the start of every round
+  const BOSS = {
+    ember: { name: 'غضب الجمر', text: 'وحدات الزعيم +20% هجوم، ويطلق «أمر الهجوم» مع بداية كل جولة.', blessings: { atkPct: 0.2 }, abilities: ['inferno_banner'] },
+    tide: { name: 'مدّ الحماية', text: 'وحدات الزعيم +25% صحة، ويطلق «حاجز المدّ» مع بداية كل جولة.', blessings: { hpPct: 0.25 }, abilities: ['tidal_ward'] },
+    neon: { name: 'كسر السرعة', text: 'وحدات الزعيم +20% سرعة هجوم، ويطلق «كسر السرعة» مع بداية كل جولة.', blessings: { asPct: 0.2 }, abilities: ['overclock'] },
+    sylvan: { name: 'جذور أزلية', text: 'وحدات الزعيم +20% صحة، ويطلق «جدار الأشواك» مع بداية كل جولة.', blessings: { hpPct: 0.2 }, abilities: ['thorn_wall'] },
+  };
+
+  const L = (id, world, hero, name, start, fights) => ({ id, world, hero, name, start, fights });
+  const F = (id, name, power, units, extra) => Object.assign({ id, name, power, units }, extra || {});
+
+  const LEVELS = [
+    L('l1', 'ember', 'kagira', 'أطراف مملكة الجمر', { gold: 6, level: 4 }, [
+      F('l1f1', 'دورية الرماد', 1.79, [['ash_ronin', 1, 'f1', 1], ['forge_bulwark', 1, 'f2', 1], ['pixel_sniper', 1, 'b1', 2]]),
+      F('l1f2', 'حرّاس الأتون', 1.35, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 1, 'f2', 1], ['thorn_fox', 1, 'f3', 2], ['pixel_sniper', 1, 'b1', 1]]),
+      F('l1f3', 'كمين الشرر', 1.1, [['ash_ronin', 1, 'f1', 1], ['forge_bulwark', 1, 'f2', 1], ['spark_wraith', 1, 'b2', 1], ['pyre_archer', 1, 'b1', 2]]),
+      F('l1f4', 'رماة المحرقة', 1.23, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 1, 'f2', 1], ['coral_sentinel', 1, 'f3', 2], ['pyre_archer', 1, 'b1', 1], ['spark_wraith', 1, 'b2', 3]]),
+      F('l1boss', 'الزعيم: كيرو', 0.86, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 2, 'f2', 1], ['pyre_archer', 1, 'b0', 1], ['caldera_seer', 1, 'b2', 2]], { boss: true }),
+    ]),
+    L('l2', 'tide', 'merin', 'سواحل المدّ القمري', { gold: 8, level: 5 }, [
+      F('l2f1', 'حرس المرجان', 1.52, [['coral_sentinel', 1, 'f1', 1], ['lunar_blade', 1, 'f2', 1], ['wave_caller', 1, 'b1', 1], ['pixel_sniper', 1, 'b2', 2]]),
+      F('l2f2', 'سيوف القمر', 1.29, [['coral_sentinel', 1, 'f1', 1], ['lunar_blade', 1, 'f2', 1], ['lunar_blade', 1, 'f3', 2], ['wave_caller', 1, 'b1', 1], ['mist_witch', 1, 'b2', 3]]),
+      F('l2f3', 'ضباب الساحرات', 0.95, [['coral_sentinel', 2, 'f1', 1], ['moss_warden', 1, 'f2', 1], ['mist_witch', 1, 'b1', 1], ['wave_caller', 1, 'b2', 1], ['willow_eye', 1, 'b3', 2]]),
+      F('l2f4', 'موجة المدّ', 0.75, [['coral_sentinel', 2, 'f1', 1], ['lunar_blade', 2, 'f2', 1], ['thorn_fox', 1, 'f3', 1], ['mist_witch', 1, 'b1', 1], ['wave_caller', 1, 'b2', 2], ['pixel_sniper', 1, 'b3', 3]]),
+      F('l2boss', 'الزعيم: ميران', 0.77, [['coral_sentinel', 2, 'f1', 1], ['lunar_blade', 1, 'f2', 1], ['wave_caller', 1, 'b0', 1], ['mist_witch', 1, 'b2', 1], ['tide_priest', 1, 'b3', 2]], { boss: true }),
+    ]),
+    L('l3', 'neon', 'zerokai', 'شوارع نيون-٩', { gold: 10, level: 5 }, [
+      F('l3f1', 'كلاب الشبكة', 1.1, [['firewall_unit', 1, 'f1', 1], ['grid_hound', 2, 'f2', 1], ['grid_hound', 1, 'f3', 1], ['pixel_sniper', 1, 'b1', 1], ['spectral_coder', 1, 'b2', 2]]),
+      F('l3f2', 'قناصة البكسل', 1.18, [['firewall_unit', 1, 'f1', 1], ['chrome_ronin', 1, 'f2', 2], ['pixel_sniper', 2, 'b1', 1], ['pixel_sniper', 1, 'b2', 1], ['spectral_coder', 1, 'b3', 1]]),
+      F('l3f3', 'جدار النار', 0.81, [['firewall_unit', 2, 'f1', 1], ['forge_bulwark', 1, 'f2', 1], ['grid_hound', 2, 'f3', 1], ['pixel_sniper', 1, 'b1', 1], ['spectral_coder', 1, 'b2', 2], ['spark_wraith', 1, 'b3', 3]]),
+      F('l3f4', 'المبرمجة الطيفية', 0.77, [['firewall_unit', 2, 'f1', 1], ['chrome_ronin', 1, 'f2', 1], ['grid_hound', 2, 'f3', 1], ['pixel_sniper', 2, 'b1', 1], ['spectral_coder', 1, 'b2', 1], ['mist_witch', 1, 'b3', 2]]),
+      F('l3boss', 'الزعيم: زيرو-كاي', 0.67, [['firewall_unit', 2, 'f1', 1], ['chrome_ronin', 1, 'f2', 1], ['grid_hound', 2, 'f3', 1], ['pixel_sniper', 2, 'b0', 1], ['spectral_coder', 1, 'b2', 2]], { boss: true }),
+    ]),
+    L('l4', 'sylvan', 'orath', 'قلب الغابة الأزلية', { gold: 12, level: 6 }, [
+      F('l4f1', 'ثعالب الأشواك', 1.17, [['moss_warden', 2, 'f1', 1], ['thorn_fox', 2, 'f2', 1], ['thorn_fox', 1, 'f3', 1], ['willow_eye', 1, 'b1', 1], ['wave_caller', 1, 'b2', 1], ['root_shaman', 1, 'b3', 3]]),
+      F('l4f2', 'عيون الصفصاف', 0.89, [['moss_warden', 2, 'f1', 1], ['thorn_fox', 2, 'f2', 1], ['coral_sentinel', 2, 'f3', 1], ['willow_eye', 2, 'b1', 1], ['willow_eye', 1, 'b2', 1], ['spectral_coder', 1, 'b3', 2]]),
+      F('l4f3', 'المتربّص', 0.88, [['moss_warden', 2, 'f1', 1], ['thorn_fox', 2, 'f2', 1], ['wild_stalker', 1, 'f3', 1], ['willow_eye', 2, 'b1', 1], ['root_shaman', 1, 'b2', 1], ['wave_caller', 2, 'b3', 2]]),
+      F('l4f4', 'شامان الجذور', 0.74, [['moss_warden', 2, 'f0', 1], ['thorn_fox', 2, 'f1', 1], ['firewall_unit', 2, 'f2', 1], ['wild_stalker', 1, 'f3', 1], ['willow_eye', 2, 'b1', 1], ['root_shaman', 1, 'b2', 1], ['tide_priest', 1, 'b3', 3]]),
+      F('l4boss', 'الزعيم: أوراث', 0.75, [['moss_warden', 2, 'f0', 1], ['thorn_fox', 2, 'f1', 1], ['wild_stalker', 1, 'f3', 1], ['willow_eye', 2, 'b0', 1], ['root_shaman', 2, 'b2', 1], ['tide_priest', 1, 'b3', 2]], { boss: true }),
+    ]),
+  ];
+
+  AMB.LEVELS = { CAMPAIGN, BOSS, LEVELS };
+})();
+
+</script>
+<script>
+/*
+ * Campaign progress: which fights are unlocked / cleared, building a fight's match,
+ * and paying rewards (first win: shards + battle-pass XP; boss: more; whole level: a free pack;
+ * replays: a little). Level data lives in core/levels.js.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const LV = () => AMB.LEVELS;
+
+  AMB.Save.register('campaign', {
+    version: 1,
+    // cleared[fightId] = true; levelsDone[levelId] = true; stats per fight: { attempts, wins, best:{ lifeLeft, roundsLost } }
+    defaults: () => ({ cleared: {}, levelsDone: {}, stats: {} }),
+  });
+
+  function Campaign(save, deps) {
+    deps = deps || {};
+    const st = () => save.get('campaign');
+    const levels = () => LV().LEVELS;
+
+    function find(fightId) {
+      for (let li = 0; li < levels().length; li++) {
+        const l = levels()[li], fi = l.fights.findIndex((f) => f.id === fightId);
+        if (fi >= 0) return { level: l, li, fight: l.fights[fi], fi };
+      }
+      return null;
+    }
+
+    const api = {
+      levels,
+      find,
+      isCleared: (fightId) => !!st().cleared[fightId],
+      levelDone: (levelId) => !!st().levelsDone[levelId],
+      progress(levelId) { const l = levels().find((x) => x.id === levelId); return { cleared: l.fights.filter((f) => api.isCleared(f.id)).length, total: l.fights.length }; },
+      levelUnlocked(li) { return li === 0 || api.levelDone(levels()[li - 1].id); },
+      isUnlocked(fightId) {
+        const f = find(fightId); if (!f) return false;
+        if (!api.levelUnlocked(f.li)) return false;
+        return f.fi === 0 || api.isCleared(f.level.fights[f.fi - 1].id);
+      },
+      /** first unlocked fight not yet cleared (or null when everything is done) */
+      next() { for (const l of levels()) for (const f of l.fights) if (api.isUnlocked(f.id) && !api.isCleared(f.id)) return f.id; return null; },
+      stats: (fightId) => st().stats[fightId] || { attempts: 0, wins: 0, best: null },
+      rewardsFor(fightId) {
+        const f = find(fightId), R = LV().CAMPAIGN.rewards;
+        if (api.isCleared(fightId)) return { replay: true, shards: R.replay.shards, passXp: 0 };
+        const base = f.fight.boss ? R.boss : R.fight;
+        const lastOfLevel = f.level.fights.filter((x) => !api.isCleared(x.id)).length === 1;
+        return { replay: false, shards: base.shards, passXp: base.passXp, pack: lastOfLevel ? R.level.pack : null };
+      },
+
+      /** Options for new AMB.Match(...) for this fight. */
+      matchOptions(fightId, heroId, seed) {
+        const f = find(fightId); if (!f) throw new Error('قتال غير معروف: ' + fightId);
+        const C = deps.collection, fight = f.fight, boss = fight.boss ? LV().BOSS[f.level.world] : null;
+        const enemyPower = {};
+        fight.units.forEach(([id]) => (enemyPower[id] = fight.power));
+        enemyPower[f.level.hero] = fight.power;
+        return {
+          mode: 'campaign', seed, progression: true,
+          rules: Object.assign({}, LV().CAMPAIGN.rules, { start: f.level.start }),
+          players: [
+            { heroId, name: 'أنت', cardPower: C ? C.powerMap() : null, allowedUnits: C ? C.ownedUnits() : null },
+            { heroId: f.level.hero, name: fight.name, isAI: true, cardPower: enemyPower,
+              lineup: { units: fight.units, summon: boss ? 'b1' : null, blessings: boss ? boss.blessings : null, abilities: boss ? boss.abilities : [] } },
+          ],
+        };
+      },
+
+      /** Record a finished fight (match.summary(0) + life left). Returns what was paid. */
+      recordResult(fightId, res) {
+        const f = find(fightId); if (!f) return null;
+        const won = !!res.won;
+        const pay = won ? api.rewardsFor(fightId) : null;
+        const out = { fightId, won, boss: !!f.fight.boss, first: !!(pay && !pay.replay), shards: 0, passXp: 0, pack: null, levelComplete: false };
+        save.update('campaign', (s) => {
+          const x = (s.stats[fightId] = s.stats[fightId] || { attempts: 0, wins: 0, best: null });
+          x.attempts++;
+          if (!won) return;
+          x.wins++;
+          const cur = { lifeLeft: res.lifeLeft || 0, roundsLost: res.roundsLost || 0 };
+          if (!x.best || cur.lifeLeft > x.best.lifeLeft) x.best = cur;
+          s.cleared[fightId] = true;
+          if (f.level.fights.every((ff) => s.cleared[ff.id]) && !s.levelsDone[f.level.id]) { s.levelsDone[f.level.id] = true; out.levelComplete = true; }
+        });
+        if (pay) {
+          if (pay.shards && deps.wallet) { deps.wallet.add('shards', pay.shards, 'campaign'); out.shards = pay.shards; }
+          if (pay.passXp && deps.addPassXp) { deps.addPassXp(pay.passXp); out.passXp = pay.passXp; }
+          if (out.levelComplete && pay.pack && deps.packs) out.pack = deps.packs.open(pay.pack, { free: true });
+        }
+        if (deps.events) deps.events.emit('fightEnd', Object.assign({}, out, { summary: res }));
+        return out;
+      },
+    };
+    return api;
+  }
+
+  AMB.Campaign = Campaign;
+})();
+
+</script>
+<script>
+/*
  * Player profile bootstrap: one save, one event bus, one wallet shared by
  * every progression system. In the browser it runs once on load and exposes
  * AMB.save / AMB.events / AMB.wallet. Tests call AMB.Profile.boot(memoryStorage).
@@ -3877,12 +4125,14 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
     const wallet = AMB.Wallet(save, events);
     const collection = AMB.Collection(save, events);
     const packs = AMB.Packs(save, wallet, collection, events, rng);
-    return { save, events, wallet, collection, packs };
+    // battle-pass XP from campaign rewards goes to the pass instance (created by the pass UI in the browser)
+    const campaign = AMB.Campaign(save, { wallet, packs, collection, events, addPassXp: (n) => AMB.pass && AMB.pass.addXp(n) });
+    return { save, events, wallet, collection, packs, campaign };
   }
   AMB.Profile = { boot };
   if (typeof document !== 'undefined' && !AMB.save) {
     const p = boot();
-    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs;
+    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs; AMB.campaign = p.campaign;
   }
 })();
 
@@ -3903,7 +4153,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   const SEASON = {
     id: 's1', name: 'موسم الصدع الأول', days: 42, levels: 30, xpPerLevel: 100,
     xp: { played: 30, won: 40, perRoundWon: 6, finaleWon: 15, firstWinOfDay: 40 },
-    modeMult: { easy: 0.6, normal: 1, hard: 1.25, hotseat: 0.8, friendly: 0 },   // friendly games give nothing (no farming)
+    modeMult: { easy: 0.6, normal: 1, hard: 1.25, hotseat: 0.8, friendly: 0, campaign: 0 },   // friendly games give nothing (no farming)
   };
 
   // ------------------------------------------------------------- cosmetics registry (applied by the UI)
@@ -4596,6 +4846,7 @@ AMB.IMAGES = {
     if (globalThis.AMB && AMB.PassUI) { if (screen === 'menu') AMB.PassUI.refreshMenu(); if (screen === 'pass') AMB.PassUI.render(); }
     if (globalThis.AMB && AMB.CollectionUI) { if (screen === 'menu') AMB.CollectionUI.refreshMenu(); if (screen === 'cards') AMB.CollectionUI.render(); }
     if (globalThis.AMB && AMB.PacksUI) { if (screen === 'menu') AMB.PacksUI.refreshMenu(); if (screen === 'packs') AMB.PacksUI.render(); }
+    if (globalThis.AMB && AMB.CampaignUI) { if (screen === 'campaign') AMB.CampaignUI.render(); if (screen === 'menu') AMB.CampaignUI.refreshMenu(); }
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -4642,6 +4893,7 @@ AMB.IMAGES = {
     $('hero-confirm').textContent = starterPick() ? 'اعتمده بطلي الأول' : S.mode === 'hotseat' && S.pickIdx === 0 ? 'تأكيد والانتقال للاعب 2' : 'ابدأ المباراة';
   }
 
+  const maxR = () => (S.match && S.match.rules ? S.match.rules.maxRounds : CFG.match.maxRounds);
   function startMatch() {
     S.panels = false; $('scr-match').classList.remove('show-panels');
     const heroIds = Object.keys(HEROES);
@@ -4656,7 +4908,8 @@ AMB.IMAGES = {
         { heroId: aiHero, name: 'الخصم الآلي', isAI: true, aiStyle: styles[Math.floor(Math.random() * 3)], difficulty: S.mode === 'friendly' ? 'easy' : S.difficulty },
       ];
     }
-    S.match = new AMB.Match({ mode: S.mode, players });
+    // campaign fight (ui/campaign-ui.js): fixed enemy line-up, short best-of-3 rules, your card levels count
+    S.match = S.mode === 'campaign' ? new AMB.Match(AMB.campaign.matchOptions(S.campaign.fightId, S.picks[0])) : new AMB.Match({ mode: S.mode, players });
     S.startTs = Date.now();
     S.speed = 2;
     show('match');
@@ -4750,7 +5003,8 @@ AMB.IMAGES = {
     S.paused = false;
     renderMatch();
     { const st = S.match.stageInfo(), first = st.rounds[0] === S.match.round;
-      if (st.id === 'finale') banner('الحسم!<small>جولة أخيرة: الخسارة هنا تتضاعف</small>', 'fight');
+      if (S.match.rules) banner(`الجولة ${S.match.round} من ${maxR()}<small>أول من يفوز بجولتين يكسب القتال</small>`, S.match.round === 1 ? '' : 'fight');
+      else if (st.id === 'finale') banner('الحسم!<small>جولة أخيرة: الخسارة هنا تتضاعف</small>', 'fight');
       else if (first) banner(`${st.name}<small>الجولة ${S.match.round} من ${CFG.match.maxRounds}</small>`);
       else banner('الجولة ' + S.match.round); }
     const p = me();
@@ -5152,8 +5406,9 @@ AMB.IMAGES = {
     const left = ph === 'prep' ? Math.ceil(Math.max(0, S.deadline - Date.now()) / 1000) + 's' : '—';
     const avail = p.essence - m.reservedEssence(p);
     $('topbar').innerHTML = `
-      <span class="tb-round">الجولة ${m.round}<small>/${CFG.match.maxRounds}</small></span>
-      <span class="stagechip" title="المراحل: كل مرحلة تنتهي بمكافأة تختارها (ما عدا الأخيرة)"><b>${m.stageInfo().name}</b><span class="pips">${[1, 2, 3, 4, 5, 6, 7].map((r) => `<i class="pip ${r < m.round ? 'done' : r === m.round ? 'now' : ''} ${CFG.match.stages.some((st) => st.rounds[1] === r && r < 7) ? 'gap' : ''}"></i>`).join('')}</span></span>
+      <span class="tb-round">الجولة ${m.round}<small>/${maxR()}</small></span>
+      ${m.rules ? `<span class="stagechip" title="أول من يفوز بجولتين يكسب القتال"><b>${p.stats.wins} – ${o.stats.wins}</b><span class="pips">${[0, 1].map((k) => `<i class="pip ${k < p.stats.wins ? 'done' : ''}"></i>`).join('')}</span></span>` : ''}
+      <span ${m.rules ? 'style="display:none" ' : ''}class="stagechip" title="المراحل: كل مرحلة تنتهي بمكافأة تختارها (ما عدا الأخيرة)"><b>${m.stageInfo().name}</b><span class="pips">${[1, 2, 3, 4, 5, 6, 7].map((r) => `<i class="pip ${r < m.round ? 'done' : r === m.round ? 'now' : ''} ${CFG.match.stages.some((st) => st.rounds[1] === r && r < 7) ? 'gap' : ''}"></i>`).join('')}</span></span>
       <div class="phases">${phases}</div>
       <span class="timer" title="مؤقت مرحلة التجهيز">${S.paused ? '⏸' : left}</span>
       <span class="tb-spacer"></span>
@@ -5179,7 +5434,8 @@ AMB.IMAGES = {
     const m = S.match;
     const v = inCombat ? S.combatViewer : S.v;
     const p = m.players[v];
-    const sc = m.scout[1 - v];
+    // campaign enemies are scripted and known: show this round's line-up instead of the last one seen
+    const sc = m.players[1 - v].lineup ? m.buildCombatSpec(1 - v) : m.scout[1 - v];
     const cell = (side, slot, mine) => {
       let inner = '', cls = mine ? 'mine' : 'enemy', fid = '';
       if (inCombat) {
@@ -5210,7 +5466,7 @@ AMB.IMAGES = {
     fe.style.setProperty('--ew', WORLDS[HEROES[m.players[o].heroId].world].color);
     $('slots').innerHTML =
       row(o, 'b', false) + row(o, 'f', false) +
-      `<div class="divider"><span>${sc && !inCombat ? 'آخر تشكيلة للخصم (استطلاع)' : inCombat ? '' : 'الخصم — لم يقاتل بعد'}</span></div>` +
+      `<div class="divider"><span>${sc && !inCombat ? (m.players[1 - v].lineup ? 'تشكيلة الخصم لهذه الجولة' : 'آخر تشكيلة للخصم (استطلاع)') : inCombat ? '' : 'الخصم — لم يقاتل بعد'}</span></div>` +
       row(v, 'f', true) + row(v, 'b', true);
   }
 
@@ -5330,7 +5586,7 @@ AMB.IMAGES = {
     else if (front === 0) guard = `<div class="guard-status risk"><b>لا يوجد خط دفاع!</b> بطلك مكشوف منذ بداية القتال. ضع وحدات في الصف الأمامي.</div>`;
     else guard = `<div class="guard-status safe"><b>خط الدفاع: ${front}</b> وحدة أمامية. لا يمكن استهداف بطلك حتى تسقط جميعها (القتلة يقفزون للصف الخلفي لكن لا يضربون البطل المحمي).</div>`;
     const hw = WORLDS[HEROES[p.heroId].world];
-    const sc = m.scout[1 - S.v];
+    const sc = m.players[1 - S.v].lineup ? m.buildCombatSpec(1 - S.v) : m.scout[1 - S.v];
     const oppSyn = sc ? AMB.synergy.evaluate(sc.units, sc.heroId).list.filter((s) => s.activeTier >= 0) : [];
     const timeline = m.history.map((r) => `<span class="${r.winner === null ? 'wd' : r.winner === S.v ? 'w0' : 'w1'}" title="الجولة ${r.round}">${r.round}</span>`).join('');
     $('panel-left').innerHTML = `
@@ -5563,6 +5819,7 @@ AMB.IMAGES = {
     cancelAnimationFrame(S.raf);
     S.phase = 'over';
     const secs = Math.round((Date.now() - S.startTs) / 1000);
+    if (S.mode === 'campaign') return AMB.CampaignUI.showResult(m, secs);   // campaign has its own results screen
     if (S.mode !== 'friendly' && !m._recorded) { AMB.telemetry.recordMatch(m, { seconds: secs }); m._recorded = true; }
     if (!m._passDone) { m._passDone = true; try { S.passResult = AMB.pass.recordMatch(m.summary(0)); } catch (e) { S.passResult = null; } }
     let title;
@@ -5806,7 +6063,7 @@ AMB.IMAGES = {
       afterReward();
     },
     toResults: () => showResults(),
-    again: () => { S.picks = [S.picks[0], S.picks[1]]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
+    again: () => { if (S.mode === 'campaign') { startMatch(); return; } S.picks = [S.picks[0], S.picks[1]]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
     statsExport: () => {
       const blob = new Blob([JSON.stringify(AMB.telemetry.load(), null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'multiverse-telemetry.json'; a.click();
@@ -5944,7 +6201,7 @@ AMB.IMAGES = {
   })();
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay };
+  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay, startMatch, portrait, stars };
   if (AMB.PassUI) { AMB.PassUI.installActions(); AMB.PassUI.applyCosmetics(); AMB.PassUI.refreshMenu(); }
 })();
 
@@ -6295,6 +6552,119 @@ AMB.IMAGES = {
   }
 
   AMB.PacksUI = { render, refreshMenu, installActions };
+  if (UI()) installActions();
+  refreshMenu();
+})();
+
+</script>
+<script>
+/*
+ * "الحملة" screen: 4 levels (one per world), each a path of 4 fights + a boss.
+ * A fight preview shows the enemy line-up, the boss special and the rewards; then a short
+ * best-of-3 match starts (ui.js startMatch with S.mode = 'campaign'). Logic: core/campaign.js, data: core/levels.js.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const $ = (id) => document.getElementById(id);
+  const CAM = AMB.campaign, LV = AMB.LEVELS, C = AMB.collection;
+  const { icon } = AMB.art;
+  const UI = () => globalThis.AMB_UI;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let hero = null;   // hero used for campaign fights (remembered while the page is open)
+
+  const W = (id) => AMB.DATA.WORLDS[id];
+  const pickHero = () => {
+    const owned = C.ownedHeroes();
+    if (hero && owned.includes(hero)) return hero;
+    return (hero = C.starterHero() && owned.includes(C.starterHero()) ? C.starterHero() : owned[0] || null);
+  };
+
+  function node(l, f, i) {
+    const cleared = CAM.isCleared(f.id), open = CAM.isUnlocked(f.id), next = CAM.next() === f.id;
+    const cls = ['cnode', f.boss ? 'boss' : '', cleared ? 'cleared' : '', open ? 'open' : 'locked', next ? 'next' : ''].join(' ');
+    const inner = f.boss ? UI().portrait(AMB.DATA.HEROES[l.hero], { bare: true, k: 'cb' + l.id }) : `<b>${i + 1}</b>`;
+    return `<button class="${cls}" ${open ? `data-act="camFight" data-id="${f.id}"` : 'disabled'} title="${esc(f.name)}">${inner}${cleared ? '<i class="ck">✓</i>' : open ? '' : '<i class="lk">🔒</i>'}<span class="cn-name">${esc(f.name)}</span></button>`;
+  }
+
+  function render() {
+    const root = $('campaign'); if (!root) return;
+    const R = LV.CAMPAIGN.rewards;
+    if (C.needsStarter()) { root.innerHTML = '<div class="cam-note">اختر بطلك الأول من «العب» قبل ما تبدأ الحملة.</div>'; return; }
+    root.innerHTML = `<div class="cam-note">كل قتال <b>أفضل من 3 جولات</b> ضد تشكيلة ثابتة. مستويات بطاقاتك وندرتها <b>تُحتسب هنا</b>، والمتجر يعرض الوحدات اللي تملكها فقط.
+        الفوز الأول: ${icon('gem')} ${R.fight.shards} + ${R.fight.passXp} خبرة ممر · الزعيم: ${icon('gem')} ${R.boss.shards} + ${R.boss.passXp} خبرة · إنهاء المستوى: باكج مجاني · الإعادة: ${icon('gem')} ${R.replay.shards}</div>
+      <div class="cam-levels">${LV.LEVELS.map((l, li) => {
+        const pr = CAM.progress(l.id), unlocked = CAM.levelUnlocked(li);
+        return `<section class="cam-level ${unlocked ? '' : 'locked'} ${CAM.levelDone(l.id) ? 'done' : ''}" style="--wc:${W(l.world).color}">
+          <header><span class="cl-n">${li + 1}</span><div><h3>${esc(l.name)}</h3><small>${W(l.world).name} · ${pr.cleared}/${pr.total}${CAM.levelDone(l.id) ? ' · ✓ مكتمل' : ''}</small></div>
+          ${unlocked ? '' : '<span class="cl-lock">🔒 أنهِ المستوى السابق</span>'}</header>
+          <div class="cpath">${l.fights.map((f, i) => node(l, f, i)).join('<i class="cline"></i>')}</div></section>`;
+      }).join('')}</div>`;
+    refreshMenu();
+  }
+
+  function refreshMenu() {
+    const b = $('menu-campaign'); if (!b) return;
+    const n = CAM.next(), f = n && CAM.find(n);
+    b.innerHTML = `الحملة${f ? `<small>${f.li + 1}-${f.fi + 1}</small>` : '<small>✓</small>'}`;
+  }
+
+  function preview(fightId) {
+    const ui = UI(), x = CAM.find(fightId), f = x.fight, l = x.level, boss = f.boss ? LV.BOSS[l.world] : null;
+    const pay = CAM.rewardsFor(fightId), st = CAM.stats(fightId);
+    const h = pickHero();
+    const unitsHTML = f.units.map(([id, star, , from], k) => `<div class="cu">${ui.portrait(AMB.DATA.UNITS[id], { k: 'cpv' + k + id })}${ui.stars(star)}${from > 1 ? `<small>من الجولة ${from}</small>` : ''}</div>`).join('');
+    const heroes = C.ownedHeroes().map((id) => `<button class="hchip ${id === h ? 'on' : ''}" data-act="camHero" data-id="${id}" data-f="${fightId}">${ui.portrait(AMB.DATA.HEROES[id], { k: 'cph' + id })}<span>${AMB.DATA.HEROES[id].name}</span></button>`).join('');
+    const reward = pay.replay ? `إعادة: ${icon('gem')} ${pay.shards}` : `${icon('gem')} ${pay.shards} شظية · +${pay.passXp} خبرة ممر${pay.pack ? ' · <b>باكج مجاني</b> لإنهاء المستوى' : ''}`;
+    ui.modal(`<div class="cam-pv" style="--wc:${W(l.world).color}">
+      <h2>${f.boss ? '👑 ' : ''}${esc(f.name)}</h2><div class="hint">${esc(l.name)} · قتال ${x.fi + 1} من ${l.fights.length} · أفضل من 3 جولات</div>
+      ${boss ? `<div class="boss-box">${ui.portrait(AMB.DATA.HEROES[l.hero], { k: 'cpb' })}<div><b>قدرة الزعيم: ${boss.name}</b><p>${boss.text}</p><small>الزعيم يقاتل بنفسه في الساحة.</small></div></div>` : ''}
+      <h4>تشكيلة الخصم</h4><div class="cam-units">${unitsHTML}</div>
+      <h4>الجائزة</h4><div class="cam-reward">${reward}</div>
+      <h4>بطلك</h4><div class="hchips">${heroes}</div>
+      ${st.attempts ? `<div class="hint">محاولات: ${st.attempts} · فوز: ${st.wins}</div>` : ''}
+      <div class="cam-go"><button class="btn primary big" data-act="camGo" data-id="${fightId}" ${h ? '' : 'disabled'}>قاتل!</button></div></div>`);
+  }
+
+  function start(fightId) {
+    const ui = UI(), S = ui.S;
+    S.mode = 'campaign'; S.campaign = { fightId }; S.picks = [pickHero(), null]; S.pickIdx = 0;
+    ui.closeModal(); ui.startMatch();
+  }
+
+  /** results screen for a finished campaign fight (called from ui.js showResults) */
+  function showResult(m, secs) {
+    const ui = UI(), S = ui.S, fightId = S.campaign.fightId, x = CAM.find(fightId);
+    if (!m._camDone) { m._camDone = true; S.camResult = CAM.recordResult(fightId, Object.assign(m.summary(0), { lifeLeft: m.players[0].life, roundsLost: m.players[0].stats.losses })); }
+    const r = S.camResult, won = r.won, next = CAM.next(), nx = next && CAM.find(next);
+    const score = `${m.players[0].stats.wins} – ${m.players[1].stats.wins}`;
+    const pay = won ? [r.shards ? `${icon('gem')} +${r.shards} شظية` : '', r.passXp ? `+${r.passXp} خبرة ممر` : ''].filter(Boolean).join(' · ') : '';
+    const pack = r.pack ? `<div class="cam-pack"><b>🎁 أكملت المستوى! باكج مجاني:</b><div class="cam-pack-row">${r.pack.cards.map((c, i) => `<div class="cu">${ui.portrait(C.def(c.id), { k: 'crp' + i + c.id })}<small class="r-${c.rarity}">${c.isNew ? 'جديدة!' : c.refund ? '+' + c.refund + ' شظية' : '+1 نسخة'}</small></div>`).join('')}</div></div>` : '';
+    $('results').innerHTML = `<div class="res-stage ${won ? 'victory' : 'defeat'}" style="--wc:${W(x.level.world).color}"><div class="res-rays"></div>
+        <div class="res-hero">${ui.portrait(won ? AMB.DATA.HEROES[m.players[0].heroId] : AMB.DATA.HEROES[x.level.hero], { bare: true, k: 'crh' })}<i class="sheen"></i></div>
+        <div class="res-hname">${esc(x.fight.name)}</div></div>
+      <div class="res-banner"><h1>${won ? (x.fight.boss ? 'هزمت الزعيم!' : 'فوز!') : 'خسارة'}</h1><p class="hint">النتيجة ${score} · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة</p>
+        ${won ? `<p class="cam-pay">${r.first ? pay : `إعادة: ${pay || 'بدون جائزة'}`}</p>` : '<p class="hint">ما خسرت شي. طوّر بطاقاتك أو غيّر التشكيلة وجرّب مرة ثانية.</p>'}</div>
+      ${pack}
+      <div class="cam-btns">
+        ${won && nx ? `<button class="btn primary big" data-act="camGo" data-id="${next}">القتال التالي: ${esc(nx.fight.name)}</button>` : ''}
+        <button class="btn ${won ? '' : 'primary'} big" data-act="camGo" data-id="${fightId}">${won ? 'أعد القتال' : 'حاول مرة ثانية'}</button>
+        <button class="btn big ghost" data-act="go" data-to="campaign">خريطة الحملة</button>
+        ${won ? '' : '<button class="btn big ghost" data-act="go" data-to="cards">طوّر بطاقاتي</button>'}</div>`;
+    ui.show('results');
+    ui.sfx(won ? 'win' : 'lose');
+    if (won) setTimeout(() => { const el = document.querySelector('.res-hero'); if (el) ['#ffd24a', '#ffffff', W(x.level.world).color].forEach((c) => ui.burst(el, c, 14, { r: 150, s: 8 })); }, 250);
+  }
+
+  function installActions() {
+    const ui = UI(); if (!ui || ui.ACT.camFight) return;
+    Object.assign(ui.ACT, {
+      camFight: (d) => preview(d.id),
+      camHero: (d) => { hero = d.id; preview(d.f); },
+      camGo: (d) => start(d.id),
+    });
+  }
+
+  AMB.CampaignUI = { render, refreshMenu, showResult, installActions };
   if (UI()) installActions();
   refreshMenu();
 })();

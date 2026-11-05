@@ -28,6 +28,7 @@
       stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, merges: 0, wins: 0, losses: 0, draws: 0 },
       alive: true,
       blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
+      lineup: opts.lineup || null,   // scripted enemy (campaign): { units:[[defId,star,slot,fromRound]], summon, blessings, abilities }
       cardPower: opts.cardPower || null,   // { defId: mult } from the collection — progression fights only
       allowed: opts.allowedUnits ? new Set(opts.allowedUnits) : null,   // units this player owns — progression fights only
     };
@@ -40,6 +41,7 @@
       this.rng = AMB.util.RNG(this.seed);
       // card levels/rarity power exist only in progression fights (campaign, tower, events); quick and same-device matches stay even
       this.progression = !!opts.progression;
+      this.rules = opts.rules || null;   // short-match rules (campaign): { maxRounds, winsNeeded, start: { gold, level } }
       this.players = opts.players.map((p, i) => newPlayer(i, this.progression ? p : Object.assign({}, p, { cardPower: null, allowedUnits: null })));
       this.round = 0;
       this.phase = 'idle';
@@ -75,6 +77,8 @@
         p.shopLocked = false;
         this._validateAbilities(p);
       });
+      if (this.rules && this.round === 1) this.players.forEach((p) => { const st = this.rules.start; if (!p.lineup && st) { p.gold += st.gold || 0; p.level = Math.max(p.level, st.level || 0); } });
+      this.players.forEach((p, i) => { if (p.lineup) this.applyLineup(i); });
       this.phase = 'prep';
     }
 
@@ -493,6 +497,13 @@
       if (dead[0] || dead[1]) {
         // both heroes fell in the same round (rift collapse): the round's winner takes the match; a drawn round is a draw
         this.winner = dead[0] && dead[1] ? (report.winner != null ? report.winner : null) : dead[0] ? 1 : 0;
+      } else if (this.rules) {   // short match: first to winsNeeded round wins; after maxRounds more round wins, then more life
+        const w = this.players.map((p) => p.stats.wins), need = this.rules.winsNeeded || 2;
+        if (w[0] >= need || w[1] >= need) this.winner = w[0] >= need ? 0 : 1;
+        else if (this.round >= this.rules.maxRounds) {
+          const [a, b] = this.players.map((p) => p.life);
+          this.winner = w[0] !== w[1] ? (w[0] > w[1] ? 0 : 1) : a !== b ? (a > b ? 0 : 1) : null;
+        }
       } else if (this.round >= M.maxRounds) {
         const [a, b] = this.players.map((p) => p.life);
         if (a !== b) this.winner = a > b ? 0 : 1;
@@ -513,6 +524,7 @@
 
     /** Build 3 distinct offers per player after the last round of a stage (not the final stage). */
     offerRewards() {
+      if (this.rules) return false;   // no reward drafts in short (campaign) matches
       const si = this.stageIndex(this.round);
       if (si >= AMB.CONFIG.match.stages.length - 1) return false;
       if (this.round !== AMB.CONFIG.match.stages[si].rounds[1]) return false;   // only at the end of a stage
@@ -575,11 +587,26 @@
       const board = last ? last.players[pi].board : [];
       const worlds = new Set(board.map((u) => AMB.DATA.UNITS[u.defId].world));
       const opp = this.players[1 - pi];
-      const mode = this.mode === 'friendly' ? 'friendly' : this.mode === 'hotseat' ? 'hotseat' : (opp.difficulty || 'normal');
+      const mode = this.rules ? 'campaign' : this.mode === 'friendly' ? 'friendly' : this.mode === 'hotseat' ? 'hotseat' : (opp.difficulty || 'normal');
       return { mode, won: this.winner === pi, roundsPlayed: this.round, roundsWon: p.stats.wins,
         finaleWon: !!(last && last.round >= AMB.CONFIG.match.maxRounds && last.winner === pi),
         buys: p.stats.unitsBought, rerolls: p.stats.rerolls, merges: p.stats.merges, summoned: this.history.some((r) => r.players[pi].summoned),
         stageRewards: p.rewardLog.length, damage: p.stats.damageDealt, worldsUsed: worlds.size };
+    }
+
+    /** Scripted (campaign) opponent: put the fixed line-up on the board for this round. */
+    applyLineup(pi) {
+      const p = this.players[pi], L = p.lineup;
+      p.board = {}; p.bench = p.bench.map(() => null); p.shop = []; p.itemShop = [];
+      L.units.forEach(([defId, star, slot, from], k) => {
+        if ((from || 1) > this.round) return;
+        p.board[slot] = { uid: 'e' + k + defId, defId, star: star || 1, items: [] };
+      });
+      p.level = Math.max(1, Object.keys(p.board).length);
+      p.summoned = !!L.summon; if (L.summon) p.heroSlot = L.summon;
+      p.blessings = Object.assign({ atkPct: 0, hpPct: 0, asPct: 0 }, L.blessings || {});
+      p.essence = 99; p.abilities = {};
+      (L.abilities || []).forEach((id) => (p.abilities[id] = 'start'));
     }
 
     get isOver() { return this.phase === 'over'; }

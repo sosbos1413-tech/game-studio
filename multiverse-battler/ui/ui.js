@@ -34,6 +34,7 @@
     if (globalThis.AMB && AMB.PassUI) { if (screen === 'menu') AMB.PassUI.refreshMenu(); if (screen === 'pass') AMB.PassUI.render(); }
     if (globalThis.AMB && AMB.CollectionUI) { if (screen === 'menu') AMB.CollectionUI.refreshMenu(); if (screen === 'cards') AMB.CollectionUI.render(); }
     if (globalThis.AMB && AMB.PacksUI) { if (screen === 'menu') AMB.PacksUI.refreshMenu(); if (screen === 'packs') AMB.PacksUI.render(); }
+    if (globalThis.AMB && AMB.CampaignUI) { if (screen === 'campaign') AMB.CampaignUI.render(); if (screen === 'menu') AMB.CampaignUI.refreshMenu(); }
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -80,6 +81,7 @@
     $('hero-confirm').textContent = starterPick() ? 'اعتمده بطلي الأول' : S.mode === 'hotseat' && S.pickIdx === 0 ? 'تأكيد والانتقال للاعب 2' : 'ابدأ المباراة';
   }
 
+  const maxR = () => (S.match && S.match.rules ? S.match.rules.maxRounds : CFG.match.maxRounds);
   function startMatch() {
     S.panels = false; $('scr-match').classList.remove('show-panels');
     const heroIds = Object.keys(HEROES);
@@ -94,7 +96,8 @@
         { heroId: aiHero, name: 'الخصم الآلي', isAI: true, aiStyle: styles[Math.floor(Math.random() * 3)], difficulty: S.mode === 'friendly' ? 'easy' : S.difficulty },
       ];
     }
-    S.match = new AMB.Match({ mode: S.mode, players });
+    // campaign fight (ui/campaign-ui.js): fixed enemy line-up, short best-of-3 rules, your card levels count
+    S.match = S.mode === 'campaign' ? new AMB.Match(AMB.campaign.matchOptions(S.campaign.fightId, S.picks[0])) : new AMB.Match({ mode: S.mode, players });
     S.startTs = Date.now();
     S.speed = 2;
     show('match');
@@ -188,7 +191,8 @@
     S.paused = false;
     renderMatch();
     { const st = S.match.stageInfo(), first = st.rounds[0] === S.match.round;
-      if (st.id === 'finale') banner('الحسم!<small>جولة أخيرة: الخسارة هنا تتضاعف</small>', 'fight');
+      if (S.match.rules) banner(`الجولة ${S.match.round} من ${maxR()}<small>أول من يفوز بجولتين يكسب القتال</small>`, S.match.round === 1 ? '' : 'fight');
+      else if (st.id === 'finale') banner('الحسم!<small>جولة أخيرة: الخسارة هنا تتضاعف</small>', 'fight');
       else if (first) banner(`${st.name}<small>الجولة ${S.match.round} من ${CFG.match.maxRounds}</small>`);
       else banner('الجولة ' + S.match.round); }
     const p = me();
@@ -590,8 +594,9 @@
     const left = ph === 'prep' ? Math.ceil(Math.max(0, S.deadline - Date.now()) / 1000) + 's' : '—';
     const avail = p.essence - m.reservedEssence(p);
     $('topbar').innerHTML = `
-      <span class="tb-round">الجولة ${m.round}<small>/${CFG.match.maxRounds}</small></span>
-      <span class="stagechip" title="المراحل: كل مرحلة تنتهي بمكافأة تختارها (ما عدا الأخيرة)"><b>${m.stageInfo().name}</b><span class="pips">${[1, 2, 3, 4, 5, 6, 7].map((r) => `<i class="pip ${r < m.round ? 'done' : r === m.round ? 'now' : ''} ${CFG.match.stages.some((st) => st.rounds[1] === r && r < 7) ? 'gap' : ''}"></i>`).join('')}</span></span>
+      <span class="tb-round">الجولة ${m.round}<small>/${maxR()}</small></span>
+      ${m.rules ? `<span class="stagechip" title="أول من يفوز بجولتين يكسب القتال"><b>${p.stats.wins} – ${o.stats.wins}</b><span class="pips">${[0, 1].map((k) => `<i class="pip ${k < p.stats.wins ? 'done' : ''}"></i>`).join('')}</span></span>` : ''}
+      <span ${m.rules ? 'style="display:none" ' : ''}class="stagechip" title="المراحل: كل مرحلة تنتهي بمكافأة تختارها (ما عدا الأخيرة)"><b>${m.stageInfo().name}</b><span class="pips">${[1, 2, 3, 4, 5, 6, 7].map((r) => `<i class="pip ${r < m.round ? 'done' : r === m.round ? 'now' : ''} ${CFG.match.stages.some((st) => st.rounds[1] === r && r < 7) ? 'gap' : ''}"></i>`).join('')}</span></span>
       <div class="phases">${phases}</div>
       <span class="timer" title="مؤقت مرحلة التجهيز">${S.paused ? '⏸' : left}</span>
       <span class="tb-spacer"></span>
@@ -617,7 +622,8 @@
     const m = S.match;
     const v = inCombat ? S.combatViewer : S.v;
     const p = m.players[v];
-    const sc = m.scout[1 - v];
+    // campaign enemies are scripted and known: show this round's line-up instead of the last one seen
+    const sc = m.players[1 - v].lineup ? m.buildCombatSpec(1 - v) : m.scout[1 - v];
     const cell = (side, slot, mine) => {
       let inner = '', cls = mine ? 'mine' : 'enemy', fid = '';
       if (inCombat) {
@@ -648,7 +654,7 @@
     fe.style.setProperty('--ew', WORLDS[HEROES[m.players[o].heroId].world].color);
     $('slots').innerHTML =
       row(o, 'b', false) + row(o, 'f', false) +
-      `<div class="divider"><span>${sc && !inCombat ? 'آخر تشكيلة للخصم (استطلاع)' : inCombat ? '' : 'الخصم — لم يقاتل بعد'}</span></div>` +
+      `<div class="divider"><span>${sc && !inCombat ? (m.players[1 - v].lineup ? 'تشكيلة الخصم لهذه الجولة' : 'آخر تشكيلة للخصم (استطلاع)') : inCombat ? '' : 'الخصم — لم يقاتل بعد'}</span></div>` +
       row(v, 'f', true) + row(v, 'b', true);
   }
 
@@ -768,7 +774,7 @@
     else if (front === 0) guard = `<div class="guard-status risk"><b>لا يوجد خط دفاع!</b> بطلك مكشوف منذ بداية القتال. ضع وحدات في الصف الأمامي.</div>`;
     else guard = `<div class="guard-status safe"><b>خط الدفاع: ${front}</b> وحدة أمامية. لا يمكن استهداف بطلك حتى تسقط جميعها (القتلة يقفزون للصف الخلفي لكن لا يضربون البطل المحمي).</div>`;
     const hw = WORLDS[HEROES[p.heroId].world];
-    const sc = m.scout[1 - S.v];
+    const sc = m.players[1 - S.v].lineup ? m.buildCombatSpec(1 - S.v) : m.scout[1 - S.v];
     const oppSyn = sc ? AMB.synergy.evaluate(sc.units, sc.heroId).list.filter((s) => s.activeTier >= 0) : [];
     const timeline = m.history.map((r) => `<span class="${r.winner === null ? 'wd' : r.winner === S.v ? 'w0' : 'w1'}" title="الجولة ${r.round}">${r.round}</span>`).join('');
     $('panel-left').innerHTML = `
@@ -1001,6 +1007,7 @@
     cancelAnimationFrame(S.raf);
     S.phase = 'over';
     const secs = Math.round((Date.now() - S.startTs) / 1000);
+    if (S.mode === 'campaign') return AMB.CampaignUI.showResult(m, secs);   // campaign has its own results screen
     if (S.mode !== 'friendly' && !m._recorded) { AMB.telemetry.recordMatch(m, { seconds: secs }); m._recorded = true; }
     if (!m._passDone) { m._passDone = true; try { S.passResult = AMB.pass.recordMatch(m.summary(0)); } catch (e) { S.passResult = null; } }
     let title;
@@ -1244,7 +1251,7 @@
       afterReward();
     },
     toResults: () => showResults(),
-    again: () => { S.picks = [S.picks[0], S.picks[1]]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
+    again: () => { if (S.mode === 'campaign') { startMatch(); return; } S.picks = [S.picks[0], S.picks[1]]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
     statsExport: () => {
       const blob = new Blob([JSON.stringify(AMB.telemetry.load(), null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'multiverse-telemetry.json'; a.click();
@@ -1382,6 +1389,6 @@
   })();
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay };
+  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay, startMatch, portrait, stars };
   if (AMB.PassUI) { AMB.PassUI.installActions(); AMB.PassUI.applyCosmetics(); AMB.PassUI.refreshMenu(); }
 })();

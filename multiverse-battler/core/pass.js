@@ -66,22 +66,22 @@
   // ------------------------------------------------------------- reward tracks (30 levels each)
   const mk = (type, id, extra) => Object.assign({ type, id }, extra || {});
   const FREE = {
-    1: mk('title', 't_recruit'), 2: mk('frame', 'bronze'), 3: mk('avatar', 'ash_ronin'), 4: mk('arena', 'stardust'),
-    5: mk('perk', 'prep5', { sec: 5 }), 6: mk('fx', 'bluespark'), 7: mk('avatar', 'wave_caller'), 8: mk('title', 't_junior'),
-    9: mk('frame', 'silver'), 10: mk('arena', 'neongrid'), 11: mk('avatar', 'moss_warden'), 12: mk('fx', 'petals'),
-    13: mk('title', 't_formation'), 14: mk('avatar', 'grid_hound'), 15: mk('perk', 'prep10', { sec: 5 }), 16: mk('frame', 'forest'),
-    17: mk('arena', 'moonwaves'), 18: mk('title', 't_stars'), 19: mk('avatar', 'forge_bulwark'), 20: mk('fx', 'goldrain'),
-    21: mk('frame', 'ember'), 22: mk('title', 't_stages'), 23: mk('avatar', 'mist_witch'), 24: mk('arena', 'volcano'),
-    25: mk('fx', 'lightning'), 26: mk('avatar', 'spectral_coder'), 27: mk('frame', 'gold'), 28: mk('avatar', 'caldera_seer'),
+    1: mk('title', 't_recruit'), 2: mk('frame', 'bronze'), 3: mk('avatar', 'yuta'), 4: mk('arena', 'stardust'),
+    5: mk('perk', 'prep5', { sec: 5 }), 6: mk('fx', 'bluespark'), 7: mk('avatar', 'mitsuki'), 8: mk('title', 't_junior'),
+    9: mk('frame', 'silver'), 10: mk('arena', 'neongrid'), 11: mk('avatar', 'kinoko'), 12: mk('fx', 'petals'),
+    13: mk('title', 't_formation'), 14: mk('avatar', 'mizuki'), 15: mk('perk', 'prep10', { sec: 5 }), 16: mk('frame', 'forest'),
+    17: mk('arena', 'moonwaves'), 18: mk('title', 't_stars'), 19: mk('avatar', 'akane'), 20: mk('fx', 'goldrain'),
+    21: mk('frame', 'ember'), 22: mk('title', 't_stages'), 23: mk('avatar', 'miyuki'), 24: mk('arena', 'volcano'),
+    25: mk('fx', 'lightning'), 26: mk('avatar', 'reiji'), 27: mk('frame', 'gold'), 28: mk('avatar', 'kashiwagi'),
     29: mk('fx', 'inferno'), 30: mk('arena', 'riftgold', { big: true }),
   };
   const PREMIUM = {
     1: mk('avatar', 'kagira'), 2: mk('frame', 'crimson'), 3: mk('title', 't_elite'), 4: mk('arena', 'inkwash'), 5: mk('fx', 'emerald'),
-    6: mk('avatar', 'merin'), 7: mk('avatar', 'pixel_sniper'), 8: mk('frame', 'diamond'), 9: mk('avatar', 'willow_eye'), 10: mk('arena', 'enchanted', { big: true }),
-    11: mk('avatar', 'tide_priest'), 12: mk('fx', 'violet'), 13: mk('title', 't_finale'), 14: mk('avatar', 'chrome_ronin'), 15: mk('avatar', 'root_shaman'),
-    16: mk('frame', 'aurora'), 17: mk('arena', 'storm'), 18: mk('avatar', 'wild_stalker'), 19: mk('fx', 'crystal'), 20: mk('avatar', 'zerokai', { big: true }),
-    21: mk('avatar', 'pyre_archer'), 22: mk('arena', 'frost'), 23: mk('avatar', 'lunar_blade'), 24: mk('title', 't_legend'), 25: mk('avatar', 'firewall_unit'),
-    26: mk('avatar', 'spark_wraith'), 27: mk('avatar', 'coral_sentinel'), 28: mk('title', 't_rift'), 29: mk('avatar', 'thorn_fox'), 30: mk('avatar', 'orath', { big: true }),
+    6: mk('avatar', 'merin'), 7: mk('avatar', 'kota'), 8: mk('frame', 'diamond'), 9: mk('avatar', 'kazehaya'), 10: mk('arena', 'enchanted', { big: true }),
+    11: mk('avatar', 'yozora'), 12: mk('fx', 'violet'), 13: mk('title', 't_finale'), 14: mk('avatar', 'kurenai'), 15: mk('avatar', 'shirayuki'),
+    16: mk('frame', 'aurora'), 17: mk('arena', 'storm'), 18: mk('avatar', 'ryujin'), 19: mk('fx', 'crystal'), 20: mk('avatar', 'zerokai', { big: true }),
+    21: mk('avatar', 'juzo'), 22: mk('arena', 'frost'), 23: mk('avatar', 'natsuki'), 24: mk('title', 't_legend'), 25: mk('avatar', 'seiji'),
+    26: mk('avatar', 'ibara'), 27: mk('avatar', 'tetsuya'), 28: mk('title', 't_rift'), 29: mk('avatar', 'ryuji'), 30: mk('avatar', 'orath', { big: true }),
   };
 
   function rewardName(r) {

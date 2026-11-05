@@ -40,20 +40,20 @@
     // album: own all 5 units of a world -> its reward (once); own all 20 -> the grand reward
     album: {
       worlds: {
-        ember: { shards: 150, title: 'alb_ember', frame: 'alb_ember' },
-        tide: { shards: 150, title: 'alb_tide', frame: 'alb_tide' },
-        neon: { shards: 150, title: 'alb_neon', frame: 'alb_neon' },
-        sylvan: { shards: 150, title: 'alb_sylvan', frame: 'alb_sylvan' },
+        ember: { shards: 300, title: 'alb_ember', frame: 'alb_ember' },
+        tide: { shards: 300, title: 'alb_tide', frame: 'alb_tide' },
+        neon: { shards: 300, title: 'alb_neon', frame: 'alb_neon' },
+        sylvan: { shards: 300, title: 'alb_sylvan', frame: 'alb_sylvan' },
       },
-      all: { packs: 2, title: 'alb_all' },
+      all: { packs: 3, title: 'alb_all' },
     },
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
       allUnlocked: false,      // true = every card owned (dev / testing)
-      // what a new player owns: these rarities (units) + ONE hero they pick at first play.
-      // Everything else comes from packs or the battle pass. Locks: hero choice in every mode (player 1),
-      // shop units only in progression fights; quick/same-device matches keep every unit.
-      starter: { rarities: ['common'] },
+      // what a new player owns: the starter roster (units flagged `starter` in core/data.js = the first 20)
+      // + ONE hero they pick at first play. Everything else (the 45 new characters, the other heroes) comes from
+      // packs or the battle pass. Locks: hero choice in every mode (player 1), shop units only in progression fights;
+      // quick/same-device matches keep every unit.
     },
   };
 

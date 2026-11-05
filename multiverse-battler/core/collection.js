@@ -33,7 +33,7 @@
         const d = defOf(id); if (!d) return false;
         if (EC().cards.allUnlocked) return true;
         if (st().cards[id] && st().cards[id].owned) return true;
-        return !!d.role && !d.exclusive && EC().cards.starter.rarities.includes(d.rarity);   // starter units
+        return !!d.role && !d.exclusive && !!d.starter;   // the original 20 units (flag set in core/data.js) are the starter roster
       },
       /** first-play hero choice (one time) */
       needsStarter: () => !st().starterHero,

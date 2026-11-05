@@ -14,7 +14,7 @@
   // where can a locked card come from?
   function unlockHint(id) {
     const P = AMB.Pass; let src = '';
-    if (P) for (const [tr, tbl] of [['free', P.FREE], ['premium', P.PREMIUM]]) for (const [lv, r] of Object.entries(tbl)) if (!src && r.type === 'avatar' && r.id === id) src = tr === 'free' ? `الباتل باس: مستوى ${lv}` : `بريميوم مستوى ${lv}`;
+    if (P) for (const [lv, r] of Object.entries(P.FREE)) if (!src && r.type === 'avatar' && r.id === id) src = `الباتل باس: مستوى ${lv}`;   // the premium track is not available yet, so it is not advertised
     return src ? `باكجات · ${src}` : 'من الباكجات';
   }
   function tile(id) {

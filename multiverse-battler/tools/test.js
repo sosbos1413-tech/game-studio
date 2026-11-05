@@ -232,7 +232,7 @@ t('pass: claiming needs the level, premium needs premium, no double claim, claim
 t('pass: equip only what you own; perks add prep time', () => {
   const p = mkPass(); p.addXp(1400);
   ok(!p.equip('frame', 'gold'), 'not owned yet'); eq(p.prepBonus(), 0);
-  p.claimAll(); ok(p.equip('frame', 'bronze')); ok(p.equip('avatar', 'ash_ronin')); ok(!p.equip('avatar', 'kagira'), 'premium avatar locked');
+  p.claimAll(); ok(p.equip('frame', 'bronze')); ok(p.equip('avatar', 'yuta')); ok(!p.equip('avatar', 'kagira'), 'premium avatar locked');
   eq(p.prepBonus(), 10, 'perk levels 5 and 15 give +5s each'); ok(p.owned('title').includes('t_recruit'));
 });
 t('pass: season end freezes xp but rewards you already earned stay claimable', () => {
@@ -394,7 +394,7 @@ t('events: a throwing listener does not stop the others', () => {
 console.log('rarity, collection, card upgrades');
 const RAR = () => AMB.ECONOMY.rarities;
 t('every card has a valid rarity; units follow tier, heroes are legendary', () => {
-  Object.values(AMB.DATA.UNITS).forEach((u) => { ok(RAR()[u.rarity], u.id); eq(u.rarity, AMB.DATA.TIER_RARITY[u.tier], u.id); });
+  Object.values(AMB.DATA.UNITS).forEach((u) => { ok(RAR()[u.rarity], u.id); if (u.rarity === 'legendary') eq(u.tier, 3, 'legendary units use tier-3 stats ' + u.id); else eq(u.rarity, AMB.DATA.TIER_RARITY[u.tier], u.id); });
   Object.values(AMB.DATA.HEROES).forEach((h) => eq(h.rarity, 'legendary', h.id));
 });
 t('rarer = stronger and needs more copies at every level', () => {
@@ -500,7 +500,7 @@ t('packs: duplicates become upgrade copies; copies of max-level cards become sha
   const p = rich(9);
   const r = p.packs.open('basic');
   const c0 = r.cards[0];
-  ok(p.collection.copies(c0.id) >= 1);
+  ok(p.collection.owned(c0.id));
   // max out every card, then a pack refunds shards for each card
   p.collection.ids().forEach((id) => { p.collection.add(id, 200); while (p.collection.canUpgrade(id)) p.collection.upgrade(id); });
   const bal = p.wallet.balance('shards');
@@ -515,25 +515,28 @@ t('packs: exclusive cards never drop', () => {
 });
 
 console.log('unlocking characters');
-t('new player: commons owned, no hero, nothing else until chosen/unlocked', () => {
+t('new player: the 20 starter units owned, no hero, the 45 new characters locked until unlocked', () => {
   const C = AMB.Profile.boot(MEM()).collection;
-  Object.values(AMB.DATA.UNITS).forEach((u) => eq(C.owned(u.id), u.rarity === 'common', u.id));
+  Object.values(AMB.DATA.UNITS).forEach((u) => eq(C.owned(u.id), !!u.starter, u.id));
+  eq(Object.values(AMB.DATA.UNITS).filter((u) => u.starter).length, 20, 'starter roster = the original 20 units');
   eq(C.ownedHeroes().length, 0); ok(C.needsStarter());
   ok(C.chooseStarter('merin')); ok(!C.chooseStarter('orath'), 'starter is one-time');
   eq(C.ownedHeroes().join(), 'merin'); ok(!C.needsStarter()); eq(C.level('merin'), 1); eq(C.copies('merin'), 0);
 });
 t('first copy unlocks a card (not counted as an upgrade copy); later copies are upgrade copies', () => {
   const C = AMB.Profile.boot(MEM()).collection;
-  const r1 = C.add('chrome_ronin', 1); ok(r1.isNew); ok(C.owned('chrome_ronin')); eq(C.copies('chrome_ronin'), 0);
-  const r2 = C.add('chrome_ronin', 2); ok(!r2.isNew); eq(C.copies('chrome_ronin'), 2);
-  const r3 = C.add('ash_ronin', 1); ok(!r3.isNew, 'starter common is already owned'); eq(C.copies('ash_ronin'), 1);
-  eq(C.ownedUnits().length, 9);
+  ok(!C.owned('shirayuki'));
+  const r1 = C.add('shirayuki', 1); ok(r1.isNew); ok(C.owned('shirayuki')); eq(C.copies('shirayuki'), 0);
+  const r2 = C.add('shirayuki', 2); ok(!r2.isNew); eq(C.copies('shirayuki'), 2);
+  const r3 = C.add('ash_ronin', 1); ok(!r3.isNew, 'starter unit is already owned'); eq(C.copies('ash_ronin'), 1);
+  eq(C.ownedUnits().length, 21);
 });
 t('packs can unlock heroes and higher-rarity units (shown as new)', () => {
   const p = rich(5); let newIds = new Set();
   for (let i = 0; i < 40; i++) p.packs.open('basic').cards.forEach((c) => { if (c.isNew) { ok(!newIds.has(c.id), 'new twice: ' + c.id); newIds.add(c.id); } });
-  ok([...newIds].every((id) => AMB.DATA.HEROES[id] || AMB.DATA.UNITS[id].rarity !== 'common'));
-  ok(p.collection.ownedHeroes().length >= 1, 'pity guarantees at least one legendary (hero) in 40 packs');
+  ok([...newIds].every((id) => AMB.DATA.HEROES[id] || !AMB.DATA.UNITS[id].starter), 'starter units are never "new"');
+  ok([...newIds].some((id) => AMB.DATA.HEROES[id] || AMB.DATA.UNITS[id].rarity === 'legendary'), 'pity guarantees a legendary within 40 packs');
+  ok([...newIds].filter((id) => AMB.DATA.UNITS[id]).length >= 10, 'packs unlock many new characters');
 });
 t('battle pass character rewards unlock the card', () => {
   const prof = AMB.Profile.boot(MEM());
@@ -741,9 +744,10 @@ t('login calendar: one claim per day, rewards grow, missed days do not reset, da
 console.log('album');
 t('album: 5 units per world, progress counts owned units, starters count', () => {
   const prof = AMB.Profile.boot(MEM()), A = prof.album;
-  eq(A.worlds().length, 4); A.worlds().forEach((w) => eq(A.units(w).length, 5, w));
-  eq(A.total().total, 20); eq(A.total().owned, 8, '8 starter commons');
-  eq(A.progress('ember').owned, 2, 'ash_ronin + forge_bulwark');
+  eq(A.worlds().length, 4);
+  eq(A.units('ember').length, 15); eq(A.units('tide').length, 15); eq(A.units('neon').length, 14); eq(A.units('sylvan').length, 21);
+  eq(A.total().total, 65); eq(A.total().owned, 20, 'the 20 starter units');
+  eq(A.progress('ember').owned, 5, 'the 5 original ember units');
   eq(A.state('ember'), 'locked');
 });
 t('album: world set reward is claimable once, gives shards + title + frame (equippable in the pass)', () => {
@@ -760,19 +764,19 @@ t('album: world set reward is claimable once, gives shards + title + frame (equi
   ok(AMB.Pass.COSMETICS.frame.alb_ember.c1 && AMB.Pass.COSMETICS.title.alb_all);
   eq(A.claim('tide'), null, 'incomplete world cannot be claimed');
 });
-t('album: all 20 units = 2 free packs + grand title; saved across reloads', () => {
+t('album: all 65 units = free packs + grand title; saved across reloads', () => {
   const mem = MEM(), prof = AMB.Profile.boot(mem), A = prof.album;
   eq(A.claimAll(), null);
   Object.keys(AMB.DATA.UNITS).forEach((id) => prof.collection.add(id, 1));
   A.worlds().forEach((w) => A.claim(w));
   eq(A.allState(), 'ready');
   const opened = prof.packs.stats().opened;
-  const r = A.claimAll(); eq(r.packs.length, 2); eq(prof.packs.stats().opened, opened + 2); eq(A.claimAll(), null);
+  const r = A.claimAll(); eq(r.packs.length, AMB.ECONOMY.album.all.packs); eq(prof.packs.stats().opened, opened + AMB.ECONOMY.album.all.packs); eq(A.claimAll(), null);
   const A2 = AMB.Profile.boot(mem).album; eq(A2.allState(), 'claimed'); eq(A2.state('tide'), 'claimed'); ok(A2.ownedCosmetics('title').includes('alb_all'));
 });
 t('album: exclusive (event) cards are not part of any set', () => {
   AMB.DATA.UNITS.thorn_fox.exclusive = true;
-  try { const A = AMB.Profile.boot(MEM()).album; eq(A.units('sylvan').length, 4); eq(A.total().total, 19); } finally { delete AMB.DATA.UNITS.thorn_fox.exclusive; }
+  try { const A = AMB.Profile.boot(MEM()).album; eq(A.units('sylvan').length, 20); eq(A.total().total, 64); } finally { delete AMB.DATA.UNITS.thorn_fox.exclusive; }
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

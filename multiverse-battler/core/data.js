@@ -143,6 +143,152 @@
     { type: 'execute', name: 'انقضاض', dmg: [300, 520, 900],
       text: 'انقضاض قاتل يتضاعف ضد الأهداف الجريحة.' });
 
+
+  // ======== NEW ROSTER (45 characters, unlocked from packs / battle pass; the 20 above are the starter roster)
+  U.forEach((u) => (u.starter = true));
+  // ---- new roster: Elder Grove
+  unit('taiju', 'تايجو', 'Taiju', 'sylvan', 'guardian', 3, 80,
+    { type: 'shieldSelf', name: 'لحاء الدهر', shield: [550, 900, 1450],
+      text: 'يكتسب درعًا سميكًا.' }, { rarity: 'legendary' });
+  unit('kashiwagi', 'كاشيواغي', 'Kashiwagi', 'sylvan', 'fighter', 3, 70,
+    { type: 'cleave', name: 'ضربة السنديان', dmg: [170, 290, 490], radius: 1.4,
+      text: 'ضربة دائرية تصيب الهدف ومن حوله.' });
+  unit('shirayuki', 'شيراويوكي', 'Shirayuki', 'sylvan', 'mage', 3, 85,
+    { type: 'stunAoe', name: 'ندى الفجر', dmg: [140, 240, 420], stun: [1.4, 1.7, 2.1], radius: 1.5,
+      text: 'يجمّد الهدف ومن حوله ويصيبهم بضرر.' });
+  unit('kazehaya', 'كازيهايا', 'Kazehaya', 'sylvan', 'marksman', 2, 80,
+    { type: 'snipe', name: 'سهم الريح', dmg: [240, 410, 700],
+      text: 'يقنص العدو الأقل صحة أينما كان.' });
+  unit('kagemaru', 'كاجيمارو', 'Kagemaru', 'sylvan', 'assassin', 1, 60,
+    { type: 'nuke', name: 'طعنة الظل', dmg: [150, 260, 450],
+      text: 'طعنة خاطفة بضرر هائل للهدف.' });
+  unit('hayate', 'هاياتي', 'Hayate', 'sylvan', 'assassin', 2, 60,
+    { type: 'execute', name: 'عاصفة النصلين', dmg: [200, 350, 610],
+      text: 'ضربة تتضاعف ضد الأهداف تحت 40% صحة.' });
+  unit('yoshino', 'يوشينو', 'Yoshino', 'sylvan', 'support', 2, 90,
+    { type: 'hasteAllies', name: 'لحن الورقة', pct: [0.25, 0.38, 0.55], dur: 5,
+      text: 'يزيد سرعة هجوم جميع الحلفاء مؤقتًا.' });
+  unit('kinoko', 'كينوكو', 'Kinoko', 'sylvan', 'support', 1, 60,
+    { type: 'healLowest', name: 'بوغ الشفاء', heal: [230, 380, 640],
+      text: 'يعالج الحليف الأكثر جرحًا.' });
+  unit('genzo', 'جينزو', 'Genzo', 'sylvan', 'guardian', 2, 70,
+    { type: 'healSelf', name: 'جذور الصمود', heal: [290, 480, 820],
+      text: 'يستعيد جزءًا كبيرًا من صحته.' });
+  unit('takashi', 'تاكاشي', 'Takashi', 'sylvan', 'marksman', 1, 80,
+    { type: 'multishot', name: 'ضربة الصقر', dmg: [110, 180, 320], count: 3,
+      text: 'يطلق ثلاثة أسهم على أقرب ثلاثة أعداء.' });
+  unit('gensai', 'جينساي', 'Gensai', 'sylvan', 'mage', 2, 90,
+    { type: 'aoe', name: 'كرة العاصفة', dmg: [280, 460, 780], radius: 1.6,
+      text: 'انفجار يصيب منطقة حول الهدف.' });
+  unit('ibara', 'إيبارا', 'Ibara', 'sylvan', 'mage', 2, 85,
+    { type: 'stunAoe', name: 'سجن الأشواك', dmg: [120, 200, 350], stun: [1.4, 1.7, 2.1], radius: 1.4,
+      text: 'يجمّد الهدف ومن حوله ويصيبهم بضرر.' });
+  unit('kaito', 'كايتو', 'Kaito', 'sylvan', 'fighter', 2, 70,
+    { type: 'stunStrike', name: 'تاج الشوك', dmg: [120, 200, 360], stun: [1, 1.2, 1.5],
+      text: 'يصيب الهدف ويشلّه لفترة قصيرة.' });
+  unit('hisui', 'هيسوي', 'Hisui', 'sylvan', 'support', 3, 80,
+    { type: 'healAll', name: 'ريش الزمرد', heal: [170, 290, 510],
+      text: 'يعالج جميع الحلفاء.' });
+  unit('daigo', 'دايغو', 'Daigo', 'sylvan', 'guardian', 1, 90,
+    { type: 'taunt', name: 'درع الطحلب', shield: [200, 350, 600], radius: 2.2, dur: 3,
+      text: 'يجبر الأعداء القريبين على مهاجمته ويكتسب درعًا.' });
+  unit('wakaba', 'واكابا', 'Wakaba', 'sylvan', 'marksman', 1, 80,
+    { type: 'burn', name: 'سهم السمّ الأخضر', dps: [50, 85, 145], dur: 4,
+      text: 'يحرق الهدف ضررًا متواصلًا لمدة 4 ثوانٍ.' });
+
+  // ---- new roster: Neon-9
+  unit('gantetsu', 'غانتيتسو', 'Gantetsu', 'neon', 'guardian', 2, 80,
+    { type: 'shieldSelf', name: 'جلد الحجر', shield: [460, 740, 1200],
+      text: 'يكتسب درعًا سميكًا.' });
+  unit('tetsuya', 'تيتسويا', 'Tetsuya', 'neon', 'guardian', 1, 90,
+    { type: 'taunt', name: 'تحدّي الفولاذ', shield: [200, 350, 600], radius: 2.2, dur: 3,
+      text: 'يجبر الأعداء القريبين على مهاجمته ويكتسب درعًا.' });
+  unit('reiji', 'ريجي', 'Reiji', 'neon', 'mage', 2, 90,
+    { type: 'aoe', name: 'ختم الرموز', dmg: [280, 460, 780], radius: 1.6,
+      text: 'انفجار يصيب منطقة حول الهدف.' });
+  unit('mitsuki', 'ميتسوكي', 'Mitsuki', 'neon', 'support', 1, 60,
+    { type: 'healLowest', name: 'بلّورة الشفاء', heal: [230, 380, 640],
+      text: 'يعالج الحليف الأكثر جرحًا.' });
+  unit('mugen', 'موغين', 'Mugen', 'neon', 'mage', 3, 85,
+    { type: 'stunAoe', name: 'ثقب اللانهاية', dmg: [140, 240, 420], stun: [1.4, 1.7, 2.1], radius: 1.5,
+      text: 'يجمّد الهدف ومن حوله ويصيبهم بضرر.' }, { rarity: 'legendary' });
+  unit('juzo', 'جوزو', 'Juzo', 'neon', 'fighter', 2, 60,
+    { type: 'execute', name: 'ضربة الجلّاد', dmg: [200, 350, 610],
+      text: 'ضربة تتضاعف ضد الأهداف تحت 40% صحة.' });
+  unit('kogetsu', 'كوغيتسو', 'Kogetsu', 'neon', 'fighter', 3, 70,
+    { type: 'cleave', name: 'قطع التاج', dmg: [170, 290, 490], radius: 1.4,
+      text: 'ضربة دائرية تصيب الهدف ومن حوله.' });
+  unit('yozora', 'يوزورا', 'Yozora', 'neon', 'support', 3, 80,
+    { type: 'healAll', name: 'مطر النجوم', heal: [170, 290, 510],
+      text: 'يعالج جميع الحلفاء.' });
+  unit('nagi', 'ناغي', 'Nagi', 'neon', 'assassin', 1, 60,
+    { type: 'nuke', name: 'خنجرا الظلام', dmg: [150, 260, 450],
+      text: 'طعنة خاطفة بضرر هائل للهدف.' });
+
+  // ---- new roster: Emberreach
+  unit('goka', 'غوكا', 'Goka', 'ember', 'fighter', 3, 70,
+    { type: 'cleave', name: 'نار العرش', dmg: [170, 290, 490], radius: 1.4,
+      text: 'ضربة دائرية تصيب الهدف ومن حوله.' }, { rarity: 'legendary' });
+  unit('ryuji', 'ريوجي', 'Ryuji', 'ember', 'fighter', 1, 70,
+    { type: 'stunStrike', name: 'قبضة الجمر', dmg: [100, 170, 300], stun: [1, 1.2, 1.5],
+      text: 'يصيب الهدف ويشلّه لفترة قصيرة.' });
+  unit('akane', 'أكاني', 'Akane', 'ember', 'assassin', 2, 60,
+    { type: 'nuke', name: 'نصلا اللهب', dmg: [180, 310, 540],
+      text: 'طعنة خاطفة بضرر هائل للهدف.' });
+  unit('natsuki', 'ناتسوكي', 'Natsuki', 'ember', 'mage', 2, 90,
+    { type: 'aoe', name: 'موجة الحمم', dmg: [280, 460, 780], radius: 1.6,
+      text: 'انفجار يصيب منطقة حول الهدف.' });
+  unit('shiro', 'شيرو', 'Shiro', 'ember', 'mage', 1, 90,
+    { type: 'aoe', name: 'شرارة مبتدئ', dmg: [230, 380, 650], radius: 1.5,
+      text: 'انفجار يصيب منطقة حول الهدف.' });
+  unit('kurenai', 'كورينائي', 'Kurenai', 'ember', 'guardian', 3, 90,
+    { type: 'taunt', name: 'قلعة القرمزي', shield: [290, 510, 870], radius: 2.4, dur: 3,
+      text: 'يجبر الأعداء القريبين على مهاجمته ويكتسب درعًا.' });
+  unit('tsubaki', 'تسوباكي', 'Tsubaki', 'ember', 'support', 1, 60,
+    { type: 'healLowest', name: 'دفء الموقد', heal: [230, 380, 640],
+      text: 'يعالج الحليف الأكثر جرحًا.' });
+  unit('godo', 'غودو', 'Godo', 'ember', 'guardian', 2, 80,
+    { type: 'shieldSelf', name: 'جلد الحمم', shield: [460, 740, 1200],
+      text: 'يكتسب درعًا سميكًا.' });
+  unit('yuta', 'يوتا', 'Yuta', 'ember', 'marksman', 1, 80,
+    { type: 'burn', name: 'سهم الفحم', dps: [50, 85, 145], dur: 4,
+      text: 'يحرق الهدف ضررًا متواصلًا لمدة 4 ثوانٍ.' });
+  unit('momo', 'مومو', 'Momo', 'ember', 'support', 2, 90,
+    { type: 'hasteAllies', name: 'خطة اللهب', pct: [0.25, 0.38, 0.55], dur: 5,
+      text: 'يزيد سرعة هجوم جميع الحلفاء مؤقتًا.' });
+
+  // ---- new roster: Moontide
+  unit('seiji', 'سيجي', 'Seiji', 'tide', 'fighter', 2, 70,
+    { type: 'drain', name: 'نصل الجزر', dmg: [220, 360, 610],
+      text: 'ضربة تمتص الحياة وتعالجه بقيمة الضرر.' });
+  unit('ryujin', 'ريوجين', 'Ryujin', 'tide', 'fighter', 3, 70,
+    { type: 'cleave', name: 'رمح المدّ', dmg: [170, 290, 490], radius: 1.4,
+      text: 'ضربة دائرية تصيب الهدف ومن حوله.' });
+  unit('mizuki', 'ميزوكي', 'Mizuki', 'tide', 'assassin', 1, 60,
+    { type: 'nuke', name: 'شفرة الموج', dmg: [150, 260, 450],
+      text: 'طعنة خاطفة بضرر هائل للهدف.' });
+  unit('miyuki', 'ميوكي', 'Miyuki', 'tide', 'support', 2, 80,
+    { type: 'healAll', name: 'ترنيمة القمر', heal: [140, 240, 420],
+      text: 'يعالج جميع الحلفاء.' });
+  unit('shiori', 'شيوري', 'Shiori', 'tide', 'mage', 1, 85,
+    { type: 'stunAoe', name: 'فقاعة مجمّدة', dmg: [100, 160, 290], stun: [1.4, 1.7, 2.1], radius: 1.3,
+      text: 'يجمّد الهدف ومن حوله ويصيبهم بضرر.' });
+  unit('tomoe', 'تومويه', 'Tomoe', 'tide', 'guardian', 1, 80,
+    { type: 'shieldSelf', name: 'درع اللؤلؤ', shield: [380, 620, 1000],
+      text: 'يكتسب درعًا سميكًا.' });
+  unit('otohime', 'أوتوهيمي', 'Otohime', 'tide', 'support', 3, 80,
+    { type: 'healAll', name: 'حضن البحر', heal: [170, 290, 510],
+      text: 'يعالج جميع الحلفاء.' }, { rarity: 'legendary' });
+  unit('haruka', 'هاروكا', 'Haruka', 'tide', 'mage', 2, 90,
+    { type: 'aoe', name: 'دوّامة', dmg: [280, 460, 780], radius: 1.6,
+      text: 'انفجار يصيب منطقة حول الهدف.' });
+  unit('daikai', 'دايكاي', 'Daikai', 'tide', 'guardian', 3, 90,
+    { type: 'taunt', name: 'مرساة الأعماق', shield: [290, 510, 870], radius: 2.4, dur: 3,
+      text: 'يجبر الأعداء القريبين على مهاجمته ويكتسب درعًا.' });
+  unit('kota', 'كوتا', 'Kota', 'tide', 'marksman', 1, 80,
+    { type: 'snipe', name: 'هربون الرمية', dmg: [200, 340, 580],
+      text: 'يقنص العدو الأقل صحة أينما كان.' });
+
   const UNITS = {};
   U.forEach((u) => (UNITS[u.id] = u));
 

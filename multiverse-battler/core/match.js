@@ -25,7 +25,7 @@
       summoned: false, heroSlot: 'b1',
       shop: [], itemShop: [], shopLocked: false, freeRerolls: 0,
       winStreak: 0, lossStreak: 0, lastIncome: null,
-      stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, wins: 0, losses: 0, draws: 0 },
+      stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, merges: 0, wins: 0, losses: 0, draws: 0 },
       alive: true,
       blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
     };
@@ -190,7 +190,7 @@
           const bi = keepLoc && keepLoc.zone === 'bench' ? keepLoc.idx : p.bench.indexOf(null);
           if (bi >= 0) p.bench[bi] = up; else this._placeAnywhere(p, up);
         }
-        merges.push(up);
+        merges.push(up); p.stats.merges++;
         check = up;
       }
       if (p._overflow) { // could not merge after all — refund
@@ -560,6 +560,19 @@
       const idx = p.bench.indexOf(null);
       if (idx >= 0) p.bench[idx] = unit; else p._overflow = unit;
       this._merge(p, unit);
+    }
+
+    /** compact facts about one player's match, for the battle pass (xp + missions) */
+    summary(pi) {
+      const p = this.players[pi], last = this.history[this.history.length - 1];
+      const board = last ? last.players[pi].board : [];
+      const worlds = new Set(board.map((u) => AMB.DATA.UNITS[u.defId].world));
+      const opp = this.players[1 - pi];
+      const mode = this.mode === 'friendly' ? 'friendly' : this.mode === 'hotseat' ? 'hotseat' : (opp.difficulty || 'normal');
+      return { mode, won: this.winner === pi, roundsPlayed: this.round, roundsWon: p.stats.wins,
+        finaleWon: !!(last && last.round >= AMB.CONFIG.match.maxRounds && last.winner === pi),
+        buys: p.stats.unitsBought, rerolls: p.stats.rerolls, merges: p.stats.merges, summoned: this.history.some((r) => r.players[pi].summoned),
+        stageRewards: p.rewardLog.length, damage: p.stats.damageDealt, worldsUsed: worlds.size };
     }
 
     get isOver() { return this.phase === 'over'; }

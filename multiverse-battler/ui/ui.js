@@ -31,6 +31,7 @@
     S.screen = screen;
     document.body.classList.toggle('in-match', screen === 'match');   // page scroll is locked only during a match
     window.scrollTo(0, 0);
+    if (globalThis.AMB && AMB.PassUI) { if (screen === 'menu') AMB.PassUI.refreshMenu(); if (screen === 'pass') AMB.PassUI.render(); }
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -93,6 +94,10 @@
 
   // ======================================================================= round flow
   function prepSeconds() {
+    const bonus = AMB.pass ? AMB.pass.prepBonus() : 0;   // battle-pass perk (+ a few seconds, never stats)
+    return prepBase() + bonus;
+  }
+  function prepBase() {
     const learn = S.match && S.match.round <= 2 ? 20 : 0;   // first two rounds: +20s to learn the screen
     if (S.mode === 'hotseat') return CFG.match.hotseatPrepSeconds + learn;
     if (S.mode === 'friendly') return CFG.match.prepSeconds * 2 + learn;
@@ -578,7 +583,7 @@
       <div class="phases">${phases}</div>
       <span class="timer" title="مؤقت مرحلة التجهيز">${S.paused ? '⏸' : left}</span>
       <span class="tb-spacer"></span>
-      <span class="lifechip me" title="حياة بطلك">${portrait(HEROES[p.heroId], { k: 'tb0' })}${esc(p.name)} ${icon('heart')} ${lifeStr(p.life)}</span>
+      <span class="lifechip me" title="حياة بطلك">${portrait(myAvatar(p, 0), { k: 'tb0' })}${esc(p.name)} ${icon('heart')} ${lifeStr(p.life)}</span>
       <span class="lifechip" title="حياة بطل الخصم">${portrait(HEROES[o.heroId], { k: 'tb1' })}${esc(o.name)} ${icon('heart')} ${lifeStr(o.life)}</span>
       <span class="res gold" title="الذهب">${icon('gold')} ${p.gold}</span>
       <span class="res ess" title="الجوهر: متاح / الإجمالي (يُدفع فقط عند تفعيل القدرة)">${icon('essence')} ${avail}/${p.essence}</span>
@@ -626,6 +631,7 @@
     const row = (side, ch, mine) => [0, 1, 2, 3].map((k) => cell(side, ch + (mine ? k : 3 - k), mine)).join('');
     const o = 1 - v;
     const fe = $('field');
+    if (AMB.PassUI) { const ac = (v === 0 && S.mode !== 'hotseat') ? AMB.PassUI.arenaClass() : ''; [...fe.classList].filter((c) => c.startsWith('ar-')).forEach((c) => fe.classList.remove(c)); if (ac) fe.classList.add(ac); }
     fe.style.setProperty('--mw', WORLDS[HEROES[p.heroId].world].color);
     fe.style.setProperty('--ew', WORLDS[HEROES[m.players[o].heroId].world].color);
     $('slots').innerHTML =
@@ -972,6 +978,11 @@
   }
 
   // ======================================================================= results / stats / codex
+  function myAvatar(p, i) {   // equipped battle-pass avatar replaces only the picture of your own hero chip (never stats)
+    if (i !== 0 || S.mode === 'hotseat' || !AMB.PassUI) return HEROES[p.heroId];
+    const id = AMB.PassUI.avatarId();
+    return (id && AMB.PassUI.avatarDef(id)) || HEROES[p.heroId];
+  }
   function showResults() {
     const m = S.match;
     closeOverlay();
@@ -979,6 +990,7 @@
     S.phase = 'over';
     const secs = Math.round((Date.now() - S.startTs) / 1000);
     if (S.mode !== 'friendly' && !m._recorded) { AMB.telemetry.recordMatch(m, { seconds: secs }); m._recorded = true; }
+    if (!m._passDone) { m._passDone = true; try { S.passResult = AMB.pass.recordMatch(m.summary(0)); } catch (e) { S.passResult = null; } }
     let title;
     if (m.winner === null || m.winner === undefined) title = 'تعادل';
     else if (S.mode === 'hotseat') title = `فاز ${esc(m.players[m.winner].name)}!`;
@@ -1003,9 +1015,13 @@
     const myWin = S.mode === 'hotseat' ? m.winner != null : m.winner === 0;
     const wi = S.mode === 'hotseat' && m.winner != null ? m.winner : 0;   // vs AI: always show your own hero
     const heroDef = HEROES[m.players[wi].heroId];
-    const stage = `<div class="res-stage ${m.winner == null ? 'draw' : myWin ? 'victory' : 'defeat'}" style="--wc:${WORLDS[heroDef.world].color}"><div class="res-rays"></div><div class="res-hero">${portrait(heroDef, { bare: true, k: 'resh' })}<i class="sheen"></i></div><div class="res-hname">${heroDef.name}</div></div>`;
+    const own = S.mode !== 'hotseat' && wi === 0;
+    const avDef = own ? myAvatar(m.players[0], 0) : heroDef;
+    const ptitle = own && AMB.PassUI ? AMB.PassUI.titleName() : '';
+    const stage = `<div class="res-stage ${m.winner == null ? 'draw' : myWin ? 'victory' : 'defeat'}" style="--wc:${WORLDS[heroDef.world].color}"><div class="res-rays"></div><div class="res-hero">${portrait(avDef, { bare: true, k: 'resh' })}<i class="sheen"></i></div><div class="res-hname">${avDef.name}</div>${ptitle ? `<div class="res-title">${ptitle}</div>` : ''}</div>`;
     $('results').innerHTML = `${stage}<div class="res-banner"><h1>${title}</h1><p class="hint">${m.round} جولات · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة ${S.mode === 'friendly' ? '· مباراة ودية (لم تُسجَّل)' : ''}</p>
       <div class="timeline">${tl}</div><p class="hint">أخضر = فوز ${esc(m.players[0].name)} · أحمر = فوز ${esc(m.players[1].name)}</p></div>
+      ${AMB.PassUI ? AMB.PassUI.resultPanel(S.passResult) : ''}
       <div class="res-cols">${cols}</div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px">
         <button class="btn primary big" data-act="again">مباراة جديدة</button>
@@ -1013,7 +1029,7 @@
         <button class="btn big ghost" data-act="go" data-to="menu">القائمة الرئيسية</button></div>`;
     show('results');
     if (m.winner != null) { sfx(myWin ? 'win' : 'lose'); }
-    if (myWin) setTimeout(() => { const h = document.querySelector('.res-hero'); if (h) ['#ffd24a', '#ff4f8b', '#5fe3ff', '#7bd46a', '#ffffff'].forEach((c) => burst(h, c, 14, { r: 150, s: 8 })); }, 250);
+    if (myWin) setTimeout(() => { const h = document.querySelector('.res-hero'); if (h) (own && AMB.PassUI ? AMB.PassUI.fxColors() : ['#ffd24a', '#ff4f8b', '#5fe3ff', '#7bd46a', '#ffffff']).forEach((c) => burst(h, c, 14, { r: 150, s: 8 })); }, 250);
   }
 
   function renderStats() {
@@ -1346,5 +1362,6 @@
   })();
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML };
+  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal };
+  if (AMB.PassUI) { AMB.PassUI.installActions(); AMB.PassUI.applyCosmetics(); AMB.PassUI.refreshMenu(); }
 })();

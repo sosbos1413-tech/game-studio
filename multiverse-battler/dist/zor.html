@@ -1256,6 +1256,93 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   .field-wrap { --cwv: clamp(46px, min(calc((100vh - 404px) / 4.44), calc((100vw - 40px) / 4)), 118px); --cwv: clamp(46px, min(calc((100dvh - 404px) / 4.44), calc((100vw - 40px) / 4)), 118px); }
 }
 
+/* ======================================================================= battle pass «ممر الصدع» */
+#menu-pass { position: relative; }
+#menu-pass small { font-size: 13px; opacity: .75; margin-inline-start: 8px; font-family: inherit; }
+.dot { position: absolute; top: -8px; inset-inline-end: -8px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: var(--red); color: #fff; border: 2px solid var(--ink); font: 700 13px/20px system-ui; text-align: center; box-shadow: var(--hard-sm); }
+.dot.sm { position: static; display: inline-block; min-width: 10px; width: 10px; height: 10px; padding: 0; vertical-align: middle; }
+.pass { max-width: 1200px; margin: 0 auto; padding: 0 10px 40px; color: var(--paper); }
+.pass h3 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 18px 0 8px; color: var(--gold); }
+.pass h3 small { font-size: 13px; color: var(--paper3); font-family: inherit; margin-inline-start: 8px; }
+.pass .hint { color: var(--paper3); }
+.pass-head { display: flex; align-items: center; gap: 14px; background: var(--ink2); border: 3px solid var(--paper); box-shadow: var(--hard); padding: 12px 16px; }
+.ph-lv { text-align: center; background: var(--red); color: #fff; border: 3px solid var(--ink); padding: 4px 16px; line-height: 1; }
+.ph-lv small { display: block; font-size: 12px; } .ph-lv b { font: 400 40px var(--display); }
+.ph-mid { flex: 1; min-width: 0; } .ph-name { font: 400 22px var(--display); color: var(--gold); } .ph-sub { font-size: 13px; margin-top: 4px; color: var(--paper3); }
+.xp-bar { height: 12px; background: #000; border: 2px solid var(--paper); margin: 6px 0; overflow: hidden; }
+.xp-bar.big { height: 16px; } .xp-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold2), var(--gold)); transition: width .6s; }
+.ph-prem { white-space: nowrap; }
+.ptabs { display: flex; gap: 8px; margin: 14px 0; }
+.ptabs button { flex: 1; font: 400 20px var(--display); padding: 8px; background: var(--ink2); color: var(--paper); border: 3px solid var(--paper3); cursor: pointer; }
+.ptabs button.on { background: var(--gold); color: var(--ink); border-color: var(--ink); box-shadow: var(--hard-sm); }
+.ptools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.ptrack-wrap { display: grid; grid-template-columns: 54px 1fr; align-items: start; }
+.prow-labels { grid-column: 1 / -1; display: none; }
+.ptrack { display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 14px; scroll-snap-type: x proximity; grid-column: 1 / -1; -webkit-overflow-scrolling: touch; }
+.pcol { flex: 0 0 112px; display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
+.plv { text-align: center; font: 400 20px var(--display); background: var(--ink2); border: 2px solid var(--paper3); color: var(--paper3); }
+.pcol.reached .plv { background: var(--gold); color: var(--ink); border-color: var(--ink); }
+.pcol.now .plv { background: var(--red); color: #fff; }
+.pcell { position: relative; height: 128px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 2px; padding: 6px 4px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); box-shadow: var(--hard-sm); text-align: center; font-size: 12px; }
+.pcell:nth-of-type(2) { margin-top: 0; }
+.pcell[data-track=premium] { background: #3a2a52; color: #fff; }
+.pcell.locked { opacity: .55; filter: grayscale(.6); }
+.pcell.can { border-color: var(--gold); box-shadow: 0 0 0 3px var(--red), var(--hard-sm); cursor: pointer; animation: pcpulse 1.2s infinite alternate; }
+.pcell.claimed { background: #cfe9cf; } .pcell[data-track=premium].claimed { background: #4a6a4a; }
+.pcell.premlock { opacity: .8; }
+.pcell[data-act] { cursor: pointer; }
+.pcell.big { border-color: var(--gold2); background: #fff2c2; } .pcell[data-track=premium].big { background: #5a3a80; }
+.pc-type { font-size: 10px; opacity: .7; } .pc-name { font-weight: 700; line-height: 1.1; max-height: 28px; overflow: hidden; } .pc-state { font-size: 11px; font-weight: 700; }
+.pcell.can .pc-state { color: var(--red); }
+@keyframes pcpulse { to { transform: translateY(-3px); } }
+.pv { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; flex: none; overflow: hidden; border: 2px solid var(--ink); background: var(--ink2); color: var(--paper); font-size: 11px; font-weight: 700; }
+.pv .portrait { width: 100%; height: 100%; }
+.pv.frame { border: 4px solid var(--c1); outline: 2px solid var(--c2); border-radius: 50%; } .pv.frame svg { width: 24px; height: 24px; }
+.pv.fxp { gap: 2px; padding: 4px; flex-wrap: wrap; } .pv.fxp i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #000; }
+.pv.title { padding: 2px; text-align: center; line-height: 1.05; font-size: 11px; background: var(--gold); color: var(--ink); }
+.pv.perk { flex-direction: column; background: var(--cyan); color: #fff; } .pv.perk svg { width: 20px; height: 20px; }
+.pv.avatar { border-radius: 8px; } .pv.avatar.none svg { width: 22px; height: 22px; }
+.missions { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.mission { background: var(--paper); color: var(--ink); border: 3px solid var(--ink); box-shadow: var(--hard-sm); padding: 10px 12px; }
+.mission.done:not(.claimed) { border-color: var(--gold2); box-shadow: 0 0 0 3px var(--gold), var(--hard-sm); }
+.mission.claimed { opacity: .6; }
+.m-top, .m-bot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }
+.m-xp { color: var(--red2); font-weight: 700; } .m-ok { color: var(--green); font-weight: 700; } .m-wait { color: var(--muted); }
+.mission .xp-bar { border-color: var(--ink); background: #0002; }
+.prof-card { display: flex; gap: 14px; align-items: center; background: var(--ink2); border: 3px solid var(--paper); padding: 12px; box-shadow: var(--hard); }
+.prof-av { width: 84px; height: 84px; flex: none; border: 4px solid var(--frame-c1, var(--gold)); outline: 2px solid var(--frame-c2, var(--ink)); border-radius: 50%; overflow: hidden; background: var(--ink); display: flex; align-items: center; justify-content: center; }
+.prof-av .portrait { width: 100%; height: 100%; } .no-av svg { width: 36px; height: 36px; color: var(--gold); }
+.prof-title { font: 400 24px var(--display); color: var(--gold); }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.opt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); cursor: pointer; font-family: inherit; }
+.opt.on { background: var(--gold); box-shadow: var(--hard-sm); } .opt.locked { opacity: .5; cursor: not-allowed; filter: grayscale(.7); }
+.o-name { font-size: 12px; font-weight: 700; text-align: center; line-height: 1.1; } .o-hint { font-size: 10px; color: var(--muted); } .o-on { position: absolute; top: 2px; inset-inline-end: 6px; color: var(--green); font-weight: 900; }
+.xp-panel { max-width: 560px; margin: 0 auto 18px; background: var(--ink2); color: var(--paper); border: 3px solid var(--gold); box-shadow: var(--hard); padding: 12px 16px; }
+.xp-h { display: flex; justify-content: space-between; align-items: center; font: 400 22px var(--display); color: var(--gold); }
+.xp-gain { background: var(--red); color: #fff; padding: 0 10px; } .xp-up { color: var(--gold); font-weight: 700; }
+.xp-lines { list-style: none; margin: 8px 0; padding: 0; font-size: 14px; } .xp-lines li { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dashed #fff3; }
+.xp-lv { font-size: 15px; } .xp-panel .btn { margin-top: 8px; }
+.res-title { position: relative; z-index: 1; color: var(--gold); font-size: 16px; text-shadow: 2px 2px 0 #000; }
+
+/* hero frame cosmetics (picture only, no stats) */
+html[data-frame]:not([data-frame=default]) .lifechip.me .portrait,
+html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame-c1) !important; box-shadow: 0 0 0 2px var(--frame-c2), 0 0 12px var(--frame-c1) !important; }
+
+/* arena themes: shared by the battlefield and the swatches */
+.ar-stardust { --a1:#10143a; --a2:#3b2a6e; --rc:#9fb4ff; } .ar-neongrid { --a1:#06121f; --a2:#0b3a4a; --rc:#00f0ff; }
+.ar-moonwaves { --a1:#0b1e3a; --a2:#1d4f7a; --rc:#bfe6ff; } .ar-volcano { --a1:#2a0a05; --a2:#7a2208; --rc:#ff7a1a; }
+.ar-riftgold { --a1:#2a1f05; --a2:#6b4d0a; --rc:#ffd24a; } .ar-inkwash { --a1:#1a1a1a; --a2:#4a4a4a; --rc:#f3ead6; }
+.ar-enchanted { --a1:#0b2a1a; --a2:#1f6b46; --rc:#9bffb8; } .ar-storm { --a1:#161a24; --a2:#38435e; --rc:#e8f0ff; }
+.ar-frost { --a1:#0e2a3a; --a2:#4f93b5; --rc:#e6fbff; }
+.field[class*="ar-"], .pv.arena { background-color: var(--a1); background-image: radial-gradient(circle at 1px 1px, #ffffff18 1px, transparent 1.5px), linear-gradient(160deg, var(--a1), var(--a2)); background-size: 6px 6px, 100% 100%; }
+.field[class*="ar-"] .rift-line { background: repeating-linear-gradient(90deg, var(--rc) 0 22px, transparent 22px 30px); opacity: .8; }
+
+@media (max-width: 700px) {
+  .pass-head { flex-wrap: wrap; } .ph-prem { width: 100%; }
+  .pcol { flex-basis: 98px; } .pcell { height: 120px; }
+  .ptabs button { font-size: 17px; }
+}
+
 </style>
 </head>
 <body>
@@ -1271,6 +1358,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
       </div>
       <div class="menu-buttons">
         <button class="btn big primary" data-act="go" data-to="mode">العب</button>
+        <button class="btn big" data-act="go" data-to="pass" id="menu-pass">ممر الصدع</button>
         <button class="btn big" data-act="go" data-to="codex">مكتبة الشخصيات</button>
         <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
         <button class="btn big ghost" data-act="howto">كيف ألعب؟</button>
@@ -1359,6 +1447,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   </section>
 
   <!-- ============ STATS ============ -->
+  <section class="screen" id="scr-pass">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>ممر الصدع</h2></header>
+    <div class="pass" id="pass"></div>
+  </section>
+
   <section class="screen" id="scr-stats">
     <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الإحصائيات والتوازن</h2></header>
     <div class="stats" id="stats"></div>
@@ -2436,7 +2529,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
       summoned: false, heroSlot: 'b1',
       shop: [], itemShop: [], shopLocked: false, freeRerolls: 0,
       winStreak: 0, lossStreak: 0, lastIncome: null,
-      stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, wins: 0, losses: 0, draws: 0 },
+      stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, merges: 0, wins: 0, losses: 0, draws: 0 },
       alive: true,
       blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
     };
@@ -2601,7 +2694,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
           const bi = keepLoc && keepLoc.zone === 'bench' ? keepLoc.idx : p.bench.indexOf(null);
           if (bi >= 0) p.bench[bi] = up; else this._placeAnywhere(p, up);
         }
-        merges.push(up);
+        merges.push(up); p.stats.merges++;
         check = up;
       }
       if (p._overflow) { // could not merge after all — refund
@@ -2973,6 +3066,19 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
       this._merge(p, unit);
     }
 
+    /** compact facts about one player's match, for the battle pass (xp + missions) */
+    summary(pi) {
+      const p = this.players[pi], last = this.history[this.history.length - 1];
+      const board = last ? last.players[pi].board : [];
+      const worlds = new Set(board.map((u) => AMB.DATA.UNITS[u.defId].world));
+      const opp = this.players[1 - pi];
+      const mode = this.mode === 'friendly' ? 'friendly' : this.mode === 'hotseat' ? 'hotseat' : (opp.difficulty || 'normal');
+      return { mode, won: this.winner === pi, roundsPlayed: this.round, roundsWon: p.stats.wins,
+        finaleWon: !!(last && last.round >= AMB.CONFIG.match.maxRounds && last.winner === pi),
+        buys: p.stats.unitsBought, rerolls: p.stats.rerolls, merges: p.stats.merges, summoned: this.history.some((r) => r.players[pi].summoned),
+        stageRewards: p.rewardLog.length, damage: p.stats.damageDealt, worldsUsed: worlds.size };
+    }
+
     get isOver() { return this.phase === 'over'; }
 
     _fail(reason) { return { ok: false, reason }; }
@@ -3258,6 +3364,229 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
   function reset() { save(empty()); }
 
   AMB.telemetry = { load, save, recordMatch, reset, empty };
+})();
+
+</script>
+<script>
+/*
+ * Battle pass ("ممر الصدع"), season 1. Pure logic + data, no DOM, so it is testable.
+ * Progress is stored in the player's browser (localStorage) — there is no server.
+ *
+ * Fairness: every reward is cosmetic except the small "prep time" perk (+5s / +10s on the
+ * planning timer). Nothing changes card or hero strength.
+ * The premium track is UI only: it stays locked (`premium=false`) until real payments exist.
+ */
+(function () {
+  const AMB = (globalThis.AMB = globalThis.AMB || {});
+  const DAY = 86400000;
+
+  const SEASON = {
+    id: 's1', name: 'موسم الصدع الأول', days: 42, levels: 30, xpPerLevel: 100,
+    xp: { played: 30, won: 40, perRoundWon: 6, finaleWon: 15, firstWinOfDay: 40 },
+    modeMult: { easy: 0.6, normal: 1, hard: 1.25, hotseat: 0.8, friendly: 0 },   // friendly games give nothing (no farming)
+  };
+
+  // ------------------------------------------------------------- cosmetics registry (applied by the UI)
+  const COSMETICS = {
+    frame: {
+      default: { name: 'بدون إطار' },
+      bronze: { name: 'إطار برونزي', c1: '#d9a066', c2: '#7a4a1f' },
+      silver: { name: 'إطار فضي', c1: '#e8eef7', c2: '#8794a8' },
+      forest: { name: 'إطار الغابة', c1: '#8be07a', c2: '#2f7a2c' },
+      ember: { name: 'إطار الجمر', c1: '#ffb347', c2: '#d9341c' },
+      gold: { name: 'إطار ذهبي', c1: '#fff1a6', c2: '#e3a800' },
+      diamond: { name: 'إطار ألماسي', c1: '#e0fbff', c2: '#3ec9ff' },
+      aurora: { name: 'إطار الشفق', c1: '#c9a6ff', c2: '#3ee6ff' },
+      crimson: { name: 'إطار قرمزي', c1: '#ff9aa2', c2: '#a5141b' },
+    },
+    arena: {
+      default: { name: 'الساحة الأساسية' },
+      stardust: { name: 'غبار النجوم' },
+      neongrid: { name: 'شبكة النيون' },
+      moonwaves: { name: 'أمواج القمر' },
+      volcano: { name: 'مرجل البركان' },
+      riftgold: { name: 'الصدع الذهبي' },
+      inkwash: { name: 'حبر المانغا' },
+      enchanted: { name: 'الغابة المسحورة' },
+      storm: { name: 'العاصفة الكهربائية' },
+      frost: { name: 'الجليد الأزرق' },
+    },
+    fx: {
+      default: { name: 'احتفال عادي', colors: ['#ffd24a', '#ff4f8b', '#5fe3ff', '#7bd46a', '#ffffff'] },
+      bluespark: { name: 'شرر أزرق', colors: ['#5fe3ff', '#3ea0ff', '#ffffff', '#a8f0ff'] },
+      petals: { name: 'بتلات', colors: ['#ffb3c7', '#ff7aa2', '#ffe0ea', '#ffffff'] },
+      goldrain: { name: 'مطر ذهبي', colors: ['#ffd24a', '#fff1a6', '#e3a800', '#ffffff'] },
+      lightning: { name: 'برق', colors: ['#fff6a8', '#ffffff', '#b9a6ff', '#5fe3ff'] },
+      inferno: { name: 'لهب', colors: ['#ff4f1a', '#ffb347', '#ffd24a', '#ffffff'] },
+      emerald: { name: 'زمرد', colors: ['#52d67c', '#b8ffcf', '#ffffff', '#2f7a2c'] },
+      violet: { name: 'بنفسج', colors: ['#c45cff', '#e6c8ff', '#ffffff', '#7a4dff'] },
+      crystal: { name: 'كريستال', colors: ['#e0fbff', '#9fe8ff', '#ffffff', '#3ec9ff'] },
+    },
+    title: {
+      default: { name: 'لاعب جديد' },
+      t_recruit: { name: 'مجنّد الصدع' }, t_junior: { name: 'قائد صغير' }, t_formation: { name: 'ماهر التشكيلات' },
+      t_stars: { name: 'جامع النجوم' }, t_stages: { name: 'سيّد المراحل' }, t_rift: { name: 'سيّد الصدع' },
+      t_elite: { name: 'نخبة الصدع' }, t_legend: { name: 'أسطورة العوالم' }, t_finale: { name: 'صاحب الحسم' },
+    },
+  };
+
+  // ------------------------------------------------------------- reward tracks (30 levels each)
+  const mk = (type, id, extra) => Object.assign({ type, id }, extra || {});
+  const FREE = {
+    1: mk('title', 't_recruit'), 2: mk('frame', 'bronze'), 3: mk('avatar', 'ash_ronin'), 4: mk('arena', 'stardust'),
+    5: mk('perk', 'prep5', { sec: 5 }), 6: mk('fx', 'bluespark'), 7: mk('avatar', 'wave_caller'), 8: mk('title', 't_junior'),
+    9: mk('frame', 'silver'), 10: mk('arena', 'neongrid'), 11: mk('avatar', 'moss_warden'), 12: mk('fx', 'petals'),
+    13: mk('title', 't_formation'), 14: mk('avatar', 'grid_hound'), 15: mk('perk', 'prep10', { sec: 5 }), 16: mk('frame', 'forest'),
+    17: mk('arena', 'moonwaves'), 18: mk('title', 't_stars'), 19: mk('avatar', 'forge_bulwark'), 20: mk('fx', 'goldrain'),
+    21: mk('frame', 'ember'), 22: mk('title', 't_stages'), 23: mk('avatar', 'mist_witch'), 24: mk('arena', 'volcano'),
+    25: mk('fx', 'lightning'), 26: mk('avatar', 'spectral_coder'), 27: mk('frame', 'gold'), 28: mk('avatar', 'caldera_seer'),
+    29: mk('fx', 'inferno'), 30: mk('arena', 'riftgold', { big: true }),
+  };
+  const PREMIUM = {
+    1: mk('avatar', 'kagira'), 2: mk('frame', 'crimson'), 3: mk('title', 't_elite'), 4: mk('arena', 'inkwash'), 5: mk('fx', 'emerald'),
+    6: mk('avatar', 'merin'), 7: mk('avatar', 'pixel_sniper'), 8: mk('frame', 'diamond'), 9: mk('avatar', 'willow_eye'), 10: mk('arena', 'enchanted', { big: true }),
+    11: mk('avatar', 'tide_priest'), 12: mk('fx', 'violet'), 13: mk('title', 't_finale'), 14: mk('avatar', 'chrome_ronin'), 15: mk('avatar', 'root_shaman'),
+    16: mk('frame', 'aurora'), 17: mk('arena', 'storm'), 18: mk('avatar', 'wild_stalker'), 19: mk('fx', 'crystal'), 20: mk('avatar', 'zerokai', { big: true }),
+    21: mk('avatar', 'pyre_archer'), 22: mk('arena', 'frost'), 23: mk('avatar', 'lunar_blade'), 24: mk('title', 't_legend'), 25: mk('avatar', 'firewall_unit'),
+    26: mk('avatar', 'spark_wraith'), 27: mk('avatar', 'coral_sentinel'), 28: mk('title', 't_rift'), 29: mk('avatar', 'thorn_fox'), 30: mk('avatar', 'orath', { big: true }),
+  };
+
+  function rewardName(r) {
+    if (!r) return '';
+    if (r.type === 'perk') return `مؤقت التجهيز +${r.sec} ث`;
+    if (r.type === 'avatar') return AMB.DATA ? ((AMB.DATA.UNITS[r.id] || AMB.DATA.HEROES[r.id] || {}).name || r.id) : r.id;
+    return (COSMETICS[r.type] && COSMETICS[r.type][r.id] ? COSMETICS[r.type][r.id].name : r.id);
+  }
+  const TYPE_NAME = { title: 'لقب', frame: 'إطار', arena: 'ثيم ساحة', fx: 'تأثير فوز', avatar: 'صورة رمزية', perk: 'ميزة' };
+
+  // ------------------------------------------------------------- missions
+  const DAILY = [
+    { id: 'd_play2', name: 'العب مباراتين', stat: 'matches', target: 2, xp: 50 },
+    { id: 'd_win1', name: 'افز بمباراة', stat: 'wins', target: 1, xp: 60 },
+    { id: 'd_rounds5', name: 'افز بـ٥ جولات', stat: 'rounds_won', target: 5, xp: 50 },
+    { id: 'd_buy10', name: 'اشترِ ١٠ وحدات', stat: 'buys', target: 10, xp: 40 },
+    { id: 'd_merge1', name: 'رقِّ وحدة (٣ نسخ ← نجمة)', stat: 'merges', target: 1, xp: 50 },
+    { id: 'd_summon1', name: 'استدعِ بطلك إلى الساحة', stat: 'summons', target: 1, xp: 40 },
+    { id: 'd_reroll8', name: 'حدّث المتجر ٨ مرات', stat: 'rerolls', target: 8, xp: 30 },
+    { id: 'd_reward2', name: 'اختر مكافأتي مراحل', stat: 'stage_rewards', target: 2, xp: 40 },
+    { id: 'd_finale', name: 'افز بجولة الحسم', stat: 'finale_won', target: 1, xp: 70 },
+    { id: 'd_dmg', name: 'تسبّب بـ ٥٠٠٠ ضرر بوحداتك', stat: 'damage', target: 5000, xp: 40 },
+  ];
+  const WEEKLY = [
+    { id: 'w_win5', name: 'افز بـ٥ مباريات', stat: 'wins', target: 5, xp: 200 },
+    { id: 'w_play10', name: 'العب ١٠ مباريات', stat: 'matches', target: 10, xp: 150 },
+    { id: 'w_merge8', name: 'رقِّ ٨ وحدات', stat: 'merges', target: 8, xp: 180 },
+    { id: 'w_rounds30', name: 'افز بـ٣٠ جولة', stat: 'rounds_won', target: 30, xp: 200 },
+    { id: 'w_worlds', name: 'ادخل مباراة بوحدات من ٤ عوالم', stat: 'four_worlds', target: 1, xp: 150 },
+    { id: 'w_finale3', name: 'افز بـ٣ جولات حسم', stat: 'finale_won', target: 3, xp: 180 },
+  ];
+
+  const dayKey = (t) => { const d = new Date(t); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+  const weekKey = (t) => { const d = new Date(t); const o = new Date(d.getFullYear(), 0, 1); return d.getFullYear() * 100 + Math.floor(((d - o) / DAY + o.getDay()) / 7); };
+  const hash = (s) => {   // murmur-style mixing so neighbouring days give unrelated orders
+    let h = 2166136261;
+    for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+    h ^= h >>> 16; h = Math.imul(h, 2246822507); h ^= h >>> 13; h = Math.imul(h, 3266489909); h ^= h >>> 16;
+    return h >>> 0;
+  };
+  function pick3(pool, key) {
+    const idx = pool.map((_, i) => i).sort((a, b) => (hash(key + ':' + a) - hash(key + ':' + b)) || a - b);
+    return idx.slice(0, 3).map((i) => pool[i]);
+  }
+
+  // ------------------------------------------------------------- state
+  const KEY = 'amb_pass_v1';
+  const blank = (now) => ({ v: 1, season: SEASON.id, start: now, xp: 0, premium: false, claimed: { free: [], premium: [] }, claimedMissions: [], daily: { key: 0, p: {} }, weekly: { key: 0, p: {} },
+    firstWinDay: 0, matches: 0, equip: { title: 'default', frame: 'default', arena: 'default', fx: 'default', avatar: null } });
+
+  function create(storage, nowFn) {
+    const now = nowFn || (() => Date.now());
+    let st;
+    try { st = JSON.parse(storage.getItem(KEY)); } catch (e) { st = null; }
+    if (!st || st.season !== SEASON.id) st = blank(now());
+    const save = () => { try { storage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* storage blocked */ } };
+    const roll = () => {   // new day / new week -> fresh mission progress
+      const dk = dayKey(now()), wk = weekKey(now());
+      if (st.daily.key !== dk) { st.daily = { key: dk, p: {} }; st.claimedMissions = st.claimedMissions.filter((id) => !id.startsWith('d_')); }
+      if (st.weekly.key !== wk) { st.weekly = { key: wk, p: {} }; st.claimedMissions = st.claimedMissions.filter((id) => !id.startsWith('w_')); }
+    };
+    roll();
+
+    const api = {
+      SEASON, COSMETICS, FREE, PREMIUM, TYPE_NAME, rewardName,
+      state: () => st,
+      level: () => Math.min(SEASON.levels, 1 + Math.floor(st.xp / SEASON.xpPerLevel)),
+      xpInLevel: () => (api.level() >= SEASON.levels ? SEASON.xpPerLevel : st.xp % SEASON.xpPerLevel),
+      maxed: () => api.level() >= SEASON.levels,
+      daysLeft: () => Math.max(0, Math.ceil((st.start + SEASON.days * DAY - now()) / DAY)),
+      ended: () => now() >= st.start + SEASON.days * DAY,
+      isPremium: () => !!st.premium,
+      setPremium: (v) => { st.premium = !!v; save(); },        // dev / future payment hook only
+      addXp(n) { if (api.ended() || n <= 0) return 0; const b = api.level(); st.xp += Math.round(n); save(); return api.level() - b; },
+
+      dailyMissions() { roll(); return pick3(DAILY, 'd' + st.daily.key).map((m) => api._m(m, st.daily.p)); },
+      weeklyMissions() { roll(); return pick3(WEEKLY, 'w' + st.weekly.key).map((m) => api._m(m, st.weekly.p)); },
+      _m(m, prog) { const v = Math.min(m.target, prog[m.stat] || 0); return Object.assign({}, m, { progress: v, done: v >= m.target, claimed: st.claimedMissions.includes(m.id) }); },
+      claimMission(id) {
+        const m = api.dailyMissions().concat(api.weeklyMissions()).find((x) => x.id === id);
+        if (!m || !m.done || m.claimed) return null;
+        st.claimedMissions.push(id); const before = api.level(); st.xp += m.xp; save();
+        return { xp: m.xp, levelUp: api.level() - before > 0 };
+      },
+
+      /** summary: { mode, won, roundsPlayed, roundsWon, finaleWon, buys, rerolls, merges, summoned, stageRewards, damage, worldsUsed } */
+      recordMatch(sm) {
+        roll();
+        const X = SEASON.xp, mult = SEASON.modeMult[sm.mode] != null ? SEASON.modeMult[sm.mode] : 1;
+        const lines = [['مباراة', X.played], ['جولات فزت بها', X.perRoundWon * sm.roundsWon]];
+        if (sm.won) lines.push(['فوز بالمباراة', X.won]);
+        if (sm.finaleWon) lines.push(['جولة الحسم', X.finaleWon]);
+        const today = dayKey(now());
+        if (sm.won && st.firstWinDay !== today && mult > 0) { lines.push(['أول فوز اليوم', X.firstWinOfDay]); st.firstWinDay = today; }
+        let xp = Math.round(lines.reduce((s, l) => s + l[1], 0) * mult);
+        const beforeLevel = api.level();
+        const added = api.ended() ? 0 : xp;
+        if (mult > 0) {
+          const bump = (p, k, n) => { p[k] = (p[k] || 0) + n; };
+          [st.daily.p, st.weekly.p].forEach((p) => {
+            bump(p, 'matches', 1); if (sm.won) bump(p, 'wins', 1); bump(p, 'rounds_won', sm.roundsWon); bump(p, 'buys', sm.buys); bump(p, 'rerolls', sm.rerolls);
+            bump(p, 'merges', sm.merges); bump(p, 'summons', sm.summoned ? 1 : 0); bump(p, 'stage_rewards', sm.stageRewards); bump(p, 'damage', Math.round(sm.damage));
+            bump(p, 'finale_won', sm.finaleWon ? 1 : 0); bump(p, 'four_worlds', sm.worldsUsed >= 4 ? 1 : 0);
+          });
+          st.matches++;
+        }
+        st.xp += added; save();
+        const doneNow = [];   // missions that are complete but unclaimed (the UI shows a dot)
+        return { xp: added, mult, lines: lines.map((l) => [l[0], Math.round(l[1] * mult)]), levelBefore: beforeLevel, levelAfter: api.level(), ended: api.ended(),
+          missionsReady: api.dailyMissions().concat(api.weeklyMissions()).filter((m) => m.done && !m.claimed).map((m) => m.id), doneNow };
+      },
+
+      // ---- rewards
+      reward(level, track) { return (track === 'premium' ? PREMIUM : FREE)[level] || null; },
+      canClaim(level, track) {
+        if (level > api.level() || level < 1) return false;
+        if (track === 'premium' && !st.premium) return false;
+        return !st.claimed[track].includes(level) && !!api.reward(level, track);
+      },
+      claim(level, track) { if (!api.canClaim(level, track)) return null; st.claimed[track].push(level); save(); return api.reward(level, track); },
+      claimAll() { const got = []; for (let l = 1; l <= api.level(); l++) ['free', 'premium'].forEach((t) => { const r = api.claim(l, t); if (r) got.push({ level: l, track: t, reward: r }); }); return got; },
+      isClaimed: (level, track) => st.claimed[track].includes(level),
+      unclaimedCount() { let n = 0; for (let l = 1; l <= api.level(); l++) ['free', 'premium'].forEach((t) => { if (api.canClaim(l, t)) n++; }); return n + api.dailyMissions().concat(api.weeklyMissions()).filter((m) => m.done && !m.claimed).length; },
+
+      // ---- owned cosmetics + equip
+      owned(type) {
+        const base = { title: ['default'], frame: ['default'], arena: ['default'], fx: ['default'], avatar: [] }[type].slice();
+        ['free', 'premium'].forEach((t) => st.claimed[t].forEach((l) => { const r = api.reward(l, t); if (r && r.type === type && !base.includes(r.id)) base.push(r.id); }));
+        return base;
+      },
+      equipped: (type) => st.equip[type],
+      equip(type, id) { if (id !== null && !api.owned(type).includes(id)) return false; st.equip[type] = id; save(); return true; },
+      prepBonus() { let s = 0; ['free', 'premium'].forEach((t) => st.claimed[t].forEach((l) => { const r = api.reward(l, t); if (r && r.type === 'perk') s += r.sec; })); return s; },
+    };
+    return api;
+  }
+
+  AMB.Pass = { create, KEY, SEASON, COSMETICS, FREE, PREMIUM, DAILY, WEEKLY, dayKey, weekKey, rewardName };
 })();
 
 </script>
@@ -3744,6 +4073,7 @@ AMB.IMAGES = {
     S.screen = screen;
     document.body.classList.toggle('in-match', screen === 'match');   // page scroll is locked only during a match
     window.scrollTo(0, 0);
+    if (globalThis.AMB && AMB.PassUI) { if (screen === 'menu') AMB.PassUI.refreshMenu(); if (screen === 'pass') AMB.PassUI.render(); }
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -3806,6 +4136,10 @@ AMB.IMAGES = {
 
   // ======================================================================= round flow
   function prepSeconds() {
+    const bonus = AMB.pass ? AMB.pass.prepBonus() : 0;   // battle-pass perk (+ a few seconds, never stats)
+    return prepBase() + bonus;
+  }
+  function prepBase() {
     const learn = S.match && S.match.round <= 2 ? 20 : 0;   // first two rounds: +20s to learn the screen
     if (S.mode === 'hotseat') return CFG.match.hotseatPrepSeconds + learn;
     if (S.mode === 'friendly') return CFG.match.prepSeconds * 2 + learn;
@@ -4291,7 +4625,7 @@ AMB.IMAGES = {
       <div class="phases">${phases}</div>
       <span class="timer" title="مؤقت مرحلة التجهيز">${S.paused ? '⏸' : left}</span>
       <span class="tb-spacer"></span>
-      <span class="lifechip me" title="حياة بطلك">${portrait(HEROES[p.heroId], { k: 'tb0' })}${esc(p.name)} ${icon('heart')} ${lifeStr(p.life)}</span>
+      <span class="lifechip me" title="حياة بطلك">${portrait(myAvatar(p, 0), { k: 'tb0' })}${esc(p.name)} ${icon('heart')} ${lifeStr(p.life)}</span>
       <span class="lifechip" title="حياة بطل الخصم">${portrait(HEROES[o.heroId], { k: 'tb1' })}${esc(o.name)} ${icon('heart')} ${lifeStr(o.life)}</span>
       <span class="res gold" title="الذهب">${icon('gold')} ${p.gold}</span>
       <span class="res ess" title="الجوهر: متاح / الإجمالي (يُدفع فقط عند تفعيل القدرة)">${icon('essence')} ${avail}/${p.essence}</span>
@@ -4339,6 +4673,7 @@ AMB.IMAGES = {
     const row = (side, ch, mine) => [0, 1, 2, 3].map((k) => cell(side, ch + (mine ? k : 3 - k), mine)).join('');
     const o = 1 - v;
     const fe = $('field');
+    if (AMB.PassUI) { const ac = (v === 0 && S.mode !== 'hotseat') ? AMB.PassUI.arenaClass() : ''; [...fe.classList].filter((c) => c.startsWith('ar-')).forEach((c) => fe.classList.remove(c)); if (ac) fe.classList.add(ac); }
     fe.style.setProperty('--mw', WORLDS[HEROES[p.heroId].world].color);
     fe.style.setProperty('--ew', WORLDS[HEROES[m.players[o].heroId].world].color);
     $('slots').innerHTML =
@@ -4685,6 +5020,11 @@ AMB.IMAGES = {
   }
 
   // ======================================================================= results / stats / codex
+  function myAvatar(p, i) {   // equipped battle-pass avatar replaces only the picture of your own hero chip (never stats)
+    if (i !== 0 || S.mode === 'hotseat' || !AMB.PassUI) return HEROES[p.heroId];
+    const id = AMB.PassUI.avatarId();
+    return (id && AMB.PassUI.avatarDef(id)) || HEROES[p.heroId];
+  }
   function showResults() {
     const m = S.match;
     closeOverlay();
@@ -4692,6 +5032,7 @@ AMB.IMAGES = {
     S.phase = 'over';
     const secs = Math.round((Date.now() - S.startTs) / 1000);
     if (S.mode !== 'friendly' && !m._recorded) { AMB.telemetry.recordMatch(m, { seconds: secs }); m._recorded = true; }
+    if (!m._passDone) { m._passDone = true; try { S.passResult = AMB.pass.recordMatch(m.summary(0)); } catch (e) { S.passResult = null; } }
     let title;
     if (m.winner === null || m.winner === undefined) title = 'تعادل';
     else if (S.mode === 'hotseat') title = `فاز ${esc(m.players[m.winner].name)}!`;
@@ -4716,9 +5057,13 @@ AMB.IMAGES = {
     const myWin = S.mode === 'hotseat' ? m.winner != null : m.winner === 0;
     const wi = S.mode === 'hotseat' && m.winner != null ? m.winner : 0;   // vs AI: always show your own hero
     const heroDef = HEROES[m.players[wi].heroId];
-    const stage = `<div class="res-stage ${m.winner == null ? 'draw' : myWin ? 'victory' : 'defeat'}" style="--wc:${WORLDS[heroDef.world].color}"><div class="res-rays"></div><div class="res-hero">${portrait(heroDef, { bare: true, k: 'resh' })}<i class="sheen"></i></div><div class="res-hname">${heroDef.name}</div></div>`;
+    const own = S.mode !== 'hotseat' && wi === 0;
+    const avDef = own ? myAvatar(m.players[0], 0) : heroDef;
+    const ptitle = own && AMB.PassUI ? AMB.PassUI.titleName() : '';
+    const stage = `<div class="res-stage ${m.winner == null ? 'draw' : myWin ? 'victory' : 'defeat'}" style="--wc:${WORLDS[heroDef.world].color}"><div class="res-rays"></div><div class="res-hero">${portrait(avDef, { bare: true, k: 'resh' })}<i class="sheen"></i></div><div class="res-hname">${avDef.name}</div>${ptitle ? `<div class="res-title">${ptitle}</div>` : ''}</div>`;
     $('results').innerHTML = `${stage}<div class="res-banner"><h1>${title}</h1><p class="hint">${m.round} جولات · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة ${S.mode === 'friendly' ? '· مباراة ودية (لم تُسجَّل)' : ''}</p>
       <div class="timeline">${tl}</div><p class="hint">أخضر = فوز ${esc(m.players[0].name)} · أحمر = فوز ${esc(m.players[1].name)}</p></div>
+      ${AMB.PassUI ? AMB.PassUI.resultPanel(S.passResult) : ''}
       <div class="res-cols">${cols}</div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px">
         <button class="btn primary big" data-act="again">مباراة جديدة</button>
@@ -4726,7 +5071,7 @@ AMB.IMAGES = {
         <button class="btn big ghost" data-act="go" data-to="menu">القائمة الرئيسية</button></div>`;
     show('results');
     if (m.winner != null) { sfx(myWin ? 'win' : 'lose'); }
-    if (myWin) setTimeout(() => { const h = document.querySelector('.res-hero'); if (h) ['#ffd24a', '#ff4f8b', '#5fe3ff', '#7bd46a', '#ffffff'].forEach((c) => burst(h, c, 14, { r: 150, s: 8 })); }, 250);
+    if (myWin) setTimeout(() => { const h = document.querySelector('.res-hero'); if (h) (own && AMB.PassUI ? AMB.PassUI.fxColors() : ['#ffd24a', '#ff4f8b', '#5fe3ff', '#7bd46a', '#ffffff']).forEach((c) => burst(h, c, 14, { r: 150, s: 8 })); }, 250);
   }
 
   function renderStats() {
@@ -5059,7 +5404,185 @@ AMB.IMAGES = {
   })();
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML };
+  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal };
+  if (AMB.PassUI) { AMB.PassUI.installActions(); AMB.PassUI.applyCosmetics(); AMB.PassUI.refreshMenu(); }
+})();
+
+</script>
+<script>
+/*
+ * Battle pass screen ("ممر الصدع"): track, missions, profile; plus the cosmetics applied in the match UI.
+ * Logic lives in core/pass.js. Progress is saved in this browser only.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const store = (() => { try { const k = '__amb_t'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch (e) { const m = {}; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); } }; } })();
+  const pass = (AMB.pass = AMB.Pass.create(store));
+  const P = AMB.Pass, C = P.COSMETICS, TYPE = pass.TYPE_NAME;
+  const { icon, portrait } = AMB.art;
+  const UI = () => globalThis.AMB_UI;
+  let tab = 'track';
+
+  const avatarDef = (id) => AMB.DATA.UNITS[id] || AMB.DATA.HEROES[id] || null;
+  const SLOTS = [['title', 'اللقب'], ['frame', 'إطار البطل'], ['arena', 'ثيم الساحة'], ['fx', 'تأثير الفوز'], ['avatar', 'الصورة الرمزية']];
+
+  // ---------------------------------------------------------------- where does an item come from?
+  function source(type, id) {
+    for (const [tr, tbl] of [['free', P.FREE], ['premium', P.PREMIUM]]) {
+      for (const [lv, r] of Object.entries(tbl)) if (r.type === type && r.id === id) return { track: tr, level: +lv };
+    }
+    return null;
+  }
+
+  // ---------------------------------------------------------------- previews
+  function preview(type, id, extra) {
+    if (type === 'frame') { const f = C.frame[id] || {}; return `<span class="pv frame" style="--c1:${f.c1 || '#555'};--c2:${f.c2 || '#222'}">${icon('crown')}</span>`; }
+    if (type === 'arena') return `<span class="pv arena ar-${id}"></span>`;
+    if (type === 'fx') return `<span class="pv fxp">${((C.fx[id] || {}).colors || []).map((c) => `<i style="background:${c}"></i>`).join('')}</span>`;
+    if (type === 'title') return `<span class="pv title">${esc((C.title[id] || {}).name || id)}</span>`;
+    if (type === 'perk') return `<span class="pv perk">${icon('wind')}<b>+${(extra && extra.sec) || 5}ث</b></span>`;
+    if (type === 'avatar') { const d = avatarDef(id); return `<span class="pv avatar">${d ? portrait(d, { bare: true, k: 'pv' + id }) : ''}</span>`; }
+    return '';
+  }
+
+  // ---------------------------------------------------------------- applied in the match UI
+  function applyCosmetics() {
+    const el = document.documentElement, f = pass.equipped('frame'), fr = C.frame[f];
+    el.dataset.frame = f || 'default';
+    if (fr && fr.c1) { el.style.setProperty('--frame-c1', fr.c1); el.style.setProperty('--frame-c2', fr.c2); }
+  }
+  const arenaClass = () => { const a = pass.equipped('arena'); return a && a !== 'default' ? 'ar-' + a : ''; };
+  const fxColors = () => (C.fx[pass.equipped('fx')] || C.fx.default).colors;
+  const avatarId = () => pass.equipped('avatar');
+  const titleName = () => (C.title[pass.equipped('title')] || C.title.default).name;
+
+  // ---------------------------------------------------------------- results panel (xp gained)
+  function resultPanel(r) {
+    if (!r) return '';
+    if (r.mult === 0) return `<div class="xp-panel"><div class="xp-h"><b>ممر الصدع</b></div><p class="hint">المباراة الودية لا تمنح خبرة، جرّب «ضد الذكاء الاصطناعي» لتتقدم في الممر.</p></div>`;
+    const lv = pass.level(), pct = pass.maxed() ? 100 : pass.xpInLevel();
+    const up = r.levelAfter > r.levelBefore;
+    return `<div class="xp-panel"><div class="xp-h"><b>ممر الصدع</b><span class="xp-gain">+${r.xp} خبرة</span></div>
+      ${r.ended ? '<p class="hint">انتهى الموسم: لا تُضاف خبرة جديدة.</p>' : ''}
+      <ul class="xp-lines">${r.lines.map((l) => `<li><span>${l[0]}</span><b>+${l[1]}</b></li>`).join('')}</ul>
+      <div class="xp-bar"><i style="width:${pct}%"></i></div>
+      <div class="xp-lv">المستوى <b>${lv}</b>${up ? ` <span class="xp-up">ارتفعت من ${r.levelBefore} ← ${r.levelAfter} 🎉</span>` : ''}</div>
+      ${pass.unclaimedCount() ? `<button class="btn primary" data-act="go" data-to="pass">لديك ${pass.unclaimedCount()} مكافأة/مهمة جاهزة للاستلام</button>` : ''}</div>`;
+  }
+
+  function refreshMenu() {
+    const b = $('menu-pass'); if (!b) return;
+    const n = pass.unclaimedCount();
+    b.innerHTML = `ممر الصدع <small>مستوى ${pass.level()}</small>${n ? `<span class="dot">${n}</span>` : ''}`;
+  }
+
+  // ---------------------------------------------------------------- screen
+  function cellHTML(level, track) {
+    const r = pass.reward(level, track); if (!r) return '<div class="pcell empty"></div>';
+    const claimed = pass.isClaimed(level, track), can = pass.canClaim(level, track), reached = level <= pass.level();
+    const premLock = track === 'premium' && !pass.isPremium();
+    const cls = claimed ? 'claimed' : can ? 'can' : premLock ? 'premlock' : reached ? '' : 'locked';
+    const act = can ? 'passClaim' : claimed && r.type !== 'perk' ? 'passEquipReward' : premLock && reached ? 'passPremium' : '';
+    return `<div class="pcell ${cls} ${r.big ? 'big' : ''}" ${act ? `data-act="${act}"` : ''} data-level="${level}" data-track="${track}" title="${esc(TYPE[r.type] + ': ' + pass.rewardName(r))}">
+      <span class="pc-type">${TYPE[r.type]}</span>${preview(r.type, r.id, r)}<span class="pc-name">${esc(pass.rewardName(r))}</span>
+      <span class="pc-state">${claimed ? '✓ ' + (r.type === 'perk' ? 'مفعّلة' : 'اضغط للتجهيز') : can ? 'استلم' : premLock ? '🔒 بريميوم' : reached ? '' : 'مستوى ' + level}</span></div>`;
+  }
+
+  function trackHTML() {
+    const cols = [];
+    for (let l = 1; l <= P.SEASON.levels; l++) {
+      cols.push(`<div class="pcol ${l === pass.level() ? 'now' : ''} ${l <= pass.level() ? 'reached' : ''}" data-col="${l}"><div class="plv">${l}</div>${cellHTML(l, 'free')}${cellHTML(l, 'premium')}</div>`);
+    }
+    const n = [];
+    for (let l = 1; l <= pass.level(); l++) ['free', 'premium'].forEach((t) => { if (pass.canClaim(l, t)) n.push(1); });
+    return `<div class="ptools"><button class="btn primary" data-act="passClaimAll" ${n.length ? '' : 'disabled'}>استلم الكل (${n.length})</button>
+      <span class="hint">كل المكافآت تجميلية، ما عدا «مؤقت التجهيز» (وقت أطول للتفكير فقط). لا شي منها يقوّي الوحدات.</span></div>
+      <div class="ptrack-wrap"><div class="prow-labels"><span></span><b>مجاني</b><b>بريميوم 🔒</b></div><div class="ptrack" id="ptrack">${cols.join('')}</div></div>`;
+  }
+
+  function missionHTML(m) {
+    const pct = Math.round((m.progress / m.target) * 100);
+    return `<div class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}"><div class="m-top"><b>${esc(m.name)}</b><span class="m-xp">+${m.xp} خبرة</span></div>
+      <div class="xp-bar"><i style="width:${pct}%"></i></div>
+      <div class="m-bot"><span>${m.progress.toLocaleString('en-US')} / ${m.target.toLocaleString('en-US')}</span>
+      ${m.claimed ? '<span class="m-ok">✓ تم الاستلام</span>' : m.done ? `<button class="btn small primary" data-act="passClaimMission" data-id="${m.id}">استلم</button>` : '<span class="m-wait">جارية</span>'}</div></div>`;
+  }
+  function missionsHTML() {
+    const d = new Date(), mid = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), hrs = Math.max(1, Math.ceil((mid - d) / 3600000));
+    return `<h3>مهام اليوم <small>تتجدد بعد ${hrs} ساعة</small></h3><div class="missions">${pass.dailyMissions().map(missionHTML).join('')}</div>
+      <h3>مهام الأسبوع</h3><div class="missions">${pass.weeklyMissions().map(missionHTML).join('')}</div>
+      <p class="hint">تُحتسب المباريات ضد الذكاء الاصطناعي أو على نفس الجهاز. المباراة الودية لا تُحتسب.</p>`;
+  }
+
+  function optionHTML(type, id) {
+    const owned = pass.owned(type).includes(id), on = pass.equipped(type) === id;
+    const src = source(type, id);
+    const hint = owned ? '' : src ? `${src.track === 'premium' ? 'بريميوم' : 'مجاني'} · مستوى ${src.level}` : '—';
+    const name = type === 'avatar' ? ((avatarDef(id) || {}).name || id) : ((C[type][id] || {}).name || id);
+    return `<button class="opt ${on ? 'on' : ''} ${owned ? '' : 'locked'}" ${owned ? `data-act="passEquip" data-type="${type}" data-id="${id}"` : 'disabled'} title="${esc(name)}">
+      ${preview(type, id)}<span class="o-name">${esc(name)}</span>${on ? '<span class="o-on">✓</span>' : ''}${hint ? `<span class="o-hint">${hint}</span>` : ''}</button>`;
+  }
+  function profileHTML() {
+    const av = avatarId(), def = av ? avatarDef(av) : null;
+    const prevHero = def ? portrait(def, { bare: true, k: 'prof' }) : `<span class="no-av">${icon('crown')}</span>`;
+    const sections = SLOTS.map(([type, label]) => {
+      let ids;
+      if (type === 'avatar') { const all = Object.values(P.FREE).concat(Object.values(P.PREMIUM)).filter((r) => r.type === 'avatar').map((r) => r.id); ids = all; }
+      else ids = Object.keys(C[type]);
+      const noneOpt = type === 'avatar' ? `<button class="opt ${av ? '' : 'on'}" data-act="passEquip" data-type="avatar" data-id=""><span class="pv avatar none">${icon('crown')}</span><span class="o-name">بطلك الافتراضي</span>${av ? '' : '<span class="o-on">✓</span>'}</button>` : '';
+      return `<h3>${label}</h3><div class="opts">${noneOpt}${ids.map((id) => optionHTML(type, id)).join('')}</div>`;
+    }).join('');
+    return `<div class="prof-card"><span class="prof-av">${prevHero}</span><div><b class="prof-title">${esc(titleName())}</b>
+      <div class="hint">الإطار: ${esc(C.frame[pass.equipped('frame')].name)} · الساحة: ${esc(C.arena[pass.equipped('arena')].name)} · الفوز: ${esc(C.fx[pass.equipped('fx')].name)}</div>
+      <div class="hint">مؤقت التجهيز الإضافي: +${pass.prepBonus()} ث</div></div></div>${sections}`;
+  }
+
+  function render() {
+    const root = $('pass'); if (!root) return;
+    const lv = pass.level(), pct = pass.maxed() ? 100 : pass.xpInLevel();
+    const days = pass.daysLeft();
+    root.innerHTML = `<div class="pass-head"><div class="ph-lv"><small>المستوى</small><b>${lv}</b></div>
+      <div class="ph-mid"><div class="ph-name">${P.SEASON.name}</div><div class="xp-bar big"><i style="width:${pct}%"></i></div>
+        <div class="ph-sub">${pass.maxed() ? 'وصلت للحد الأقصى 🎉' : `${pass.xpInLevel()} / ${P.SEASON.xpPerLevel} خبرة للمستوى ${lv + 1}`} · ${pass.ended() ? '<b style="color:var(--red)">انتهى الموسم</b>' : `باقي ${days} يوم`}</div></div>
+      <button class="btn ph-prem" data-act="passPremium" title="غير متاح بعد">${pass.isPremium() ? '✓ بريميوم' : '👑 بريميوم · قريبًا'}</button></div>
+      <div class="ptabs">${[['track', 'المسار'], ['missions', 'المهام'], ['profile', 'ملفي']].map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-act="passTab" data-v="${k}">${n}${k === 'missions' && pass.dailyMissions().concat(pass.weeklyMissions()).some((m) => m.done && !m.claimed) ? ' <span class="dot sm"></span>' : ''}</button>`).join('')}</div>
+      <div class="pbody">${tab === 'track' ? trackHTML() : tab === 'missions' ? missionsHTML() : profileHTML()}</div>`;
+    if (tab === 'track') { const tr = $('ptrack'); if (tr) { const col = tr.querySelector(`[data-col="${Math.max(1, lv - 1)}"]`); if (col) tr.scrollLeft = col.offsetLeft - 8; } }
+    refreshMenu();
+  }
+
+  // ---------------------------------------------------------------- actions
+  const toast = (m, k) => UI() && UI().toast(m, k);
+  function after() { applyCosmetics(); render(); }
+  function installActions() {
+    const ACT = UI().ACT;
+    Object.assign(ACT, {
+      passTab: (d) => { tab = d.v; render(); },
+      passClaim: (d) => {
+        const lvl = +d.level, tr = d.track, r = pass.claim(lvl, tr);
+        if (!r) return;
+        UI().sfx('merge');
+        if (r.type !== 'perk' && pass.equipped(r.type) === (r.type === 'avatar' ? null : 'default')) pass.equip(r.type, r.id);   // first item of a kind is equipped for you
+        toast(`استلمت: ${pass.rewardName(r)} (${TYPE[r.type]})`, 'good'); after();
+      },
+      passClaimAll: () => {
+        const got = pass.claimAll(); if (!got.length) return;
+        got.forEach((g) => { const r = g.reward; if (r.type !== 'perk' && pass.equipped(r.type) === (r.type === 'avatar' ? null : 'default')) pass.equip(r.type, r.id); });
+        UI().sfx('merge'); toast(`استلمت ${got.length} مكافأة`, 'good'); after();
+      },
+      passEquipReward: (d) => { const r = pass.reward(+d.level, d.track); if (r && pass.equip(r.type, r.id)) { UI().sfx('click'); toast(`تم تجهيز: ${pass.rewardName(r)}`, 'good'); after(); } },
+      passEquip: (d) => { if (pass.equip(d.type, d.id === '' ? null : d.id)) { UI().sfx('click'); after(); } },
+      passClaimMission: (d) => { const r = pass.claimMission(d.id); if (r) { UI().sfx('merge'); toast(`+${r.xp} خبرة${r.levelUp ? ' — ارتفع مستواك!' : ''}`, 'good'); after(); } },
+      passPremium: () => toast('المسار المميز غير متاح بعد: يحتاج نظام حسابات ودفع غير موجود حاليًا. كل مكافآت المسار المجاني متاحة لك.', ''),
+    });
+  }
+
+  AMB.PassUI = { render, refreshMenu, resultPanel, applyCosmetics, arenaClass, fxColors, avatarId, avatarDef, titleName, preview, installActions };
+  // the match UI loads first and exposes AMB_UI; hook up once it exists
+  if (UI()) { installActions(); }
+  applyCosmetics(); refreshMenu();
 })();
 
 </script>

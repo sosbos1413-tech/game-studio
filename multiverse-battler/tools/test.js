@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Rule tests for the core (no browser needed):  node tools/test.js */
 const path = require('path');
-['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
+['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -178,6 +178,76 @@ t('autoArrange never uses the slot of a summoned hero', () => {
 });
 t('every role has a placement hint and a kind (shown on cards)', () => {
   Object.values(AMB.DATA.ROLES).forEach((r) => { ok(r.place && ['front', 'back', 'any'].includes(r.side) && ['def', 'off'].includes(r.kind), r.id); });
+});
+
+console.log('battle pass');
+const memStore = () => { const m = {}; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, _m: m }; };
+const T0 = new Date(2026, 10, 5, 12).getTime();
+const mkPass = (st, t) => AMB.Pass.create(st || memStore(), () => (t == null ? T0 : t));
+const sm = (o) => Object.assign({ mode: 'normal', won: false, roundsPlayed: 7, roundsWon: 0, finaleWon: false, buys: 0, rerolls: 0, merges: 0, summoned: false, stageRewards: 0, damage: 0, worldsUsed: 1 }, o || {});
+t('pass: both tracks have 30 valid rewards with no duplicate cosmetic across tracks', () => {
+  const P = AMB.Pass, seen = new Set();
+  eq(Object.keys(P.FREE).length, 30); eq(Object.keys(P.PREMIUM).length, 30);
+  [['free', P.FREE], ['premium', P.PREMIUM]].forEach(([tr, tbl]) => Object.values(tbl).forEach((r) => {
+    if (r.type === 'perk') return;
+    const k = r.type + ':' + r.id; ok(!seen.has(k), 'duplicate ' + k); seen.add(k);
+    if (r.type === 'avatar') ok(AMB.DATA.UNITS[r.id] || AMB.DATA.HEROES[r.id], 'unknown avatar ' + r.id); else ok(P.COSMETICS[r.type][r.id], 'unknown ' + r.type + ' ' + r.id);
+  }));
+});
+t('pass: xp -> level (100 per level, max 30)', () => {
+  const p = mkPass(); eq(p.level(), 1); p.addXp(99); eq(p.level(), 1); p.addXp(1); eq(p.level(), 2); p.addXp(100000); eq(p.level(), 30); ok(p.maxed());
+});
+t('pass: match xp = played + rounds + win (+ first win of the day once), scaled by mode, friendly = 0', () => {
+  const p = mkPass();
+  const a = p.recordMatch(sm({ won: true, roundsWon: 4 })); eq(a.xp, 30 + 24 + 40 + 40, 'first win of the day included');
+  const b = p.recordMatch(sm({ won: true, roundsWon: 4 })); eq(b.xp, 30 + 24 + 40, 'first win bonus only once per day');
+  const hard = mkPass().recordMatch(sm({ mode: 'hard', roundsWon: 2 })); eq(hard.xp, Math.round((30 + 12) * 1.25));
+  const easy = mkPass().recordMatch(sm({ mode: 'easy', roundsWon: 2 })); eq(easy.xp, Math.round((30 + 12) * 0.6));
+  const fr = mkPass(); const f = fr.recordMatch(sm({ mode: 'friendly', won: true, roundsWon: 5 })); eq(f.xp, 0); eq(fr.state().xp, 0);
+  ok(mkPass().recordMatch(sm({ won: true, finaleWon: true, roundsWon: 1 })).xp > mkPass().recordMatch(sm({ won: true, roundsWon: 1 })).xp, 'finale bonus');
+});
+t('pass: daily missions are 3, stable within a day, change on another day; progress and one-time claim', () => {
+  const st = memStore(); let p = mkPass(st);
+  const d = p.dailyMissions(); eq(d.length, 3); eq(new Set(d.map((m) => m.id)).size, 3);
+  eq(mkPass(st).dailyMissions().map((m) => m.id).join(), d.map((m) => m.id).join(), 'same day -> same missions');
+  const next = mkPass(memStore(), T0 + 3 * 86400000).dailyMissions().map((m) => m.id).join();
+  const other = [1, 2, 3, 4, 5, 6].some((k) => mkPass(memStore(), T0 + k * 86400000).dailyMissions().map((m) => m.id).join() !== d.map((m) => m.id).join()); ok(other, 'missions rotate across days');
+  eq(p.weeklyMissions().length, 3);
+  // finish everything possible in one huge match, then claim
+  p.recordMatch(sm({ won: true, roundsWon: 7, finaleWon: true, buys: 40, rerolls: 20, merges: 10, summoned: true, stageRewards: 3, damage: 20000, worldsUsed: 4 }));
+  const done = p.dailyMissions().concat(p.weeklyMissions()).filter((m) => m.done); ok(done.length >= 3, 'a huge match completes several missions');
+  const xp0 = p.state().xp; const c = p.claimMission(done[0].id); ok(c && c.xp > 0); eq(p.state().xp, xp0 + c.xp); eq(p.claimMission(done[0].id), null, 'cannot claim twice');
+});
+t('pass: missions reset on a new day (claims too)', () => {
+  const st = memStore(); const p = mkPass(st); p.recordMatch(sm({ won: true, roundsWon: 7, buys: 40, merges: 5 }));
+  const nd = mkPass(st, T0 + 86400000); ok(nd.dailyMissions().every((m) => m.progress === 0), 'daily progress reset'); ok(nd.state().xp > 0, 'xp is kept');
+});
+t('pass: claiming needs the level, premium needs premium, no double claim, claimAll', () => {
+  const p = mkPass();
+  ok(!p.canClaim(2, 'free'), 'level 2 not reached'); ok(p.canClaim(1, 'free')); ok(p.claim(1, 'free')); ok(!p.claim(1, 'free'), 'no double claim');
+  ok(!p.canClaim(1, 'premium'), 'premium locked'); p.addXp(500); ok(p.level() === 6);
+  const got = p.claimAll(); eq(got.filter((g) => g.track === 'premium').length, 0, 'premium stays locked'); eq(got.length, 5, 'free levels 2-6');
+  p.setPremium(true); ok(p.claimAll().length === 6, 'premium levels 1-6 after unlocking');
+});
+t('pass: equip only what you own; perks add prep time', () => {
+  const p = mkPass(); p.addXp(1400);
+  ok(!p.equip('frame', 'gold'), 'not owned yet'); eq(p.prepBonus(), 0);
+  p.claimAll(); ok(p.equip('frame', 'bronze')); ok(p.equip('avatar', 'ash_ronin')); ok(!p.equip('avatar', 'kagira'), 'premium avatar locked');
+  eq(p.prepBonus(), 10, 'perk levels 5 and 15 give +5s each'); ok(p.owned('title').includes('t_recruit'));
+});
+t('pass: season end freezes xp but rewards you already earned stay claimable', () => {
+  const st = memStore(); const p = mkPass(st); p.addXp(300);
+  const late = mkPass(st, T0 + 50 * 86400000); ok(late.ended()); eq(late.addXp(500), 0); eq(late.state().xp, 300); ok(late.claim(3, 'free'));
+  eq(late.recordMatch(sm({ won: true, roundsWon: 7 })).xp, 0);
+});
+t('pass: progress persists through storage; corrupt data is ignored', () => {
+  const st = memStore(); mkPass(st).addXp(250); eq(mkPass(st).level(), 3);
+  const bad = memStore(); bad.setItem(AMB.Pass.KEY, '{not json'); eq(mkPass(bad).level(), 1);
+});
+t('match.summary() reports the facts the pass needs', () => {
+  const m = new AMB.Match({ seed: 51, mode: 'ai', players: [{ heroId: 'kagira' }, { heroId: 'orath', isAI: true, difficulty: 'hard' }] });
+  while (!m.isOver) { m.startRound(); AMB.AI.prep(m, 0); AMB.AI.prep(m, 1); m.resolveCombat(m.createCombat(false).runToEnd()); }
+  const s0 = m.summary(0); eq(s0.mode, 'hard'); eq(s0.roundsPlayed, m.round); eq(s0.roundsWon, m.players[0].stats.wins); ok(s0.buys > 0); ok(s0.worldsUsed >= 1); eq(typeof s0.won, 'boolean');
 });
 
 console.log('economy');

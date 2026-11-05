@@ -26,6 +26,7 @@
       </div>
       <div class="menu-buttons">
         <button class="btn big primary" data-act="go" data-to="mode">العب</button>
+        <button class="btn big" data-act="go" data-to="pass" id="menu-pass">ممر الصدع</button>
         <button class="btn big" data-act="go" data-to="codex">مكتبة الشخصيات</button>
         <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
         <button class="btn big ghost" data-act="howto">كيف ألعب؟</button>
@@ -114,6 +115,11 @@
   </section>
 
   <!-- ============ STATS ============ -->
+  <section class="screen" id="scr-pass">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>ممر الصدع</h2></header>
+    <div class="pass" id="pass"></div>
+  </section>
+
   <section class="screen" id="scr-stats">
     <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الإحصائيات والتوازن</h2></header>
     <div class="stats" id="stats"></div>
@@ -138,9 +144,11 @@
 <script src="core/match.js"></script>
 <script src="core/ai.js"></script>
 <script src="core/telemetry.js"></script>
+<script src="core/pass.js"></script>
 <script src="assets/characters/manifest.js"></script>
 <script src="ui/characters.js"></script>
 <script src="ui/art.js"></script>
 <script src="ui/ui.js"></script>
+<script src="ui/pass-ui.js"></script>
 </body>
 </html>

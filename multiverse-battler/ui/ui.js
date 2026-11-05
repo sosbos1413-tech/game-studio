@@ -32,6 +32,7 @@
     document.body.classList.toggle('in-match', screen === 'match');   // page scroll is locked only during a match
     window.scrollTo(0, 0);
     if (globalThis.AMB && AMB.PassUI) { if (screen === 'menu') AMB.PassUI.refreshMenu(); if (screen === 'pass') AMB.PassUI.render(); }
+    if (globalThis.AMB && AMB.CollectionUI) { if (screen === 'menu') AMB.CollectionUI.refreshMenu(); if (screen === 'cards') AMB.CollectionUI.render(); }
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -329,8 +330,11 @@
     const iconsRow = isHero
       ? disc('world', ART.WORLD_ICON[def.world], W.name) + roleD
       : disc('world', ART.WORLD_ICON[def.world], W.name) + rolePill + disc('skill', ART.SKILL_ICON[def.skill.type] || 'star', def.skill.name);
-    return `<div class="tcard hc full ${tier}${sc} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
-      <div class="hc-frame"><i class="sheen"></i></div>
+    const RA = AMB.ECONOMY && AMB.ECONOMY.rarities[def.rarity];
+    const rar = RA ? `<span class="hc-rar" title="الندرة: ${RA.name}">${RA.name}</span>` : '';
+    const lvl = o.lvl ? `<span class="hc-lvl" title="مستوى البطاقة (في الحملة والبرج)">Lv ${o.lvl}</span>` : '';
+    return `<div class="tcard hc full ${tier}${sc} r-${def.rarity || 'common'} ${o.cls || ''}" style="--wc:${W.color}" ${attrs}>
+      <div class="hc-frame"><i class="sheen"></i></div>${rar}${lvl}
       <div class="hc-art">${portrait(def, { bare: true, k: o.k })}</div><div class="hc-ring"></div>
       <div class="hc-name"><b>${def.name}</b></div>
       <div class="hc-icons">${iconsRow}</div>

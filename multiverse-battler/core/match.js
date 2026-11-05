@@ -28,6 +28,7 @@
       stats: { damageDealt: 0, goldSpent: 0, rerolls: 0, unitsBought: 0, merges: 0, wins: 0, losses: 0, draws: 0 },
       alive: true,
       blessings: { atkPct: 0, hpPct: 0, asPct: 0 }, rewardOffer: null, rewardLog: [],
+      cardPower: opts.cardPower || null,   // { defId: mult } from the collection — progression fights only
     };
   }
 
@@ -36,7 +37,9 @@
       this.mode = opts.mode || 'ai';
       this.seed = opts.seed || Math.floor(Math.random() * 2 ** 31);
       this.rng = AMB.util.RNG(this.seed);
-      this.players = opts.players.map((p, i) => newPlayer(i, p));
+      // card levels/rarity power exist only in progression fights (campaign, tower, events); quick and same-device matches stay even
+      this.progression = !!opts.progression;
+      this.players = opts.players.map((p, i) => newPlayer(i, this.progression ? p : Object.assign({}, p, { cardPower: null })));
       this.round = 0;
       this.phase = 'idle';
       this.pool = {};
@@ -421,7 +424,8 @@
       const p = this.players[pi];
       return {
         heroId: p.heroId, life: p.life, maxLife: p.maxLife, summoned: p.summoned, heroSlot: p.heroSlot,
-        units: Object.entries(p.board).map(([slot, u]) => ({ uid: u.uid, defId: u.defId, star: u.star, items: u.items.slice(), slot })),
+        units: Object.entries(p.board).map(([slot, u]) => ({ uid: u.uid, defId: u.defId, star: u.star, items: u.items.slice(), slot, power: (p.cardPower && p.cardPower[u.defId]) || 1 })),
+        heroPower: (p.cardPower && p.cardPower[p.heroId]) || 1,
         spells: p.armedSpells.slice(),
         blessings: Object.assign({}, p.blessings),
         abilities: Object.entries(p.abilities).map(([id, trigger]) => ({ id, trigger })),

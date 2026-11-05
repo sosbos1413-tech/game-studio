@@ -81,7 +81,7 @@
         const bl = spec.blessings || {};
         mods.atkPct += bl.atkPct || 0; mods.hpPct += bl.hpPct || 0; mods.asPct += bl.asPct || 0;   // stage-reward blessings
 
-        const sm = AMB.CONFIG.stars.mult[u.star];
+        const sm = AMB.CONFIG.stars.mult[u.star] * (u.power || 1);   // power: card level × rarity (progression fights only, else 1)
         const maxHp = def.hp * sm * (1 + mods.hpPct);
         const f = this._fighter(s, {
           uid: u.uid, defId: def.id, name: def.name, role: def.role, world: def.world, star: u.star,
@@ -108,7 +108,7 @@
         const pos = slotPos(s, spec.heroSlot);
         hf = this._fighter(s, Object.assign(base, {
           onBoard: true, slot: spec.heroSlot, row: pos.row, x: pos.x, y: pos.y,
-          atk: (hero.board.atk + HC.boardAtkPerRound * this.round) * (1 + hMods.atkPct),
+          atk: (hero.board.atk + HC.boardAtkPerRound * this.round) * (1 + hMods.atkPct) * (spec.heroPower || 1),
           as: hero.board.as * (1 + hMods.asPct), range: hero.board.range, def: hero.board.def + hMods.dr,
           crit: hero.board.crit, critDmg: this.C.critMult, lifesteal: 0, skillPower: 1, regenPct: hMods.regenPct,
         }));

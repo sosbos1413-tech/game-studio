@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Rule tests for the core (no browser needed):  node tools/test.js */
 const path = require('path');
-['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
+['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -388,6 +388,67 @@ t('events: a throwing listener does not stop the others', () => {
   ev.on('x', () => { throw new Error('boom'); }); ev.on('x', () => n++);
   const ce = console.error; console.error = () => {}; ev.emit('x'); console.error = ce;
   eq(n, 1);
+});
+
+console.log('rarity, collection, card upgrades');
+const RAR = () => AMB.ECONOMY.rarities;
+t('every card has a valid rarity; units follow tier, heroes are legendary', () => {
+  Object.values(AMB.DATA.UNITS).forEach((u) => { ok(RAR()[u.rarity], u.id); eq(u.rarity, AMB.DATA.TIER_RARITY[u.tier], u.id); });
+  Object.values(AMB.DATA.HEROES).forEach((h) => eq(h.rarity, 'legendary', h.id));
+});
+t('rarer = stronger and needs more copies at every level', () => {
+  const order = Object.values(RAR()).sort((a, b) => a.order - b.order);
+  eq(order.map((r) => r.en).join(), 'Common,Rare,Epic,Legendary');
+  for (let i = 1; i < order.length; i++) {
+    ok(order[i].power > order[i - 1].power, 'power ' + order[i].en);
+    eq(order[i].copies.length, order[i - 1].copies.length, 'same number of levels');
+    order[i].copies.forEach((c, k) => ok(c > order[i - 1].copies[k], `copies ${order[i].en} L${k + 2}`));
+  }
+  order.forEach((r) => r.copies.forEach((c, k) => k && ok(c > r.copies[k - 1], 'each level costs more')));
+});
+t('collection: duplicates level a card up, max level is a hard stop, saved', () => {
+  const mem = MEM();
+  const p = AMB.Profile.boot(mem), C = p.collection;
+  const ups = []; p.events.on('cardUpgraded', (e) => ups.push(e.level));
+  const id = 'ash_ronin';   // common: 2, 4, 8, 12
+  eq(C.level(id), 1); eq(C.needed(id), 2); ok(!C.canUpgrade(id));
+  eq(C.upgrade(id), 0, 'no copies, no upgrade');
+  C.add(id, 3); ok(C.canUpgrade(id)); eq(C.upgrade(id), 2); eq(C.copies(id), 1); eq(C.needed(id), 4);
+  C.add(id, 100);
+  while (C.canUpgrade(id)) C.upgrade(id);
+  eq(C.level(id), C.maxLevel(id)); eq(C.level(id), 5); ok(C.isMax(id)); eq(C.needed(id), 0);
+  eq(C.copies(id), 101 - 4 - 8 - 12);
+  eq(C.upgrade(id), 0, 'cannot pass max');
+  eq(ups.join(), '2,3,4,5');
+  const C2 = AMB.Profile.boot(mem).collection;
+  eq(C2.level(id), 5); eq(C2.totalUpgrades(), 4);
+  let threw = false; try { C.add('not_a_card', 1); } catch (e) { threw = true; } ok(threw);
+});
+t('collection: power = rarity × level bonus', () => {
+  const C = AMB.Profile.boot(MEM()).collection;
+  eq(C.power('ash_ronin'), 1);
+  eq(C.power('kagira'), RAR().legendary.power);
+  C.add('caldera_seer', 4); C.upgrade('caldera_seer');
+  ok(Math.abs(C.power('caldera_seer') - RAR().epic.power * (1 + AMB.ECONOMY.cards.levelBonus)) < 1e-9);
+  eq(C.powerMap().caldera_seer, Math.round(C.power('caldera_seer') * 1000) / 1000);
+});
+t('card power never touches quick matches (identical to a match without it)', () => {
+  const big = {}; Object.keys(AMB.DATA.UNITS).concat(Object.keys(AMB.DATA.HEROES)).forEach((id) => (big[id] = 3));
+  const run = (cp, prog) => {
+    const m = new AMB.Match({ seed: 77, progression: prog, players: [{ heroId: 'orath', isAI: true, cardPower: cp }, { heroId: 'merin', isAI: true }] });
+    while (!m.isOver) { m.startRound(); AMB.AI.prep(m, 0); AMB.AI.prep(m, 1); m.resolveCombat(m.createCombat(false).runToEnd()); }
+    return m.players.map((p) => p.life).join() + '|' + m.round + '|' + m.winner;
+  };
+  eq(run(big, false), run(null, false), 'quick match must ignore card power');
+  ok(run(big, true) !== run(null, true), 'progression match should feel the power');
+});
+t('progression power scales unit stats after synergies; synergies unchanged', () => {
+  const sp = (pw) => [side([Object.assign(U('moss_warden', 'f1'), { power: pw }), Object.assign(U('thorn_fox', 'f2'), { power: pw })]), side([U('grid_hound', 'f1')])];
+  const a = new AMB.Combat(sp(1), { seed: 3, round: 1 }), b = new AMB.Combat(sp(1.5), { seed: 3, round: 1 });
+  const fa = a.fighters.find((f) => f.defId === 'moss_warden'), fb = b.fighters.find((f) => f.defId === 'moss_warden');
+  ok(Math.abs(fb.maxHp / fa.maxHp - 1.5) < 1e-9, 'hp x1.5'); ok(Math.abs(fb.atk / fa.atk - 1.5) < 1e-9, 'atk x1.5');
+  const ids = (c) => c.sides[0].synergy.list.map((x) => x.id + ':' + x.activeTier).join();
+  ok(a.sides[0].synergy.list.length > 0, 'test board should have an active synergy'); eq(ids(a), ids(b));
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

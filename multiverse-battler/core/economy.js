@@ -14,6 +14,19 @@
     currencies: {
       shards: { name: 'شظايا', icon: 'gem', start: 0, max: 999999 },        // earned in missions/levels, spent on packs
     },
+    // Card rarity. `power` and card levels only apply in progression fights (campaign, tower, events),
+    // never in quick matches or same-device play, so those stay fair.
+    //   copies[i] = duplicate copies needed to go from level i+1 to level i+2 (rarer = more copies).
+    rarities: {
+      common:    { name: 'كومن',     en: 'Common',    order: 1, color: '#9aa3ad', c2: '#5d6670', power: 1.00, copies: [2, 4, 8, 12] },
+      rare:      { name: 'رير',      en: 'Rare',      order: 2, color: '#3d8ff0', c2: '#1b4f99', power: 1.04, copies: [3, 6, 10, 15] },
+      epic:      { name: 'إيبك',     en: 'Epic',      order: 3, color: '#a855f7', c2: '#5b1d99', power: 1.08, copies: [4, 8, 14, 20] },
+      legendary: { name: 'ليجندري', en: 'Legendary', order: 4, color: '#ff9f1a', c2: '#a34f00', power: 1.12, copies: [5, 10, 16, 25] },
+    },
+    cards: {
+      levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
+      allUnlocked: true,       // phase 3 switches this off (start with one character, unlock the rest)
+    },
   };
 
   // ---------------------------------------------------------------- wallet

@@ -62,11 +62,13 @@
    * Arrays are per star [1★, 2★, 3★].
    */
   const U = [];
+  // collectible rarity (see AMB.ECONOMY.rarities). Units follow their tier, heroes are legendary.
+  const TIER_RARITY = { 1: 'common', 2: 'rare', 3: 'epic' };
   function unit(id, name, en, world, role, tier, mana, skill, over) {
     const base = ROLE_BASE[role];
     const m = TIER_MULT[tier];
     U.push(Object.assign({
-      id, name, en, world, role, tier, cost: tier,
+      id, name, en, world, role, tier, cost: tier, rarity: TIER_RARITY[tier],
       hp: Math.round(base.hp * m), atk: Math.round(base.atk * m),
       as: base.as, range: base.range, def: base.def, crit: base.crit,
       mana, skill,
@@ -293,5 +295,6 @@
     ['bless_atk', 'bless_hp', 'bless_as', 'heal', 'xp', 'essence'],
   ];
 
-  AMB.DATA = { REWARDS, REWARD_POOLS, WORLDS, ROLES, ROLE_BASE, TIER_MULT, UNITS, HEROES, ITEMS, SYNERGIES, ABILITY_TRIGGERS };
+  Object.values(HEROES).forEach((h) => { h.rarity = h.rarity || 'legendary'; });
+  AMB.DATA = { REWARDS, REWARD_POOLS, WORLDS, ROLES, ROLE_BASE, TIER_MULT, TIER_RARITY, UNITS, HEROES, ITEMS, SYNERGIES, ABILITY_TRIGGERS };
 })();

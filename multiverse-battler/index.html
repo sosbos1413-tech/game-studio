@@ -27,6 +27,7 @@
       <div class="menu-buttons">
         <button class="btn big primary" data-act="go" data-to="mode">العب</button>
         <button class="btn big" data-act="go" data-to="pass" id="menu-pass">ممر الصدع</button>
+        <button class="btn big" data-act="go" data-to="cards" id="menu-cards">مجموعتي</button>
         <button class="btn big" data-act="go" data-to="codex">مكتبة الشخصيات</button>
         <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
         <button class="btn big ghost" data-act="howto">كيف ألعب؟</button>
@@ -120,6 +121,11 @@
     <div class="pass" id="pass"></div>
   </section>
 
+  <section class="screen" id="scr-cards">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>مجموعتي</h2></header>
+    <div class="collection" id="collection"></div>
+  </section>
+
   <section class="screen" id="scr-stats">
     <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الإحصائيات والتوازن</h2></header>
     <div class="stats" id="stats"></div>
@@ -146,6 +152,7 @@
 <script src="core/telemetry.js"></script>
 <script src="core/save.js"></script>
 <script src="core/economy.js"></script>
+<script src="core/collection.js"></script>
 <script src="core/profile.js"></script>
 <script src="core/pass.js"></script>
 <script src="assets/characters/manifest.js"></script>
@@ -153,5 +160,6 @@
 <script src="ui/art.js"></script>
 <script src="ui/ui.js"></script>
 <script src="ui/pass-ui.js"></script>
+<script src="ui/collection-ui.js"></script>
 </body>
 </html>

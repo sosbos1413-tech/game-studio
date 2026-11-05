@@ -35,7 +35,7 @@
   function preview(type, id, extra) {
     if (type === 'frame') { const f = C.frame[id] || {}; return `<span class="pv frame" style="--c1:${f.c1 || '#555'};--c2:${f.c2 || '#222'}">${icon('crown')}</span>`; }
     if (type === 'arena') return `<span class="pv arena ar-${id}"></span>`;
-    if (type === 'fx') return `<span class="pv fxp">${((C.fx[id] || {}).colors || []).map((c) => `<i style="background:${c}"></i>`).join('')}</span>`;
+    if (type === 'fx') return `<span class="pv fxsw">${((C.fx[id] || {}).colors || []).map((c) => `<i style="background:${c}"></i>`).join('')}</span>`;
     if (type === 'title') return `<span class="pv title">${esc((C.title[id] || {}).name || id)}</span>`;
     if (type === 'perk') return `<span class="pv perk">${icon('wind')}<b>+${(extra && extra.sec) || 5}ث</b></span>`;
     if (type === 'avatar') { const d = avatarDef(id); return `<span class="pv avatar">${d ? portrait(d, { bare: true, k: 'pv' + id }) : ''}</span>`; }
@@ -73,6 +73,12 @@
     (b.querySelector('.mt-l') || b).innerHTML = `ممر الصدع <small>${pass.level()}</small>${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
+  // ---------------------------------------------------------------- tips (ⓘ)
+  const ibtnP = (k) => `<button class="ibtn" data-act="info" data-k="${k}" title="شرح">ⓘ</button>`;
+  AMB.TIPS = AMB.TIPS || {};
+  AMB.TIPS.passinfo = () => ({ title: 'مكافآت الممر', html: '<p>كل المكافآت <b>تجميلية</b> (ألقاب، إطارات، ثيمات، تأثيرات، صور)، والشخصيات تفتح بطاقاتها.</p><p>الاستثناء الوحيد «مؤقت التجهيز»: وقت أطول للتفكير فقط. <b>ما فيه شي يقوّي الوحدات.</b></p><p>المسار المميز واجهة فقط حاليًا (قريبًا).</p>' });
+  AMB.TIPS.missinfo = () => ({ title: 'المهام', html: '<p>مهام اليوم تعطي <b>خبرة ممر + شظايا</b> تشتري فيها باكجات.</p><p>تُحتسب المباريات السريعة وعلى نفس الجهاز وقتالات الحملة، وتطوير البطاقات وفتح الباكجات. المباراة الودية لا تُحتسب.</p>' });
+
   // ---------------------------------------------------------------- screen
   function cellHTML(level, track) {
     const r = pass.reward(level, track); if (!r) return '<div class="pcell empty"></div>';
@@ -81,8 +87,8 @@
     const cls = claimed ? 'claimed' : can ? 'can' : premLock ? 'premlock' : reached ? '' : 'locked';
     const act = can ? 'passClaim' : claimed && r.type !== 'perk' ? 'passEquipReward' : premLock && reached ? 'passPremium' : '';
     return `<div class="pcell ${cls} ${r.big ? 'big' : ''}" ${act ? `data-act="${act}"` : ''} data-level="${level}" data-track="${track}" title="${esc(TYPE[r.type] + ': ' + pass.rewardName(r))}">
-      <span class="pc-type">${TYPE[r.type]}</span>${preview(r.type, r.id, r)}<span class="pc-name">${esc(pass.rewardName(r))}</span>
-      <span class="pc-state">${claimed ? '✓ ' + (r.type === 'perk' ? 'مفعّلة' : 'اضغط للتجهيز') : can ? 'استلم' : premLock ? '🔒 بريميوم' : reached ? '' : 'مستوى ' + level}</span></div>`;
+      ${preview(r.type, r.id, r)}<span class="pc-name">${esc(pass.rewardName(r))}</span>
+      <span class="pc-state">${claimed ? '✓' : can ? 'استلم' : premLock ? '🔒' : ''}</span></div>`;
   }
 
   function trackHTML() {
@@ -93,7 +99,7 @@
     const n = [];
     for (let l = 1; l <= pass.level(); l++) ['free', 'premium'].forEach((t) => { if (pass.canClaim(l, t)) n.push(1); });
     return `<div class="ptools"><button class="btn primary" data-act="passClaimAll" ${n.length ? '' : 'disabled'}>استلم الكل (${n.length})</button>
-      <span class="hint">كل المكافآت تجميلية، ما عدا «مؤقت التجهيز» (وقت أطول للتفكير فقط). لا شي منها يقوّي الوحدات.</span></div>
+      ${ibtnP('passinfo')}</div>
       <div class="ptrack-wrap"><div class="prow-labels"><span></span><b>مجاني</b><b>بريميوم 🔒</b></div><div class="ptrack" id="ptrack">${cols.join('')}</div></div>`;
   }
 
@@ -108,7 +114,7 @@
     const d = new Date(), mid = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), hrs = Math.max(1, Math.ceil((mid - d) / 3600000));
     return `<h3>مهام اليوم <small>تتجدد بعد ${hrs} ساعة</small></h3><div class="missions">${pass.dailyMissions().map(missionHTML).join('')}</div>
       <h3>مهام الأسبوع</h3><div class="missions">${pass.weeklyMissions().map(missionHTML).join('')}</div>
-      <p class="hint">مهام اليوم تعطي خبرة ممر + شظايا تشتري فيها باكجات. تُحتسب المباريات السريعة وعلى نفس الجهاز وقتالات الحملة، وتطوير البطاقات وفتح الباكجات. المباراة الودية لا تُحتسب.</p>`;
+      <p class="hint">${ibtnP('missinfo')} المباراة الودية لا تُحتسب</p>`;
   }
 
   function optionHTML(type, id) {
@@ -130,8 +136,7 @@
       return `<h3>${label}</h3><div class="opts">${noneOpt}${ids.map((id) => optionHTML(type, id)).join('')}</div>`;
     }).join('');
     return `<div class="prof-card"><span class="prof-av">${prevHero}</span><div><b class="prof-title">${esc(titleName())}</b>
-      <div class="hint">الإطار: ${esc(C.frame[pass.equipped('frame')].name)} · الساحة: ${esc(C.arena[pass.equipped('arena')].name)} · الفوز: ${esc(C.fx[pass.equipped('fx')].name)}</div>
-      <div class="hint">مؤقت التجهيز الإضافي: +${pass.prepBonus()} ث</div></div></div>${sections}`;
+      ${pass.prepBonus() ? `<div class="hint">⏱ +${pass.prepBonus()} ث تجهيز</div>` : ''}</div></div>${sections}`;
   }
 
   function render() {

@@ -13,28 +13,32 @@
 
   const shardsHTML = (n) => `<span class="shards">${icon('gem')}<b>${n.toLocaleString('en-US')}</b></span>`;
 
+  AMB.TIPS = AMB.TIPS || {};
+  AMB.TIPS.pity = () => { const d = P.def(PACK), R = RAR[d.pity.rarity]; return { title: 'ضمان ' + R.name, html: `<p>إذا فتحت ${d.pity.after} باكجات بدون ${R.name}، الباكج اللي بعدها يحتوي ${R.name} أكيد. العدّاد يرجع للصفر كلما طلعت لك ${R.name}.</p>` }; };
+  AMB.TIPS.shards = () => ({ title: 'الشظايا', html: '<p>الشظايا تجيك من الحملة والمهام اليومية والدخول اليومي.</p><p>اللعبة ما تبيع شي بفلوس حقيقية.</p>' });
+  AMB.TIPS.odds = () => ({ title: 'النسب', html: `<p>مع الضمان، المعدل الفعلي للـ${RAR.legendary.name} تقريبًا بطاقة كل 8–9 باكجات.</p><p>النسخة المكررة تطوّر البطاقة، ونسخة بطاقة وصلت للمستوى الأقصى تتحوّل إلى شظايا.</p>` });
   function pityHTML() {
     const d = P.def(PACK), left = P.pityLeft(PACK), done = d.pity.after - left;
     const segs = Array.from({ length: d.pity.after }, (_, i) => `<i class="${i < done ? 'on' : ''}"></i>`).join('');
     const R = RAR[d.pity.rarity];
     return `<div class="pity ${left === 0 ? 'ready' : ''}" style="--rc:${R.color}">
-      <div class="pity-t">${left === 0 ? `🎉 الباكج الجاي فيه <b>${R.name}</b> مضمون!` : `باقي <b>${left}</b> ${left === 1 ? 'باكج' : 'باكجات'} على ضمان <b>${R.name}</b>`}</div>
+      <div class="pity-t">${left === 0 ? `🎉 الباكج الجاي فيه <b>${R.name}</b> مضمون!` : `باقي <b>${left}</b> على ضمان <b>${R.name}</b>`} <button class="ibtn" data-act="info" data-k="pity" title="شرح">ⓘ</button></div>
       <div class="pity-bar">${segs}</div>
-      <div class="hint">إذا فتحت ${d.pity.after} باكجات بدون ${R.name}، الباكج اللي بعدها يحتوي ${R.name} أكيد. العدّاد يرجع للصفر كلما طلعت لك ${R.name}.</div></div>`;
+      </div>`;
   }
 
   function render() {
     const root = $('packs'); if (!root) return;
     const d = P.def(PACK), cost = d.cost.shards, st = P.stats();
     const odds = P.oddsTable(PACK).map((o) => `<li class="r-${o.rarity}"><i></i>${RAR[o.rarity].name}<b>${o.pct.toFixed(o.pct < 1 ? 1 : 0)}%</b></li>`).join('');
-    root.innerHTML = `<div class="pk-top">${shardsHTML(W.balance('shards'))}<span class="hint">الشظايا تجيك من المهام والمستويات (المراحل الجاية). اللعبة ما تبيع شي بفلوس حقيقية.</span></div>
+    root.innerHTML = `<div class="pk-top">${shardsHTML(W.balance('shards'))}<button class="ibtn" data-act="info" data-k="shards" title="شرح">ⓘ</button></div>
       <div class="pk-main">
         <div class="pk-pack"><div class="pk-art"><span class="pk-logo">ZOR</span><span class="pk-name">${d.name}</span><span class="pk-n">${d.cards} بطاقات</span></div>
           <button class="btn primary big" data-act="packOpen" ${W.canAfford(d.cost) ? '' : 'disabled'}>افتح · ${icon('gem')} ${cost}</button>
           ${W.canAfford(d.cost) ? '' : `<div class="hint">تحتاج ${cost - W.balance('shards')} شظية إضافية</div>`}</div>
         <div class="pk-side">${pityHTML()}
           <div class="pk-odds"><b>نسبة ظهور كل بطاقة</b><ul>${odds}</ul>
-            <div class="hint">مع الضمان، المعدل الفعلي للـ${RAR.legendary.name} تقريبًا بطاقة كل 8–9 باكجات. النسخة المكررة تطوّر البطاقة، ونسخة بطاقة وصلت للمستوى الأقصى تتحوّل إلى شظايا.</div></div>
+            <button class="ibtn" data-act="info" data-k="odds" title="شرح">ⓘ</button></div>
           <div class="pk-stats hint">فتحت ${st.opened} باكج · ${Object.keys(RAR).map((r) => `${RAR[r].name}: ${st.found[r] || 0}`).join(' · ')}</div>
           <button class="btn" data-act="go" data-to="cards">مجموعتي ←</button></div>
       </div>`;

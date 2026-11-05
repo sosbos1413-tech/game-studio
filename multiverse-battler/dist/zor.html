@@ -1298,7 +1298,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .3px
 .pv { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; flex: none; overflow: hidden; border: 2px solid var(--ink); background: var(--ink2); color: var(--paper); font-size: 11px; font-weight: 700; }
 .pv .portrait { width: 100%; height: 100%; }
 .pv.frame { border: 4px solid var(--c1); outline: 2px solid var(--c2); border-radius: 50%; } .pv.frame svg { width: 24px; height: 24px; }
-.pv.fxp { gap: 2px; padding: 4px; flex-wrap: wrap; } .pv.fxp i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #000; }
+.pv.fxsw { gap: 2px; padding: 4px; flex-wrap: wrap; } .pv.fxsw i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #000; }
 .pv.title { padding: 2px; text-align: center; line-height: 1.05; font-size: 11px; background: var(--gold); color: var(--ink); }
 .pv.perk { flex-direction: column; background: var(--cyan); color: #fff; } .pv.perk svg { width: 20px; height: 20px; }
 .pv.avatar { border-radius: 8px; } .pv.avatar.none svg { width: 22px; height: 22px; }
@@ -1538,6 +1538,24 @@ body.newbie #menu-play { opacity: .8; }
 /* your hero vs the same hero: the enemy is its shadow */
 body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .hc-art { filter: grayscale(.4) hue-rotate(200deg) brightness(.75) contrast(1.2); }
 
+/* ======================================================================= less text: ⓘ buttons, compact panels */
+.ibtn { display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 2px solid currentColor; background: transparent; color: var(--muted); font: 700 12px/1 system-ui; cursor: pointer; vertical-align: middle; margin-inline-start: 4px; opacity: .8; }
+.ibtn:hover { opacity: 1; color: var(--red); }
+.pass .ibtn, .collection .ibtn, .packs .ibtn, .campaign .ibtn, .xp-panel .ibtn { color: var(--paper3); }
+.tip-body p { margin: 8px 0; line-height: 1.7; } .tip-body h4 { margin: 12px 0 4px; } .syn-full { margin-bottom: 10px; }
+.guard-status { display: flex; align-items: center; gap: 8px; } .guard-status svg { width: 20px; height: 20px; flex: none; }
+.guard-status b { flex: 1; }
+.syn-more { margin-top: 6px; width: 100%; }
+.summon-row { display: flex; align-items: center; gap: 6px; } .summon-row .summon-btn { flex: 1; }
+.passive { display: flex; align-items: center; gap: 4px; }
+.res-quick { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin: 0 auto 14px; max-width: 760px; }
+.rq { flex: 1 1 260px; display: flex; justify-content: space-around; align-items: center; gap: 8px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); box-shadow: var(--hard-sm); padding: 8px 12px; font-size: 14px; }
+.rq.won { border-color: var(--gold2); box-shadow: 0 0 0 3px var(--gold), var(--hard-sm); } .rq svg { width: 14px; height: 14px; vertical-align: -2px; }
+.res-details { margin: 0 auto 18px; max-width: 1100px; } .res-details summary { cursor: pointer; text-align: center; color: var(--paper3); padding: 8px; font-weight: 700; }
+.cam-note { font-size: 15px; text-align: center; }
+.pcell { height: 112px; }
+.mode-card p { margin: 6px 0 12px; }
+
 </style>
 </head>
 <body>
@@ -1578,7 +1596,7 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
     <div class="mode-grid">
       <div class="mode-card">
         <h3>ضد الذكاء الاصطناعي</h3>
-        <p>مباراة 1 ضد 1 كاملة ضد خصم آلي يستخدم نفس المتجر ونفس القواعد.</p>
+        <p>7 جولات ضد خصم آلي</p>
         <div class="seg" id="diff-seg">
           <button data-act="diff" data-v="easy">سهل</button>
           <button data-act="diff" data-v="normal" class="on">عادي</button>
@@ -1588,22 +1606,22 @@ body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .h
       </div>
       <div class="mode-card">
         <h3>1 ضد 1 — نفس الجهاز</h3>
-        <p>لاعبان بشريان يتناوبان على مرحلة التجهيز ثم يشاهدان القتال معًا. مخزون البطاقات مشترك.</p>
+        <p>لاعبان على جهاز واحد</p>
         <button class="btn primary" data-act="mode" data-v="hotseat">ابدأ</button>
       </div>
       <div class="mode-card">
         <h3>مباراة ودية</h3>
-        <p>ضد ذكاء اصطناعي سهل، بمؤقت مضاعف، ولا تُسجَّل في الإحصائيات. مناسبة للتعلم.</p>
+        <p>سهلة وبوقت مضاعف للتعلّم</p>
         <button class="btn" data-act="mode" data-v="friendly">ابدأ</button>
       </div>
       <div class="mode-card">
         <h3>الحملة</h3>
-        <p>4 عوالم، قتالات قصيرة من 3 جولات وزعماء بقدرات خاصة. هنا تكسب الشظايا والنجوم وتطوّر بطاقاتك. أفضل مكان تبدأ منه.</p>
+        <p>قتالات قصيرة، زعماء، جوائز · ابدأ من هنا</p>
         <button class="btn primary" data-act="go" data-to="campaign">افتح الحملة</button>
       </div>
       <div class="mode-card soon">
         <h3>التحدي التنافسي</h3>
-        <p>العب ضد لاعبين حقيقيين وارتقِ في التصنيف.</p>
+        <p>ضد لاعبين حقيقيين</p>
         <span class="tag">قريبًا</span>
       </div>
     </div>
@@ -5042,6 +5060,12 @@ AMB.IMAGES = {
   };
 
   // ======================================================================= helpers
+  // Less text on screen: short label + an ⓘ button that opens the full explanation.
+  // Any module can register a tip:  AMB.TIPS.key = () => ({ title, html });  then  ibtn('key')
+  AMB.TIPS = AMB.TIPS || {};
+  const ibtn = (k, extra) => `<button class="ibtn" data-act="info" data-k="${k}" ${extra || ''} title="شرح">ⓘ</button>`;
+  // beginners (fewer than 2 finished matches) get the extra hints, then they disappear
+  const coach = () => { try { return +(localStorage.getItem('amb_played') || 0) < 2; } catch (e) { return false; } };
   function toast(msg, kind) {
     const el = document.createElement('div');
     el.className = 'toast ' + (kind || '');
@@ -5161,13 +5185,14 @@ AMB.IMAGES = {
   // ---- quick-start guide: shown once automatically, reopen with "؟"
   function showTutorial() {
     const steps = [
-      ['crown', 'اشترِ', 'اضغط بطاقة من المتجر (أسفل الشاشة) لشرائها. تصل إلى الاحتياط. «ⓘ» يفتح تفاصيلها، والمؤقت يتوقف وأنت تقرأ.'],
-      ['shield', 'ضعها في الساحة', 'اضغط الوحدة ثم خانة مضيئة، أو اسحبها. <b>حارس ومقاتل: أمامي</b> (يحميان بطلك). <b>ساحر وقناص ودعم: خلفي</b>. أو اضغط «ترتيب تلقائي».'],
-      ['star', 'غيّر رأيك بسهولة', 'اضغط أي وحدة (في الساحة أو الاحتياط) فيظهر شريط: <b>بيع</b> أو <b>للاحتياط</b> أو <b>تفاصيل</b>. اضغط وحدة أخرى لتبديل مكانهما.'],
-      ['burst', 'الترقية ★', '<b>٣ نسخ متطابقة = ترقية تلقائية</b> لنجمة أقوى. علامة <b>×2</b> على بطاقة المتجر = تملك نسختين، و<b>↑</b> = شراؤها يرقّيها. «ترقية ★» يعرض تقدمك.'],
-      ['sword', 'جاهز', 'اضغط «جاهز» حين تنتهي، أو ينتهي المؤقت ويبدأ القتال لحاله. القتال تلقائي بالكامل. ' + (S.match && S.match.rules ? 'قتال الحملة أفضل من ٣ جولات: أول من يفوز بجولتين يكسب.' : 'المباراة ٧ جولات وبعد كل مرحلة مكافأة.')],
+      ['crown', 'اشترِ', 'اضغط بطاقة المتجر'],
+      ['shield', 'ضعها في الساحة', '<b>حارس ومقاتل</b> قدّام · <b>ساحر وقناص ودعم</b> ورا'],
+      ['star', 'غيّر رأيك', 'اضغط الوحدة: بيع أو تبديل'],
+      ['burst', 'الترقية ★', '٣ نسخ متطابقة = نجمة'],
+      ['sword', 'جاهز', 'القتال تلقائي · ' + (S.match && S.match.rules ? 'جولتين من ٣ تكسب' : '٧ جولات')],
     ];
     modal(`<h2>دليل سريع</h2><div class="tut">${steps.map((st, i) => `<div class="tut-step"><span class="tut-n">${i + 1}</span><span class="tut-ic">${icon(st[0])}</span><div><b>${st[1]}</b><p>${st[2]}</p></div></div>`).join('')}</div>
+      <p class="hint" style="text-align:center;margin:8px 0 0">لو احتجت شرح أكثر اضغط ⓘ في أي مكان</p>
       <div style="text-align:center;margin-top:10px"><button class="btn primary big" data-act="closeModal">فهمت</button></div>`);
     try { localStorage.setItem('amb_tut', '1'); } catch (e) { /* ignore */ }
   }
@@ -5228,12 +5253,8 @@ AMB.IMAGES = {
     const p = me();
     const inc = p.lastIncome;
     if (inc && !tutNext) {
-      const parts = [`+${inc.base} أساسي`];
-      if (inc.interest) parts.push(`+${inc.interest} فائدة`);
-      if (inc.streak) parts.push(`+${inc.streak} سلسلة`);
-      if (inc.win) parts.push(`+${inc.win} فوز`);
       const ess = S.match.round > 1 ? CFG.economy.essencePerRound + (HEROES[p.heroId].passive.id === 'deep_reserve' ? 1 : 0) : 0;
-      toast(`مرحلة الموارد: ${parts.join(' ')} ذهب${ess ? ` · +${ess} جوهر · +${CFG.economy.xpPerRound} خبرة` : ''}`, 'good');
+      toast(`+${inc.total} ذهب${ess ? ` · +${ess} جوهر` : ''}`, 'good');
     }
     setTimeout(() => {
       if (S.phase !== 'resources') return;
@@ -5745,7 +5766,7 @@ AMB.IMAGES = {
     const prep = S.phase === 'prep' || S.phase === 'resources';
     const E = CFG.economy;
     if (!prep) {
-      $('shopbar').innerHTML = `<div class="hint" style="padding:10px">المتجر مغلق أثناء ${S.phase === 'combat' ? 'القتال' : 'النتائج'}. ${S.phase === 'combat' ? 'القتال تلقائي بالكامل — قراراتك في التجهيز هي ما يحسم النتيجة.' : ''}</div>`;
+      $('shopbar').innerHTML = `<div class="hint" style="padding:10px">🔒 ${S.phase === 'combat' ? 'القتال جارٍ' : 'المتجر مغلق'}${coach() && S.phase === 'combat' ? ' · تلقائي بالكامل' : ''}</div>`;
       return;
     }
     const owned = {};
@@ -5781,16 +5802,20 @@ AMB.IMAGES = {
   }
 
   function synergyHTML(list) {
-    if (!list.length) return '<div class="hint">ضع وحدات في الساحة لتفعيل التآزر.</div>';
-    return list.map((s) => {
+    if (!list.length) return '<div class="hint">ضع وحدات لتفعيل التآزر</div>';
+    // active synergies show their effect; the rest are one short row each (3 at most) with "+N" opening the full list
+    const act = list.filter((s) => s.activeTier >= 0), rest = list.filter((s) => s.activeTier < 0);
+    const shown = act.concat(rest.slice(0, 3)), hidden = rest.length - 3;
+    AMB.TIPS.syn = () => ({ title: 'كل التآزرات', html: list.map((s) => `<div class="syn-full"><b>${s.name}</b> <small>(${s.count}${s.nextN ? '/' + s.nextN : ''})</small>${s.tiers.map((t) => `<div class="hint">• ${t.n}: ${t.text}</div>`).join('')}</div>`).join('') });
+    return shown.map((s) => {
       const color = s.kind === 'world' ? WORLDS[s.id].color : s.kind === 'special' ? '#ffcf4a' : '#3ee6ff';
       const tiers = s.tiers.map((t, i) => (i === s.activeTier ? `<b>${t.n}</b>` : t.n)).join(' › ');
       const on = s.activeTier >= 0;
       const desc = on ? s.tiers[s.activeTier].text : `عند ${s.tiers[0].n}: ${s.tiers[0].text}`;
       return `<div class="syn ${on ? 'on' : ''}" style="--sc:${color}" title="${esc(s.tiers.map((t) => t.n + ': ' + t.text).join('\n'))}">
         <span class="cnt">${s.count}${s.nextN ? '/' + s.nextN : ''}</span><span class="nm">${s.name}</span><span class="tiers">${tiers}</span></div>
-        <div class="syn-desc">${desc}</div>`;
-    }).join('');
+        ${on ? `<div class="syn-desc">${desc}</div>` : ''}`;
+    }).join('') + (hidden > 0 ? `<button class="btn small ghost syn-more" data-act="info" data-k="syn">+${hidden} تآزر آخر</button>` : '');
   }
 
   function renderLeft() {
@@ -5800,9 +5825,10 @@ AMB.IMAGES = {
     const front = Object.keys(p.board).filter((s) => s[0] === 'f').length;
     const heroFront = p.summoned && p.heroSlot[0] === 'f';
     let guard;
-    if (heroFront) guard = `<div class="guard-status risk"><b>البطل في الصف الأمامي</b> — يمكن استهدافه مباشرة منذ بداية القتال.</div>`;
-    else if (front === 0) guard = `<div class="guard-status risk"><b>لا يوجد خط دفاع!</b> بطلك مكشوف منذ بداية القتال. ضع وحدات في الصف الأمامي.</div>`;
-    else guard = `<div class="guard-status safe"><b>خط الدفاع: ${front}</b> وحدة أمامية. لا يمكن استهداف بطلك حتى تسقط جميعها (القتلة يقفزون للصف الخلفي لكن لا يضربون البطل المحمي).</div>`;
+    AMB.TIPS.guard = () => ({ title: 'حماية البطل', html: '<p>ما دام عندك أي وحدة حيّة في الصف الأمامي، <b>ما يقدر العدو يستهدف بطلك</b>. إذا سقطت كلها ينكشف البطل ويتلقى الضرر.</p><p>القتلة يقفزون للصف الخلفي لكن لا يضربون البطل المحمي. وإذا استدعيت بطلك للساحة يتلقى الضرر كاملًا.</p>' });
+    if (heroFront) guard = `<div class="guard-status risk">${icon('shield')}<b>البطل في الأمام: مكشوف</b>${ibtn('guard')}</div>`;
+    else if (front === 0) guard = `<div class="guard-status risk">${icon('shield')}<b>مكشوف!</b>${coach() ? ' ضع وحدات أمامية' : ''}${ibtn('guard')}</div>`;
+    else guard = `<div class="guard-status safe">${icon('shield')}<b>خط الدفاع: ${front}</b>${ibtn('guard')}</div>`;
     const hw = WORLDS[HEROES[p.heroId].world];
     const sc = m.players[1 - S.v].lineup ? m.buildCombatSpec(1 - S.v) : m.scout[1 - S.v];
     const oppSyn = sc ? AMB.synergy.evaluate(sc.units, sc.heroId).list.filter((s) => s.activeTier >= 0) : [];
@@ -5811,13 +5837,12 @@ AMB.IMAGES = {
       <section><h4>حماية البطل</h4>${guard}</section>
       <section><h4>التآزر <small>${board.length}/${p.level} وحدات</small></h4>
         <div class="syn ${ev.resonance ? 'on' : ''}" style="--sc:${hw.color}" title="كل وحدة من عالم بطلك تكتسب +${CFG.hero.resonancePerAlly * 100}% صحة وهجوم"><span class="cnt">${ev.resonance}</span><span class="nm">رنين البطل (${hw.name})</span></div>
-        <div class="syn-desc">كل وحدة من عالم بطلك: +${CFG.hero.resonancePerAlly * 100}% صحة وهجوم.</div>
         ${synergyHTML(ev.list)}</section>
       <section><h4>الخصم</h4>
         <div class="hero-box">${portrait(HEROES[o.heroId], { k: 'lo' })}<div><div class="nm">${esc(o.name)}</div><div class="ti">${HEROES[o.heroId].name} · ${WORLDS[HEROES[o.heroId].world].name}</div>
         <div class="ti">مستوى ${o.level} · ${icon('heart')} ${lifeStr(o.life)}</div></div></div>
-        ${oppSyn.length ? '<div class="hint" style="margin-top:6px">تآزر آخر تشكيلة: ' + oppSyn.map((s) => s.name).join('، ') + '</div>' : ''}
-        ${sc && sc.summoned ? '<div class="hint">استدعى بطله في الجولة السابقة.</div>' : ''}</section>
+        ${oppSyn.length ? '<div class="hint" style="margin-top:6px">تآزره: ' + oppSyn.slice(0, 3).map((s) => s.name).join('، ') + '</div>' : ''}
+        ${sc && sc.summoned ? '<div class="hint">استدعى بطله</div>' : ''}</section>
       <section><h4>سجل الجولات</h4><div class="timeline">${timeline || '<span class="hint">—</span>'}</div></section>`;
   }
 
@@ -5831,9 +5856,12 @@ AMB.IMAGES = {
       const trig = p.abilities[a.id] || '';
       const fired = S.combat && S.phase !== 'prep' && S.combat.sides[S.v] && S.combat.sides[S.v].abilities.find((x) => x.def.id === a.id && x.fired);
       const opts = [`<option value="">— غير مجهزة —</option>`].concat(Object.values(ABILITY_TRIGGERS).map((t) => `<option value="${t.id}" ${trig === t.id ? 'selected' : ''}>تفعيل: ${t.name}</option>`)).join('');
-      return `<div class="ability ${trig ? 'armed' : ''}"><div class="ah"><span>${a.name}</span><span class="cost">${icon('essence')}${cost}${cost !== a.cost ? ` <s style="opacity:.5">${a.cost}</s>` : ''}</span></div>
-        <p>${a.text}</p>${prep ? `<select data-ab="${a.id}">${opts}</select>` : `<div class="hint">${trig ? (fired ? '✔ فُعّلت في هذا القتال' : 'مجهزة: ' + ABILITY_TRIGGERS[trig].name) : 'غير مجهزة'}</div>`}</div>`;
+      return `<div class="ability ${trig ? 'armed' : ''}" title="${esc(a.text)}"><div class="ah"><span>${a.name} ${ibtn('hero', `data-id="${h.id}"`)}</span><span class="cost">${icon('essence')}${cost}${cost !== a.cost ? ` <s style="opacity:.5">${a.cost}</s>` : ''}</span></div>
+        ${prep ? `<select data-ab="${a.id}">${opts}</select>` : `<div class="hint">${trig ? (fired ? '✔ فُعّلت في هذا القتال' : 'مجهزة: ' + ABILITY_TRIGGERS[trig].name) : 'غير مجهزة'}</div>`}</div>`;
     }).join('');
+    AMB.TIPS.summon = () => ({ title: 'استدعاء البطل', html: `<p>${p.summoned ? 'بطلك الحين يقاتل في الساحة (اسحبه لتغيير موقعه).' : 'بطلك الحين في مركز القيادة خلف صفوفك.'}</p>
+      <p><b>الفايدة:</b> يهاجم بقوة ${h.board.atk + CFG.hero.boardAtkPerRound * m.round}، والحلفاء +${CFG.hero.summonAuraAtk * 100}% هجوم، والقدرات أرخص بـ${CFG.hero.summonAbilityDiscount}.</p>
+      <p><b>المخاطرة:</b> يتلقى الضرر كاملًا (حتى الضرر المساحي)، وينسحب بعد خسارة ${CFG.combat.summonKnockout} حياة، ووصول حياته للصفر = خسارة فورية.</p>` });
     const summonTxt = p.summoned ? 'إعادة البطل إلى مركز القيادة' : 'استدعاء البطل إلى الساحة';
     const bag = [];
     for (let i = 0; i < CFG.economy.itemBenchSize; i++) {
@@ -5847,20 +5875,16 @@ AMB.IMAGES = {
     $('panel-right').innerHTML = `
       <section><div class="hero-box">${portrait(h, { k: 'rh' })}<div style="flex:1"><div class="nm">${h.name}</div><div class="ti">${h.title} · ${WORLDS[h.world].name}</div>
         <div class="lifebar-big"><i style="width:${(p.life / p.maxLife) * 100}%"></i></div><div class="ti">${icon('heart')} ${lifeStr(p.life)} / ${p.maxLife}</div></div></div>
-        <div class="passive"><b>${h.passive.name}:</b> ${h.passive.text}</div>
-        ${prep ? `<button class="btn summon-btn ${p.summoned ? 'on' : ''}" data-act="summon">${summonTxt}</button>
-        <div class="hint">${p.summoned ? 'البطل يقاتل في الساحة (اسحبه لتغيير موقعه).' : 'البطل الآن في مركز القيادة خلف صفوفك.'}
-        الاستدعاء: يهاجم بقوة ${h.board.atk + CFG.hero.boardAtkPerRound * m.round}، الحلفاء +${CFG.hero.summonAuraAtk * 100}% هجوم، القدرات أرخص بـ${CFG.hero.summonAbilityDiscount}.
-        المخاطرة: يتلقى الضرر كاملًا (والضرر المساحي يصيبه حتى لو كان محميًا)، وينسحب بعد خسارة ${CFG.combat.summonKnockout} حياة، ووصول حياته للصفر = خسارة فورية.</div>` : ''}
+        <div class="passive" title="${esc(h.passive.text)}"><b>${h.passive.name}</b> ${ibtn('hero', `data-id="${h.id}"`)}</div>
+        ${prep ? `<div class="summon-row"><button class="btn summon-btn ${p.summoned ? 'on' : ''}" data-act="summon">${summonTxt}</button>${ibtn('summon')}</div>` : ''}
       </section>
       <section><h4>قدرات البطل <span class="cost" style="color:var(--ess)">${icon('essence')} متاح ${avail}</span></h4>${abil}
-        <div class="hint">يُدفع الجوهر فقط إذا تفعّلت القدرة أثناء القتال.</div></section>
+        ${coach() ? '<div class="hint">الجوهر يُصرف فقط إذا تفعّلت القدرة</div>' : ''}</section>
       <section><h4>المعدات والتعاويذ</h4><div class="bag">${bag.join('')}</div>
         ${armed ? `<div class="armed-spells">${armed}</div>` : ''}
-        <div class="hint" style="margin-top:6px">اضغط معدة ثم وحدة لتجهيزها (حد ${CFG.economy.maxItemsPerUnit} لكل وحدة). التعاويذ تُجهَّز للقتال القادم فقط.</div></section>
+        ${coach() ? '<div class="hint" style="margin-top:6px">اضغط معدة ثم وحدة لتجهيزها</div>' : ''}</section>
       <section><h4>التحديد</h4>${selectionHTML()}</section>
-      <section class="hint">اضغط وحدة ثم خانة لنقلها (أو اسحبها). اسحب وحدة إلى المتجر لبيعها.
-        اختصارات: <span class="kbd">D</span> تحديث · <span class="kbd">F</span> خبرة · <span class="kbd">E</span> بيع المحدد · <span class="kbd">Enter</span> جاهز</section>`;
+      ${coach() ? `<section class="hint">اضغط وحدة ثم خانة لنقلها، أو اسحبها · <span class="kbd">D</span> تحديث · <span class="kbd">F</span> خبرة · <span class="kbd">Enter</span> جاهز</section>` : ''}`;
   }
 
   function selectionHTML() {
@@ -5917,7 +5941,7 @@ AMB.IMAGES = {
     if (sel && sel.kind === 'hero') return `<div class="pb sel"><span class="pb-name">البطل</span><span class="pb-tip">اضغط خانة في ساحتك لنقله</span><span class="pb-btns"><button class="btn small ghost" data-act="deselect">✕</button></span></div>`;
     const bag = p.items.map((id, i) => `<button class="bagchip" data-act="bagSel" data-idx="${i}" title="${esc(ITEMS[id].name)}: ${esc(ITEMS[id].text)}">${icon(ITEMS[id].icon)}</button>`).join('');
     return `<div class="pb"><span class="pb-count">في الساحة ${cnt}${p.summoned ? ' + البطل' : ''}</span>${bag ? `<span class="pb-bag" title="معداتك: اضغط واحدة ثم وحدة">${bag}</span>` : ''}
-      <span class="pb-tip">اضغط وحدة لتغييرها · ٣ نسخ متطابقة = ترقية ★</span>
+      ${coach() ? '<span class="pb-tip">اضغط وحدة لتغييرها · ٣ نسخ = ★</span>' : ''}
       <span class="pb-btns"><button class="btn small" data-act="autoArrange" title="يختار أقوى وحداتك ويضع الحراس أمام والباقي خلف">ترتيب تلقائي</button></span></div>`;
   }
 
@@ -6039,6 +6063,7 @@ AMB.IMAGES = {
     const secs = Math.round((Date.now() - S.startTs) / 1000);
     if (S.mode === 'campaign') return AMB.CampaignUI.showResult(m, secs);   // campaign has its own results screen
     if (S.mode !== 'friendly' && !m._recorded) { AMB.telemetry.recordMatch(m, { seconds: secs }); m._recorded = true; }
+    if (!m._counted) { m._counted = true; try { localStorage.setItem('amb_played', String(+(localStorage.getItem('amb_played') || 0) + 1)); } catch (e) { /* ignore */ } }
     if (!m._passDone) { m._passDone = true; try { S.passResult = AMB.pass.recordMatch(m.summary(0)); } catch (e) { S.passResult = null; } }
     let title;
     if (m.winner === null || m.winner === undefined) title = 'تعادل';
@@ -6069,9 +6094,10 @@ AMB.IMAGES = {
     const ptitle = own && AMB.PassUI ? AMB.PassUI.titleName() : '';
     const stage = `<div class="res-stage ${m.winner == null ? 'draw' : myWin ? 'victory' : 'defeat'}" style="--wc:${WORLDS[heroDef.world].color}"><div class="res-rays"></div><div class="res-hero">${portrait(avDef, { bare: true, k: 'resh' })}<i class="sheen"></i></div><div class="res-hname">${avDef.name}</div>${ptitle ? `<div class="res-title">${ptitle}</div>` : ''}</div>`;
     $('results').innerHTML = `${stage}<div class="res-banner"><h1>${title}</h1><p class="hint">${m.round} جولات · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة ${S.mode === 'friendly' ? '· مباراة ودية (لم تُسجَّل)' : ''}</p>
-      <div class="timeline">${tl}</div><p class="hint">أخضر = فوز ${esc(m.players[0].name)} · أحمر = فوز ${esc(m.players[1].name)}</p></div>
+      <div class="timeline">${tl}</div></div>
       ${AMB.PassUI ? AMB.PassUI.resultPanel(S.passResult) : ''}
-      <div class="res-cols">${cols}</div>
+      <div class="res-quick">${m.players.map((p, i) => `<div class="rq ${m.winner === i ? 'won' : ''}"><b>${esc(p.name)}</b><span>${icon('heart')} ${lifeStr(p.life)}</span><span>${icon('sword')} ${p.stats.wins}–${p.stats.losses}</span><span>${fmt(p.stats.damageDealt)} ضرر</span></div>`).join('')}</div>
+      <details class="res-details"><summary>تفاصيل المباراة</summary><div class="res-cols">${cols}</div></details>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px">
         <button class="btn primary big" data-act="again">مباراة جديدة</button>
         <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
@@ -6281,6 +6307,7 @@ AMB.IMAGES = {
       afterReward();
     },
     toResults: () => showResults(),
+    info: (d, el, e) => { if (e) e.stopPropagation(); if (d.k === 'hero') { heroDetail(d.id); return; } const t = AMB.TIPS[d.k]; if (!t) return; const x = t(); modal(`<h2>${x.title}</h2><div class="tip-body">${x.html}</div>`); },
     again: () => { if (S.mode === 'campaign') { startMatch(); return; } S.picks = [S.picks[0], S.picks[1]]; S.pickIdx = 0; renderHeroSelect(); show('hero'); },
     statsExport: () => {
       const blob = new Blob([JSON.stringify(AMB.telemetry.load(), null, 2)], { type: 'application/json' });
@@ -6462,7 +6489,7 @@ AMB.IMAGES = {
   function preview(type, id, extra) {
     if (type === 'frame') { const f = C.frame[id] || {}; return `<span class="pv frame" style="--c1:${f.c1 || '#555'};--c2:${f.c2 || '#222'}">${icon('crown')}</span>`; }
     if (type === 'arena') return `<span class="pv arena ar-${id}"></span>`;
-    if (type === 'fx') return `<span class="pv fxp">${((C.fx[id] || {}).colors || []).map((c) => `<i style="background:${c}"></i>`).join('')}</span>`;
+    if (type === 'fx') return `<span class="pv fxsw">${((C.fx[id] || {}).colors || []).map((c) => `<i style="background:${c}"></i>`).join('')}</span>`;
     if (type === 'title') return `<span class="pv title">${esc((C.title[id] || {}).name || id)}</span>`;
     if (type === 'perk') return `<span class="pv perk">${icon('wind')}<b>+${(extra && extra.sec) || 5}ث</b></span>`;
     if (type === 'avatar') { const d = avatarDef(id); return `<span class="pv avatar">${d ? portrait(d, { bare: true, k: 'pv' + id }) : ''}</span>`; }
@@ -6500,6 +6527,12 @@ AMB.IMAGES = {
     (b.querySelector('.mt-l') || b).innerHTML = `ممر الصدع <small>${pass.level()}</small>${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
+  // ---------------------------------------------------------------- tips (ⓘ)
+  const ibtnP = (k) => `<button class="ibtn" data-act="info" data-k="${k}" title="شرح">ⓘ</button>`;
+  AMB.TIPS = AMB.TIPS || {};
+  AMB.TIPS.passinfo = () => ({ title: 'مكافآت الممر', html: '<p>كل المكافآت <b>تجميلية</b> (ألقاب، إطارات، ثيمات، تأثيرات، صور)، والشخصيات تفتح بطاقاتها.</p><p>الاستثناء الوحيد «مؤقت التجهيز»: وقت أطول للتفكير فقط. <b>ما فيه شي يقوّي الوحدات.</b></p><p>المسار المميز واجهة فقط حاليًا (قريبًا).</p>' });
+  AMB.TIPS.missinfo = () => ({ title: 'المهام', html: '<p>مهام اليوم تعطي <b>خبرة ممر + شظايا</b> تشتري فيها باكجات.</p><p>تُحتسب المباريات السريعة وعلى نفس الجهاز وقتالات الحملة، وتطوير البطاقات وفتح الباكجات. المباراة الودية لا تُحتسب.</p>' });
+
   // ---------------------------------------------------------------- screen
   function cellHTML(level, track) {
     const r = pass.reward(level, track); if (!r) return '<div class="pcell empty"></div>';
@@ -6508,8 +6541,8 @@ AMB.IMAGES = {
     const cls = claimed ? 'claimed' : can ? 'can' : premLock ? 'premlock' : reached ? '' : 'locked';
     const act = can ? 'passClaim' : claimed && r.type !== 'perk' ? 'passEquipReward' : premLock && reached ? 'passPremium' : '';
     return `<div class="pcell ${cls} ${r.big ? 'big' : ''}" ${act ? `data-act="${act}"` : ''} data-level="${level}" data-track="${track}" title="${esc(TYPE[r.type] + ': ' + pass.rewardName(r))}">
-      <span class="pc-type">${TYPE[r.type]}</span>${preview(r.type, r.id, r)}<span class="pc-name">${esc(pass.rewardName(r))}</span>
-      <span class="pc-state">${claimed ? '✓ ' + (r.type === 'perk' ? 'مفعّلة' : 'اضغط للتجهيز') : can ? 'استلم' : premLock ? '🔒 بريميوم' : reached ? '' : 'مستوى ' + level}</span></div>`;
+      ${preview(r.type, r.id, r)}<span class="pc-name">${esc(pass.rewardName(r))}</span>
+      <span class="pc-state">${claimed ? '✓' : can ? 'استلم' : premLock ? '🔒' : ''}</span></div>`;
   }
 
   function trackHTML() {
@@ -6520,7 +6553,7 @@ AMB.IMAGES = {
     const n = [];
     for (let l = 1; l <= pass.level(); l++) ['free', 'premium'].forEach((t) => { if (pass.canClaim(l, t)) n.push(1); });
     return `<div class="ptools"><button class="btn primary" data-act="passClaimAll" ${n.length ? '' : 'disabled'}>استلم الكل (${n.length})</button>
-      <span class="hint">كل المكافآت تجميلية، ما عدا «مؤقت التجهيز» (وقت أطول للتفكير فقط). لا شي منها يقوّي الوحدات.</span></div>
+      ${ibtnP('passinfo')}</div>
       <div class="ptrack-wrap"><div class="prow-labels"><span></span><b>مجاني</b><b>بريميوم 🔒</b></div><div class="ptrack" id="ptrack">${cols.join('')}</div></div>`;
   }
 
@@ -6535,7 +6568,7 @@ AMB.IMAGES = {
     const d = new Date(), mid = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), hrs = Math.max(1, Math.ceil((mid - d) / 3600000));
     return `<h3>مهام اليوم <small>تتجدد بعد ${hrs} ساعة</small></h3><div class="missions">${pass.dailyMissions().map(missionHTML).join('')}</div>
       <h3>مهام الأسبوع</h3><div class="missions">${pass.weeklyMissions().map(missionHTML).join('')}</div>
-      <p class="hint">مهام اليوم تعطي خبرة ممر + شظايا تشتري فيها باكجات. تُحتسب المباريات السريعة وعلى نفس الجهاز وقتالات الحملة، وتطوير البطاقات وفتح الباكجات. المباراة الودية لا تُحتسب.</p>`;
+      <p class="hint">${ibtnP('missinfo')} المباراة الودية لا تُحتسب</p>`;
   }
 
   function optionHTML(type, id) {
@@ -6557,8 +6590,7 @@ AMB.IMAGES = {
       return `<h3>${label}</h3><div class="opts">${noneOpt}${ids.map((id) => optionHTML(type, id)).join('')}</div>`;
     }).join('');
     return `<div class="prof-card"><span class="prof-av">${prevHero}</span><div><b class="prof-title">${esc(titleName())}</b>
-      <div class="hint">الإطار: ${esc(C.frame[pass.equipped('frame')].name)} · الساحة: ${esc(C.arena[pass.equipped('arena')].name)} · الفوز: ${esc(C.fx[pass.equipped('fx')].name)}</div>
-      <div class="hint">مؤقت التجهيز الإضافي: +${pass.prepBonus()} ث</div></div></div>${sections}`;
+      ${pass.prepBonus() ? `<div class="hint">⏱ +${pass.prepBonus()} ث تجهيز</div>` : ''}</div></div>${sections}`;
   }
 
   function render() {
@@ -6639,6 +6671,10 @@ AMB.IMAGES = {
     return `<div class="cp-tile" data-card="${id}">${card}${owned ? bar : ''}<div class="cp-foot">${btn}<span class="cp-pow" title="قوة البطاقة في الحملة والبرج">${bonus > 0 ? '+' + bonus + '%' : '±0%'}</span></div></div>`;
   }
 
+  AMB.TIPS = AMB.TIPS || {};
+  AMB.TIPS.colinfo = () => ({ title: 'تطوير البطاقات', html: `<p>كل مستوى +${Math.round(AMB.ECONOMY.cards.levelBonus * 100)}% صحة وهجوم، والندرة الأعلى أقوى لكنها تحتاج نسخًا أكثر.</p>
+    <p>النسخ المطلوبة للمستويات 2 إلى 5:</p>${Object.entries(RAR).map(([k, r]) => `<div class="hint">• <b style="color:${r.color}">${r.name}</b>: ${r.copies.join(' / ')}</div>`).join('')}
+    <p><b>المستويات والندرة تُحتسب في الحملة والبرج والأحداث فقط</b>، أما المباراة السريعة وعلى نفس الجهاز فالكل متساوٍ.</p>` });
   function render() {
     const root = $('collection'); if (!root) return;
     const ids = C.ids().filter((id) => !filter || C.rarity(id) === filter)
@@ -6648,9 +6684,8 @@ AMB.IMAGES = {
     root.innerHTML = `<div class="col-head">
         ${C.needsStarter() ? '<div class="col-starter">ما اخترت بطلك الأول للحين: اضغط «العب» واختر واحد من الأربعة.</div>' : ''}
         <div><b>${C.ownedCount()} / ${C.ids().length}</b> بطاقة · ${ready ? `<span class="col-ready">${ready} جاهزة للتطوير</span>` : 'لا توجد ترقيات جاهزة'}</div>
-        <p class="hint">النسخ المكررة تطوّر البطاقة. كل مستوى +${Math.round(AMB.ECONOMY.cards.levelBonus * 100)}% صحة وهجوم، والندرة الأعلى أقوى لكنها تحتاج نسخًا أكثر.
-        <b>المستويات والندرة تُحتسب في الحملة والبرج والأحداث فقط</b>، أما المباراة السريعة وعلى نفس الجهاز فالكل متساوٍ.</p>
-        <div class="rar-legend">${Object.entries(RAR).map(([k, r]) => `<span class="rl r-${k}"><i></i>${r.name} <small>+${Math.round((r.power - 1) * 100)}% · نسخ ${r.copies.join('/')}</small></span>`).join('')}</div>
+        <p class="hint">النسخ المكررة تطوّر البطاقة <button class="ibtn" data-act="info" data-k="colinfo" title="شرح">ⓘ</button></p>
+        <div class="rar-legend">${Object.entries(RAR).map(([k, r]) => `<span class="rl r-${k}"><i></i>${r.name} <small>+${Math.round((r.power - 1) * 100)}%</small></span>`).join('')}</div>
         <button class="btn primary small" data-act="go" data-to="packs">افتح باكجات للحصول على نسخ</button>
         <div class="filters">${fb('', 'الكل')}${Object.entries(RAR).map(([k, r]) => fb(k, r.name, r.color)).join('')}</div>
       </div>
@@ -6700,28 +6735,32 @@ AMB.IMAGES = {
 
   const shardsHTML = (n) => `<span class="shards">${icon('gem')}<b>${n.toLocaleString('en-US')}</b></span>`;
 
+  AMB.TIPS = AMB.TIPS || {};
+  AMB.TIPS.pity = () => { const d = P.def(PACK), R = RAR[d.pity.rarity]; return { title: 'ضمان ' + R.name, html: `<p>إذا فتحت ${d.pity.after} باكجات بدون ${R.name}، الباكج اللي بعدها يحتوي ${R.name} أكيد. العدّاد يرجع للصفر كلما طلعت لك ${R.name}.</p>` }; };
+  AMB.TIPS.shards = () => ({ title: 'الشظايا', html: '<p>الشظايا تجيك من الحملة والمهام اليومية والدخول اليومي.</p><p>اللعبة ما تبيع شي بفلوس حقيقية.</p>' });
+  AMB.TIPS.odds = () => ({ title: 'النسب', html: `<p>مع الضمان، المعدل الفعلي للـ${RAR.legendary.name} تقريبًا بطاقة كل 8–9 باكجات.</p><p>النسخة المكررة تطوّر البطاقة، ونسخة بطاقة وصلت للمستوى الأقصى تتحوّل إلى شظايا.</p>` });
   function pityHTML() {
     const d = P.def(PACK), left = P.pityLeft(PACK), done = d.pity.after - left;
     const segs = Array.from({ length: d.pity.after }, (_, i) => `<i class="${i < done ? 'on' : ''}"></i>`).join('');
     const R = RAR[d.pity.rarity];
     return `<div class="pity ${left === 0 ? 'ready' : ''}" style="--rc:${R.color}">
-      <div class="pity-t">${left === 0 ? `🎉 الباكج الجاي فيه <b>${R.name}</b> مضمون!` : `باقي <b>${left}</b> ${left === 1 ? 'باكج' : 'باكجات'} على ضمان <b>${R.name}</b>`}</div>
+      <div class="pity-t">${left === 0 ? `🎉 الباكج الجاي فيه <b>${R.name}</b> مضمون!` : `باقي <b>${left}</b> على ضمان <b>${R.name}</b>`} <button class="ibtn" data-act="info" data-k="pity" title="شرح">ⓘ</button></div>
       <div class="pity-bar">${segs}</div>
-      <div class="hint">إذا فتحت ${d.pity.after} باكجات بدون ${R.name}، الباكج اللي بعدها يحتوي ${R.name} أكيد. العدّاد يرجع للصفر كلما طلعت لك ${R.name}.</div></div>`;
+      </div>`;
   }
 
   function render() {
     const root = $('packs'); if (!root) return;
     const d = P.def(PACK), cost = d.cost.shards, st = P.stats();
     const odds = P.oddsTable(PACK).map((o) => `<li class="r-${o.rarity}"><i></i>${RAR[o.rarity].name}<b>${o.pct.toFixed(o.pct < 1 ? 1 : 0)}%</b></li>`).join('');
-    root.innerHTML = `<div class="pk-top">${shardsHTML(W.balance('shards'))}<span class="hint">الشظايا تجيك من المهام والمستويات (المراحل الجاية). اللعبة ما تبيع شي بفلوس حقيقية.</span></div>
+    root.innerHTML = `<div class="pk-top">${shardsHTML(W.balance('shards'))}<button class="ibtn" data-act="info" data-k="shards" title="شرح">ⓘ</button></div>
       <div class="pk-main">
         <div class="pk-pack"><div class="pk-art"><span class="pk-logo">ZOR</span><span class="pk-name">${d.name}</span><span class="pk-n">${d.cards} بطاقات</span></div>
           <button class="btn primary big" data-act="packOpen" ${W.canAfford(d.cost) ? '' : 'disabled'}>افتح · ${icon('gem')} ${cost}</button>
           ${W.canAfford(d.cost) ? '' : `<div class="hint">تحتاج ${cost - W.balance('shards')} شظية إضافية</div>`}</div>
         <div class="pk-side">${pityHTML()}
           <div class="pk-odds"><b>نسبة ظهور كل بطاقة</b><ul>${odds}</ul>
-            <div class="hint">مع الضمان، المعدل الفعلي للـ${RAR.legendary.name} تقريبًا بطاقة كل 8–9 باكجات. النسخة المكررة تطوّر البطاقة، ونسخة بطاقة وصلت للمستوى الأقصى تتحوّل إلى شظايا.</div></div>
+            <button class="ibtn" data-act="info" data-k="odds" title="شرح">ⓘ</button></div>
           <div class="pk-stats hint">فتحت ${st.opened} باكج · ${Object.keys(RAR).map((r) => `${RAR[r].name}: ${st.found[r] || 0}`).join(' · ')}</div>
           <button class="btn" data-act="go" data-to="cards">مجموعتي ←</button></div>
       </div>`;
@@ -6808,7 +6847,7 @@ AMB.IMAGES = {
     const items = CAM.chests().map((c) => `<button class="chest ${c.state}" style="--at:${(100 * c.need) / max}%" ${c.state === 'ready' ? `data-act="camChest" data-id="${c.id}"` : 'disabled'} title="${esc(c.name)}: ${rewardText(c.reward)}">
         <span class="ch-ic">${c.state === 'claimed' ? '✓' : '🎁'}</span><b>${c.need}★</b></button>`).join('');
     return `<div class="cam-chests"><div class="cc-top"><span class="cc-total">★ ${tot}<small>/${max}</small></span>
-        <span class="hint">${LV.CAMPAIGN.stars.rules.map((r) => '★'.repeat(r.n) + ' ' + r.text).join(' · ')}</span></div>
+        <span class="hint">${LV.CAMPAIGN.stars.rules.map((r) => '★'.repeat(r.n)).join(' · ')} <button class="ibtn" data-act="info" data-k="caminfo" title="شرح">ⓘ</button></span></div>
       <div class="cc-track"><i style="width:${(100 * tot) / max}%"></i>${items}</div></div>`;
   }
   function rewardText(rw) {
@@ -6827,13 +6866,16 @@ AMB.IMAGES = {
     const root = $('campaign'); if (!root) return;
     const R = LV.CAMPAIGN.rewards;
     if (C.needsStarter()) {   // brand-new player: pick the first hero right here, then straight to fight 1
-      root.innerHTML = `<div class="cam-starter"><h3>اختر بطلك الأول</h3><p class="hint">هذا بطلك الدائم. الأبطال الباقين تفتحهم لاحقًا من الباكجات أو الباتل باس. اضغط «ⓘ» لتفاصيل القدرات.</p>
+      root.innerHTML = `<div class="cam-starter"><h3>اختر بطلك الأول</h3><p class="hint">بطلك الدائم · الباقين تفتحهم لاحقًا</p>
         <div class="cam-starter-row">${Object.values(AMB.DATA.HEROES).map((h) => `<div class="cs-pick">${UI().cardHTML(h, { k: 'cst' + h.id, attrs: `data-act="heroInfo" data-id="${h.id}"` })}
           <div class="cs-style">${esc(h.style.split('—')[0])}</div><button class="btn primary" data-act="camStarter" data-id="${h.id}">اختر ${esc(h.name)}</button></div>`).join('')}</div></div>`;
       return;
     }
-    root.innerHTML = `<div class="cam-note">كل قتال <b>أفضل من 3 جولات</b> ضد تشكيلة ثابتة. مستويات بطاقاتك وندرتها <b>تُحتسب هنا</b>، والمتجر يعرض الوحدات اللي تملكها فقط.
-        الفوز الأول: ${icon('gem')} ${R.fight.shards} + ${R.fight.passXp} خبرة ممر · الزعيم: ${icon('gem')} ${R.boss.shards} + ${R.boss.passXp} خبرة · إنهاء المستوى: باكج مجاني · الإعادة: ${icon('gem')} ${R.replay.shards}</div>
+    AMB.TIPS = AMB.TIPS || {};
+    AMB.TIPS.caminfo = () => ({ title: 'كيف تشتغل الحملة', html: `<p>كل قتال <b>أفضل من 3 جولات</b> ضد تشكيلة ثابتة. مستويات بطاقاتك وندرتها <b>تُحتسب هنا</b>، والمتجر يعرض الوحدات اللي تملكها فقط.</p>
+      <p>الفوز الأول: ${icon('gem')} ${R.fight.shards} + ${R.fight.passXp} خبرة ممر<br>الزعيم: ${icon('gem')} ${R.boss.shards} + ${R.boss.passXp} خبرة<br>إنهاء المستوى: باكج مجاني<br>الإعادة: ${icon('gem')} ${R.replay.shards}</p>
+      <h4>النجوم</h4>${LV.CAMPAIGN.stars.rules.map((r) => `<div>${'★'.repeat(r.n)} ${r.text}</div>`).join('')}` });
+    root.innerHTML = `<div class="cam-note">⚔️ أفضل من 3 جولات · ⭐ نجوم · ${icon('gem')} شظايا · 🎁 باكج لكل مستوى <button class="ibtn" data-act="info" data-k="caminfo" title="شرح">ⓘ</button></div>
       ${chestsHTML()}
       <div class="cam-levels">${LV.LEVELS.map((l, li) => {
         const pr = CAM.progress(l.id), unlocked = CAM.levelUnlocked(li);
@@ -6864,13 +6906,13 @@ AMB.IMAGES = {
     const heroes = C.ownedHeroes().map((id) => `<button class="hchip ${id === h ? 'on' : ''}" data-act="camHero" data-id="${id}" data-f="${fightId}">${ui.portrait(AMB.DATA.HEROES[id], { k: 'cph' + id })}<span>${AMB.DATA.HEROES[id].name}</span></button>`).join('');
     const reward = pay.replay ? `إعادة: ${icon('gem')} ${pay.shards}` : `${icon('gem')} ${pay.shards} شظية · +${pay.passXp} خبرة ممر${pay.pack ? ' · <b>باكج مجاني</b> لإنهاء المستوى' : ''}`;
     ui.modal(`<div class="cam-pv" style="--wc:${W(l.world).color}">
-      <h2>${f.boss ? '👑 ' : ''}${esc(f.name)}</h2><div class="hint">${esc(l.name)} · قتال ${x.fi + 1} من ${l.fights.length} · أفضل من 3 جولات</div>
-      ${boss ? `<div class="boss-box">${ui.portrait(AMB.DATA.HEROES[l.hero], { k: 'cpb' })}<div><b>قدرة الزعيم: ${boss.name}</b><p>${boss.text}</p><small>الزعيم يقاتل بنفسه في الساحة.</small></div></div>` : ''}
-      ${h === l.hero ? `<div class="hint">قائد الخصم هو نفس بطلك، فبتواجه <b>ظلّ ${AMB.DATA.HEROES[h].name}</b>.</div>` : ''}
+      <h2>${f.boss ? '👑 ' : ''}${esc(f.name)}</h2><div class="hint">${esc(l.name)} · ${x.fi + 1}/${l.fights.length}</div>
+      ${boss ? `<div class="boss-box">${ui.portrait(AMB.DATA.HEROES[l.hero], { k: 'cpb' })}<div><b>قدرة الزعيم: ${boss.name}</b><p>${boss.text}</p></div></div>` : ''}
+      ${h === l.hero ? `<div class="hint">ستواجه <b>ظلّ ${AMB.DATA.HEROES[h].name}</b></div>` : ''}
       <h4>تشكيلة الخصم</h4><div class="cam-units">${unitsHTML}</div>
       <h4>الجائزة</h4><div class="cam-reward">${reward}</div>
       <h4>بطلك</h4><div class="hchips">${heroes}</div>
-      <h4>النجوم ${starRow(CAM.stars(fightId))}</h4><ul class="star-rules">${LV.CAMPAIGN.stars.rules.map((r) => `<li class="${CAM.stars(fightId) >= r.n ? 'got' : ''}">${'★'.repeat(r.n)} ${r.text}</li>`).join('')}</ul>
+      <h4>النجوم ${starRow(CAM.stars(fightId))} <button class="ibtn" data-act="info" data-k="caminfo" title="شرح">ⓘ</button></h4>
       ${st.attempts ? `<div class="hint">محاولات: ${st.attempts} · فوز: ${st.wins}</div>` : ''}
       <div class="cam-go"><button class="btn primary big" data-act="camGo" data-id="${fightId}" ${h ? '' : 'disabled'}>قاتل!</button></div></div>`);
   }
@@ -6894,11 +6936,11 @@ AMB.IMAGES = {
         <div class="res-hname">${esc(x.fight.name)}</div></div>
       <div class="res-banner"><h1>${won ? (x.fight.boss ? 'هزمت الزعيم!' : 'فوز!') : 'خسارة'}</h1><p class="hint">النتيجة ${score} · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة</p>
         ${won ? `<div class="res-stars">${[1, 2, 3].map((k) => `<i class="${k <= r.stars ? 'on' : ''}" style="--d:${0.3 + k * 0.35}s">★</i>`).join('')}</div>
-          <p class="hint">${r.newBest ? (r.prevStars ? `رقم جديد! من ${r.prevStars} إلى ${r.stars} نجوم` : `${r.stars} من 3 نجوم`) : `أفضل نتيجة لك هنا: ${CAM.stars(fightId)} نجوم`}${r.stars < 3 ? ' · ' + LV.CAMPAIGN.stars.rules[r.stars].text + ' = نجمة إضافية' : ''}</p>` : ''}
+          <p class="hint">${r.newBest ? (r.prevStars ? `رقم جديد! من ${r.prevStars} إلى ${r.stars} نجوم` : `${r.stars} من 3 نجوم`) : `أفضل نتيجة لك هنا: ${CAM.stars(fightId)} نجوم`}${r.stars < 3 ? ' · ' + LV.CAMPAIGN.stars.rules[r.stars].text + ' = ★' : ''}</p>` : ''}
         ${r.chestsReady > r.chestsBefore ? '<button class="btn primary" data-act="go" data-to="campaign">🎁 صندوق نجوم جاهز! افتحه من خريطة الحملة</button>' : ''}
-        ${won ? `<p class="cam-pay">${r.first ? pay : `إعادة: ${pay || 'بدون جائزة'}`}</p>` : '<p class="hint">ما خسرت شي. طوّر بطاقاتك أو غيّر التشكيلة وجرّب مرة ثانية.</p>'}</div>
+        ${won ? `<p class="cam-pay">${r.first ? pay : `إعادة: ${pay || 'بدون جائزة'}`}</p>` : '<p class="hint">طوّر بطاقاتك وجرّب مرة ثانية</p>'}</div>
       ${pack}
-      ${r.first && fightId === 'l1f1' ? '<div class="cam-unlock">🔓 انفتح لك: <b>الباكجات</b> و<b>مجموعتي</b> و<b>ممر الصدع</b> و<b>الدخول اليومي</b> من القائمة الرئيسية. معك شظايا تكفي 3 باكجات!</div>' : ''}
+      ${r.first && fightId === 'l1f1' ? '<div class="cam-unlock">🔓 انفتح: الباكجات · مجموعتي · الممر · الدخول اليومي</div>' : ''}
       <div class="cam-btns">
         ${won && nx ? `<button class="btn primary big" data-act="camGo" data-id="${next}">القتال التالي: ${esc(nx.fight.name)}</button>` : ''}
         <button class="btn ${won ? '' : 'primary'} big" data-act="camGo" data-id="${fightId}">${won ? 'أعد القتال' : 'حاول مرة ثانية'}</button>

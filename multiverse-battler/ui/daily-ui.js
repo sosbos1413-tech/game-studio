@@ -37,13 +37,14 @@
   function open() { UI().overlay(calendarHTML(null)); }
   function refreshMenu() {
     const b = $('menu-login'); if (!b) return;
-    b.innerHTML = `🎁 الدخول اليومي${L.canClaim() ? '<span class="dot">1</span>' : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `الدخول اليومي${L.canClaim() ? '<span class="dot">1</span>' : ''}`;
   }
   /** called when the main menu shows: open the calendar once per session if a reward waits */
   function onMenu() {
     refreshMenu();
     if (shown || !L.canClaim() || $('overlay').classList.contains('on')) return;
-    shown = true; setTimeout(() => { if (L.canClaim() && document.querySelector('#scr-menu.active') && !$('overlay').classList.contains('on')) open(); }, 600);
+    if (AMB.CampaignUI && AMB.CampaignUI.isNewbie()) return;   // first visit: no popups before the first fight
+    shown = true; setTimeout(() => { if (L.canClaim() && !(AMB.CampaignUI && AMB.CampaignUI.isNewbie()) && document.querySelector('#scr-menu.active') && !$('overlay').classList.contains('on')) open(); }, 600);
   }
 
   function installActions() {

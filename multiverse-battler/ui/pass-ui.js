@@ -70,7 +70,7 @@
   function refreshMenu() {
     const b = $('menu-pass'); if (!b) return;
     const n = pass.unclaimedCount();
-    b.innerHTML = `ممر الصدع <small>مستوى ${pass.level()}</small>${n ? `<span class="dot">${n}</span>` : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `ممر الصدع <small>${pass.level()}</small>${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
   // ---------------------------------------------------------------- screen

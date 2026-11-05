@@ -1496,3 +1496,30 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 .lday.today { border-color: var(--red); box-shadow: 0 0 0 3px var(--gold), var(--hard-sm); animation: pcpulse .7s infinite alternate; }
 .lday.now { opacity: 1; box-shadow: 0 0 0 3px var(--green), 0 0 18px var(--gold); }
 @media (max-width: 700px) { .lcal { grid-template-columns: repeat(4, 1fr); } .lday.big { grid-column: span 2; } .login-wrap h2 { font-size: 28px; } }
+
+/* ======================================================================= main menu v2 + first-run */
+.menu-wrap { margin-top: 3vh; }
+.logo { padding: 18px 0 14px; }
+.menu-buttons { max-width: 360px; margin: 18px auto 14px; gap: 10px; }
+.menu-buttons .btn { transform: none !important; }
+.menu-cta { position: relative; font-size: 30px !important; padding: 16px 30px !important; box-shadow: 6px 6px 0 var(--ink), 0 0 26px #e0262f66; }
+.menu-cta small { font-size: 15px; }
+.menu-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 440px; margin: 0 auto 14px; }
+.mtile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 6px; background: var(--ink2); color: var(--paper); border: 2px solid var(--paper3); cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700; box-shadow: var(--hard-sm); }
+.mtile:hover { border-color: var(--gold); color: var(--gold); }
+.mtile .mt-ic { font-size: 22px; line-height: 1.1; } .mtile .mt-l small { font-weight: 400; opacity: .75; margin-inline-start: 3px; }
+.mtile .dot { top: -7px; inset-inline-end: -7px; }
+.menu-newbie { display: none; max-width: 400px; margin: 0 auto 10px; color: var(--gold); font-size: 14px; }
+body.newbie .mtile.mt-prog { display: none; }
+body.newbie .menu-tiles { grid-template-columns: repeat(4, 1fr); }
+body.newbie .menu-newbie { display: block; }
+body.newbie #menu-play { opacity: .8; }
+.menu-heroes .tcard.hc.full { zoom: 1 !important; }
+@media (max-height: 820px) { .menu-heroes { display: none; } }
+.cam-starter { text-align: center; } .cam-starter h3 { font: 400 30px var(--display); color: var(--gold); margin: 0; }
+.cam-starter-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px 16px; margin-top: 16px; }
+.cs-pick { display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 170px; }
+.cs-style { font-size: 13px; color: var(--paper3); min-height: 34px; }
+.cam-unlock { max-width: 560px; margin: 0 auto 16px; background: var(--gold); color: var(--ink); border: 3px solid var(--ink); box-shadow: var(--hard); padding: 10px 14px; font-size: 15px; }
+/* your hero vs the same hero: the enemy is its shadow */
+body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .hc-art { filter: grayscale(.4) hue-rotate(200deg) brightness(.75) contrast(1.2); }

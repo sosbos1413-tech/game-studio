@@ -50,7 +50,7 @@
   function refreshMenu() {
     const b = $('menu-cards'); if (!b) return;
     const n = C.ids().filter((id) => C.canUpgrade(id)).length;
-    b.innerHTML = `مجموعتي${n ? `<span class="dot">${n}</span>` : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `مجموعتي${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
   function installActions() {

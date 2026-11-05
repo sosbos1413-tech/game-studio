@@ -44,7 +44,7 @@
   function refreshMenu() {
     const b = $('menu-packs'); if (!b) return;
     const n = Math.floor(W.balance('shards') / P.def(PACK).cost.shards);
-    b.innerHTML = `الباكجات${n ? `<span class="dot">${n}</span>` : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `الباكجات${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
   function tagFor(c) {

@@ -25,19 +25,23 @@
         <p class="sub">Zones Of Rift · مناطق الصدع</p>
       </div>
       <div class="menu-buttons">
-        <button class="btn big primary" data-act="go" data-to="mode">العب</button>
-        <button class="btn big primary" data-act="go" data-to="campaign" id="menu-campaign">الحملة</button>
-        <button class="btn big" data-act="go" data-to="pass" id="menu-pass">ممر الصدع</button>
-        <button class="btn big" data-act="go" data-to="cards" id="menu-cards">مجموعتي</button>
-        <button class="btn big" data-act="go" data-to="packs" id="menu-packs">الباكجات</button>
-        <button class="btn big" data-act="go" data-to="codex">مكتبة الشخصيات</button>
-        <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
-        <button class="btn ghost" data-act="loginOpen" id="menu-login">🎁 الدخول اليومي</button>
-        <button class="btn big ghost" data-act="howto">كيف ألعب؟</button>
-        <button class="btn ghost" data-act="sound" id="menu-sound">🔊 الصوت</button>
+        <button class="btn big primary menu-cta" data-act="go" data-to="campaign" id="menu-campaign">الحملة</button>
+        <button class="btn big" data-act="go" data-to="mode" id="menu-play">مباراة سريعة</button>
       </div>
+      <!-- secondary screens as small tiles; the progression ones appear after the first campaign win -->
+      <div class="menu-tiles">
+        <button class="mtile mt-prog" data-act="go" data-to="pass" id="menu-pass"><span class="mt-ic">🎖️</span><span class="mt-l">ممر الصدع</span></button>
+        <button class="mtile mt-prog" data-act="go" data-to="cards" id="menu-cards"><span class="mt-ic">🃏</span><span class="mt-l">مجموعتي</span></button>
+        <button class="mtile mt-prog" data-act="go" data-to="packs" id="menu-packs"><span class="mt-ic">📦</span><span class="mt-l">الباكجات</span></button>
+        <button class="mtile mt-prog" data-act="loginOpen" id="menu-login"><span class="mt-ic">🎁</span><span class="mt-l">الدخول اليومي</span></button>
+        <button class="mtile" data-act="go" data-to="codex"><span class="mt-ic">📖</span><span class="mt-l">الشخصيات</span></button>
+        <button class="mtile" data-act="go" data-to="stats"><span class="mt-ic">📊</span><span class="mt-l">الإحصائيات</span></button>
+        <button class="mtile" data-act="howto"><span class="mt-ic">❓</span><span class="mt-l">كيف ألعب؟</span></button>
+        <button class="mtile" data-act="sound" id="menu-sound"><span class="mt-ic">🔊</span><span class="mt-l">الصوت</span></button>
+      </div>
+      <p class="menu-newbie">ابدأ بالحملة: أول فوز يفتح لك الباكجات ومجموعتك وممر الصدع والجوائز اليومية.</p>
       <div class="menu-heroes" id="menu-heroes"></div>
-      <p class="fineprint">جميع العوالم والشخصيات أصلية ومؤقتة للتجربة. الأرقام قابلة للتعديل في <code>core/config.js</code> و <code>core/data.js</code>.</p>
+      <p class="fineprint">كل العوالم والشخصيات أصلية. لعبة تجريبية: تقدّمك محفوظ في هذا المتصفح.</p>
     </div>
   </section>
 
@@ -65,14 +69,14 @@
         <p>ضد ذكاء اصطناعي سهل، بمؤقت مضاعف، ولا تُسجَّل في الإحصائيات. مناسبة للتعلم.</p>
         <button class="btn" data-act="mode" data-v="friendly">ابدأ</button>
       </div>
-      <div class="mode-card soon">
-        <h3>التحديات والمراحل</h3>
-        <p>سلسلة خصوم بتشكيلات مصممة مسبقًا. البنية جاهزة (Match + AI)، المحتوى لاحقًا.</p>
-        <span class="tag">قريبًا</span>
+      <div class="mode-card">
+        <h3>الحملة</h3>
+        <p>4 عوالم، قتالات قصيرة من 3 جولات وزعماء بقدرات خاصة. هنا تكسب الشظايا والنجوم وتطوّر بطاقاتك. أفضل مكان تبدأ منه.</p>
+        <button class="btn primary" data-act="go" data-to="campaign">افتح الحملة</button>
       </div>
       <div class="mode-card soon">
-        <h3>التصنيف التنافسي والمواسم</h3>
-        <p>يتطلب خادمًا للمطابقة. القتال حتمي (seed) لذا يمكن التحقق منه على الخادم.</p>
+        <h3>التحدي التنافسي</h3>
+        <p>العب ضد لاعبين حقيقيين وارتقِ في التصنيف.</p>
         <span class="tag">قريبًا</span>
       </div>
     </div>

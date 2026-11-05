@@ -9,8 +9,9 @@ const path = require('path');
   .forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 const games = +(process.argv[2] || 40);
+const only = process.argv[3] || null;   // optional: tune just one level, e.g. l1
 // reference player per level: what a player plausibly has when reaching it
-const REF = { l1: { lvl: 1, owned: 'starter', t: [0.95, 0.9, 0.85, 0.8, 0.55] }, l2: { lvl: 2, owned: 'starter', t: [0.85, 0.8, 0.75, 0.7, 0.5] },
+const REF = { l1: { lvl: 1, owned: 'starter', t: [0.95, 0.8, 0.72, 0.65, 0.4] }, l2: { lvl: 2, owned: 'starter', t: [0.85, 0.8, 0.75, 0.7, 0.5] },
   l3: { lvl: 3, owned: 'all', t: [0.8, 0.75, 0.7, 0.65, 0.45] }, l4: { lvl: 4, owned: 'all', t: [0.75, 0.7, 0.65, 0.6, 0.4] } };
 const heroes = Object.keys(AMB.DATA.HEROES);
 function profile(lvl, owned) {
@@ -30,9 +31,10 @@ function rate(prof, f, power) {
   return w / games;
 }
 for (const l of AMB.LEVELS.LEVELS) {
+  if (only && l.id !== only) continue;
   const R = REF[l.id], prof = profile(R.lvl, R.owned), out = [];
   l.fights.forEach((f, i) => {
-    let lo = 0.3, hi = 1.8;
+    let lo = 0.3, hi = 2.6;
     for (let it = 0; it < 7; it++) { const mid = (lo + hi) / 2; if (rate(prof, f, mid) > R.t[i]) lo = mid; else hi = mid; }
     f.power = Math.round(((lo + hi) / 2) * 100) / 100;
     out.push(`${f.id}=${f.power} (${Math.round(rate(prof, f, f.power) * 100)}%)`);

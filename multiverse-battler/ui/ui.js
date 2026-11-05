@@ -99,6 +99,10 @@
     }
     // campaign fight (ui/campaign-ui.js): fixed enemy line-up, short best-of-3 rules, your card levels count
     S.match = S.mode === 'campaign' ? new AMB.Match(AMB.campaign.matchOptions(S.campaign.fightId, S.picks[0])) : new AMB.Match({ mode: S.mode, players });
+    // same hero on both sides (e.g. your Kiro vs the Ember boss Kiro): the enemy becomes its "shadow"
+    const mirror = S.match.players[0].heroId === S.match.players[1].heroId;
+    document.body.classList.toggle('mirror-foe', mirror);
+    if (mirror && S.mode === 'campaign') { const hn = HEROES[S.match.players[1].heroId].name, e = S.match.players[1]; if (e.name.includes(hn)) e.name = e.name.replace(hn, 'ظلّ ' + hn); }
     S.startTs = Date.now();
     S.speed = 2;
     show('match');
@@ -138,7 +142,7 @@
       ['shield', 'ضعها في الساحة', 'اضغط الوحدة ثم خانة مضيئة، أو اسحبها. <b>حارس ومقاتل: أمامي</b> (يحميان بطلك). <b>ساحر وقناص ودعم: خلفي</b>. أو اضغط «ترتيب تلقائي».'],
       ['star', 'غيّر رأيك بسهولة', 'اضغط أي وحدة (في الساحة أو الاحتياط) فيظهر شريط: <b>بيع</b> أو <b>للاحتياط</b> أو <b>تفاصيل</b>. اضغط وحدة أخرى لتبديل مكانهما.'],
       ['burst', 'الترقية ★', '<b>٣ نسخ متطابقة = ترقية تلقائية</b> لنجمة أقوى. علامة <b>×2</b> على بطاقة المتجر = تملك نسختين، و<b>↑</b> = شراؤها يرقّيها. «ترقية ★» يعرض تقدمك.'],
-      ['sword', 'جاهز', 'اضغط «جاهز» حين تنتهي، أو ينتهي المؤقت ويبدأ القتال لحاله. القتال تلقائي بالكامل. المباراة ٧ جولات وبعد كل مرحلة مكافأة.'],
+      ['sword', 'جاهز', 'اضغط «جاهز» حين تنتهي، أو ينتهي المؤقت ويبدأ القتال لحاله. القتال تلقائي بالكامل. ' + (S.match && S.match.rules ? 'قتال الحملة أفضل من ٣ جولات: أول من يفوز بجولتين يكسب.' : 'المباراة ٧ جولات وبعد كل مرحلة مكافأة.')],
     ];
     modal(`<h2>دليل سريع</h2><div class="tut">${steps.map((st, i) => `<div class="tut-step"><span class="tut-n">${i + 1}</span><span class="tut-ic">${icon(st[0])}</span><div><b>${st[1]}</b><p>${st[2]}</p></div></div>`).join('')}</div>
       <div style="text-align:center;margin-top:10px"><button class="btn primary big" data-act="closeModal">فهمت</button></div>`);
@@ -191,14 +195,16 @@
     S.phase = 'resources';
     S.paused = false;
     renderMatch();
-    { const st = S.match.stageInfo(), first = st.rounds[0] === S.match.round;
+    // the first-run guide opens in a moment: skip the round banner and income toast so nothing stacks on it
+    let tutNext = false; try { tutNext = S.match.round === 1 && localStorage.getItem('amb_tut') !== '1'; } catch (e) { /* ignore */ }
+    if (!tutNext) { const st = S.match.stageInfo(), first = st.rounds[0] === S.match.round;
       if (S.match.rules) banner(`الجولة ${S.match.round} من ${maxR()}<small>أول من يفوز بجولتين يكسب القتال</small>`, S.match.round === 1 ? '' : 'fight');
       else if (st.id === 'finale') banner('الحسم!<small>جولة أخيرة: الخسارة هنا تتضاعف</small>', 'fight');
       else if (first) banner(`${st.name}<small>الجولة ${S.match.round} من ${CFG.match.maxRounds}</small>`);
       else banner('الجولة ' + S.match.round); }
     const p = me();
     const inc = p.lastIncome;
-    if (inc) {
+    if (inc && !tutNext) {
       const parts = [`+${inc.base} أساسي`];
       if (inc.interest) parts.push(`+${inc.interest} فائدة`);
       if (inc.streak) parts.push(`+${inc.streak} سلسلة`);
@@ -1180,7 +1186,7 @@
     buyFromUpg: (d) => { const r = S.match.buy(S.v, +d.idx); if (res(r) && r.merged && r.merged.length) toast(`تطوير! ${UNITS[r.merged[r.merged.length - 1].defId].name} ${'★'.repeat(r.merged[r.merged.length - 1].star)}`, 'good'); renderMatch(); upgradesModal(); },
     buyItem: (d) => { if (prepActive() && res(S.match.buyItem(S.v, +d.idx))) renderMatch(); },
     reroll: () => { if (prepActive() && res(S.match.reroll(S.v))) { sfx('reroll'); renderMatch(); } },
-    sound: () => { SND.on = !SND.on; try { localStorage.setItem('amb_sound', SND.on ? '1' : '0'); } catch (e) { /* ignore */ } if (SND.on) sfx('click'); document.querySelectorAll('[data-act="sound"]').forEach((b) => (b.textContent = (SND.on ? '🔊' : '🔇') + (b.id === 'menu-sound' ? ' الصوت' : ''))); },
+    sound: () => { SND.on = !SND.on; try { localStorage.setItem('amb_sound', SND.on ? '1' : '0'); } catch (e) { /* ignore */ } if (SND.on) sfx('click'); document.querySelectorAll('[data-act="sound"]').forEach((b) => { if (b.id === 'menu-sound') b.querySelector('.mt-ic').textContent = SND.on ? '🔊' : '🔇'; else b.textContent = SND.on ? '🔊' : '🔇'; }); },
     xp: () => { if (prepActive()) { const lv = me().level; if (res(S.match.buyXp(S.v))) { if (me().level > lv) toast(`المستوى ${me().level}! يمكنك وضع ${me().level} وحدات`, 'good'); renderMatch(); } } },
     lock: () => { if (prepActive()) { S.match.toggleLock(S.v); renderMatch(); } },
     ready: () => prepActive() && endPrep(),
@@ -1386,7 +1392,7 @@
   (function fillMenu() {
     const el = $('menu-heroes');
     if (el) el.innerHTML = Object.values(HEROES).map((h, i) => cardHTML(h, { k: 'menu' + i })).join('');
-    const ms = $('menu-sound'); if (ms) ms.textContent = SND.on ? '🔊 الصوت' : '🔇 الصوت';
+    const ms = $('menu-sound'); if (ms) ms.querySelector('.mt-ic').textContent = SND.on ? '🔊' : '🔇';
   })();
 
   // debug / testing hook

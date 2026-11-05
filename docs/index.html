@@ -1511,6 +1511,33 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 .lday.now { opacity: 1; box-shadow: 0 0 0 3px var(--green), 0 0 18px var(--gold); }
 @media (max-width: 700px) { .lcal { grid-template-columns: repeat(4, 1fr); } .lday.big { grid-column: span 2; } .login-wrap h2 { font-size: 28px; } }
 
+/* ======================================================================= main menu v2 + first-run */
+.menu-wrap { margin-top: 3vh; }
+.logo { padding: 18px 0 14px; }
+.menu-buttons { max-width: 360px; margin: 18px auto 14px; gap: 10px; }
+.menu-buttons .btn { transform: none !important; }
+.menu-cta { position: relative; font-size: 30px !important; padding: 16px 30px !important; box-shadow: 6px 6px 0 var(--ink), 0 0 26px #e0262f66; }
+.menu-cta small { font-size: 15px; }
+.menu-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 440px; margin: 0 auto 14px; }
+.mtile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 6px; background: var(--ink2); color: var(--paper); border: 2px solid var(--paper3); cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700; box-shadow: var(--hard-sm); }
+.mtile:hover { border-color: var(--gold); color: var(--gold); }
+.mtile .mt-ic { font-size: 22px; line-height: 1.1; } .mtile .mt-l small { font-weight: 400; opacity: .75; margin-inline-start: 3px; }
+.mtile .dot { top: -7px; inset-inline-end: -7px; }
+.menu-newbie { display: none; max-width: 400px; margin: 0 auto 10px; color: var(--gold); font-size: 14px; }
+body.newbie .mtile.mt-prog { display: none; }
+body.newbie .menu-tiles { grid-template-columns: repeat(4, 1fr); }
+body.newbie .menu-newbie { display: block; }
+body.newbie #menu-play { opacity: .8; }
+.menu-heroes .tcard.hc.full { zoom: 1 !important; }
+@media (max-height: 820px) { .menu-heroes { display: none; } }
+.cam-starter { text-align: center; } .cam-starter h3 { font: 400 30px var(--display); color: var(--gold); margin: 0; }
+.cam-starter-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px 16px; margin-top: 16px; }
+.cs-pick { display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 170px; }
+.cs-style { font-size: 13px; color: var(--paper3); min-height: 34px; }
+.cam-unlock { max-width: 560px; margin: 0 auto 16px; background: var(--gold); color: var(--ink); border: 3px solid var(--ink); box-shadow: var(--hard); padding: 10px 14px; font-size: 15px; }
+/* your hero vs the same hero: the enemy is its shadow */
+body.mirror-foe .lifechip:not(.me) .portrait, body.mirror-foe .tcard.hero.foe .hc-art { filter: grayscale(.4) hue-rotate(200deg) brightness(.75) contrast(1.2); }
+
 </style>
 </head>
 <body>
@@ -1525,19 +1552,23 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         <p class="sub">Zones Of Rift · مناطق الصدع</p>
       </div>
       <div class="menu-buttons">
-        <button class="btn big primary" data-act="go" data-to="mode">العب</button>
-        <button class="btn big primary" data-act="go" data-to="campaign" id="menu-campaign">الحملة</button>
-        <button class="btn big" data-act="go" data-to="pass" id="menu-pass">ممر الصدع</button>
-        <button class="btn big" data-act="go" data-to="cards" id="menu-cards">مجموعتي</button>
-        <button class="btn big" data-act="go" data-to="packs" id="menu-packs">الباكجات</button>
-        <button class="btn big" data-act="go" data-to="codex">مكتبة الشخصيات</button>
-        <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
-        <button class="btn ghost" data-act="loginOpen" id="menu-login">🎁 الدخول اليومي</button>
-        <button class="btn big ghost" data-act="howto">كيف ألعب؟</button>
-        <button class="btn ghost" data-act="sound" id="menu-sound">🔊 الصوت</button>
+        <button class="btn big primary menu-cta" data-act="go" data-to="campaign" id="menu-campaign">الحملة</button>
+        <button class="btn big" data-act="go" data-to="mode" id="menu-play">مباراة سريعة</button>
       </div>
+      <!-- secondary screens as small tiles; the progression ones appear after the first campaign win -->
+      <div class="menu-tiles">
+        <button class="mtile mt-prog" data-act="go" data-to="pass" id="menu-pass"><span class="mt-ic">🎖️</span><span class="mt-l">ممر الصدع</span></button>
+        <button class="mtile mt-prog" data-act="go" data-to="cards" id="menu-cards"><span class="mt-ic">🃏</span><span class="mt-l">مجموعتي</span></button>
+        <button class="mtile mt-prog" data-act="go" data-to="packs" id="menu-packs"><span class="mt-ic">📦</span><span class="mt-l">الباكجات</span></button>
+        <button class="mtile mt-prog" data-act="loginOpen" id="menu-login"><span class="mt-ic">🎁</span><span class="mt-l">الدخول اليومي</span></button>
+        <button class="mtile" data-act="go" data-to="codex"><span class="mt-ic">📖</span><span class="mt-l">الشخصيات</span></button>
+        <button class="mtile" data-act="go" data-to="stats"><span class="mt-ic">📊</span><span class="mt-l">الإحصائيات</span></button>
+        <button class="mtile" data-act="howto"><span class="mt-ic">❓</span><span class="mt-l">كيف ألعب؟</span></button>
+        <button class="mtile" data-act="sound" id="menu-sound"><span class="mt-ic">🔊</span><span class="mt-l">الصوت</span></button>
+      </div>
+      <p class="menu-newbie">ابدأ بالحملة: أول فوز يفتح لك الباكجات ومجموعتك وممر الصدع والجوائز اليومية.</p>
       <div class="menu-heroes" id="menu-heroes"></div>
-      <p class="fineprint">جميع العوالم والشخصيات أصلية ومؤقتة للتجربة. الأرقام قابلة للتعديل في <code>core/config.js</code> و <code>core/data.js</code>.</p>
+      <p class="fineprint">كل العوالم والشخصيات أصلية. لعبة تجريبية: تقدّمك محفوظ في هذا المتصفح.</p>
     </div>
   </section>
 
@@ -1565,14 +1596,14 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         <p>ضد ذكاء اصطناعي سهل، بمؤقت مضاعف، ولا تُسجَّل في الإحصائيات. مناسبة للتعلم.</p>
         <button class="btn" data-act="mode" data-v="friendly">ابدأ</button>
       </div>
-      <div class="mode-card soon">
-        <h3>التحديات والمراحل</h3>
-        <p>سلسلة خصوم بتشكيلات مصممة مسبقًا. البنية جاهزة (Match + AI)، المحتوى لاحقًا.</p>
-        <span class="tag">قريبًا</span>
+      <div class="mode-card">
+        <h3>الحملة</h3>
+        <p>4 عوالم، قتالات قصيرة من 3 جولات وزعماء بقدرات خاصة. هنا تكسب الشظايا والنجوم وتطوّر بطاقاتك. أفضل مكان تبدأ منه.</p>
+        <button class="btn primary" data-act="go" data-to="campaign">افتح الحملة</button>
       </div>
       <div class="mode-card soon">
-        <h3>التصنيف التنافسي والمواسم</h3>
-        <p>يتطلب خادمًا للمطابقة. القتال حتمي (seed) لذا يمكن التحقق منه على الخادم.</p>
+        <h3>التحدي التنافسي</h3>
+        <p>العب ضد لاعبين حقيقيين وارتقِ في التصنيف.</p>
         <span class="tag">قريبًا</span>
       </div>
     </div>
@@ -4044,10 +4075,10 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   const LEVELS = [
     L('l1', 'ember', 'kagira', 'أطراف مملكة الجمر', { gold: 6, level: 4 }, [
       F('l1f1', 'دورية الرماد', 1.79, [['ash_ronin', 1, 'f1', 1], ['forge_bulwark', 1, 'f2', 1], ['pixel_sniper', 1, 'b1', 2]]),
-      F('l1f2', 'حرّاس الأتون', 1.35, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 1, 'f2', 1], ['thorn_fox', 1, 'f3', 2], ['pixel_sniper', 1, 'b1', 1]]),
-      F('l1f3', 'كمين الشرر', 1.1, [['ash_ronin', 1, 'f1', 1], ['forge_bulwark', 1, 'f2', 1], ['spark_wraith', 1, 'b2', 1], ['pyre_archer', 1, 'b1', 2]]),
-      F('l1f4', 'رماة المحرقة', 1.23, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 1, 'f2', 1], ['coral_sentinel', 1, 'f3', 2], ['pyre_archer', 1, 'b1', 1], ['spark_wraith', 1, 'b2', 3]]),
-      F('l1boss', 'الزعيم: كيرو', 0.86, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 2, 'f2', 1], ['pyre_archer', 1, 'b0', 1], ['caldera_seer', 1, 'b2', 2]], { boss: true }),
+      F('l1f2', 'حرّاس الأتون', 1.46, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 1, 'f2', 1], ['thorn_fox', 1, 'f3', 2], ['pixel_sniper', 1, 'b1', 1]]),
+      F('l1f3', 'كمين الشرر', 1.15, [['ash_ronin', 1, 'f1', 1], ['forge_bulwark', 1, 'f2', 1], ['spark_wraith', 1, 'b2', 1], ['pyre_archer', 1, 'b1', 2]]),
+      F('l1f4', 'رماة المحرقة', 1.28, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 1, 'f2', 1], ['coral_sentinel', 1, 'f3', 2], ['pyre_archer', 1, 'b1', 1], ['spark_wraith', 1, 'b2', 3]]),
+      F('l1boss', 'الزعيم: كيرو', 0.92, [['forge_bulwark', 1, 'f1', 1], ['ash_ronin', 2, 'f2', 1], ['pyre_archer', 1, 'b0', 1], ['caldera_seer', 1, 'b2', 2]], { boss: true }),
     ]),
     L('l2', 'tide', 'merin', 'سواحل المدّ القمري', { gold: 8, level: 5 }, [
       F('l2f1', 'حرس المرجان', 1.52, [['coral_sentinel', 1, 'f1', 1], ['lunar_blade', 1, 'f2', 1], ['wave_caller', 1, 'b1', 1], ['pixel_sniper', 1, 'b2', 2]]),
@@ -5091,6 +5122,10 @@ AMB.IMAGES = {
     }
     // campaign fight (ui/campaign-ui.js): fixed enemy line-up, short best-of-3 rules, your card levels count
     S.match = S.mode === 'campaign' ? new AMB.Match(AMB.campaign.matchOptions(S.campaign.fightId, S.picks[0])) : new AMB.Match({ mode: S.mode, players });
+    // same hero on both sides (e.g. your Kiro vs the Ember boss Kiro): the enemy becomes its "shadow"
+    const mirror = S.match.players[0].heroId === S.match.players[1].heroId;
+    document.body.classList.toggle('mirror-foe', mirror);
+    if (mirror && S.mode === 'campaign') { const hn = HEROES[S.match.players[1].heroId].name, e = S.match.players[1]; if (e.name.includes(hn)) e.name = e.name.replace(hn, 'ظلّ ' + hn); }
     S.startTs = Date.now();
     S.speed = 2;
     show('match');
@@ -5130,7 +5165,7 @@ AMB.IMAGES = {
       ['shield', 'ضعها في الساحة', 'اضغط الوحدة ثم خانة مضيئة، أو اسحبها. <b>حارس ومقاتل: أمامي</b> (يحميان بطلك). <b>ساحر وقناص ودعم: خلفي</b>. أو اضغط «ترتيب تلقائي».'],
       ['star', 'غيّر رأيك بسهولة', 'اضغط أي وحدة (في الساحة أو الاحتياط) فيظهر شريط: <b>بيع</b> أو <b>للاحتياط</b> أو <b>تفاصيل</b>. اضغط وحدة أخرى لتبديل مكانهما.'],
       ['burst', 'الترقية ★', '<b>٣ نسخ متطابقة = ترقية تلقائية</b> لنجمة أقوى. علامة <b>×2</b> على بطاقة المتجر = تملك نسختين، و<b>↑</b> = شراؤها يرقّيها. «ترقية ★» يعرض تقدمك.'],
-      ['sword', 'جاهز', 'اضغط «جاهز» حين تنتهي، أو ينتهي المؤقت ويبدأ القتال لحاله. القتال تلقائي بالكامل. المباراة ٧ جولات وبعد كل مرحلة مكافأة.'],
+      ['sword', 'جاهز', 'اضغط «جاهز» حين تنتهي، أو ينتهي المؤقت ويبدأ القتال لحاله. القتال تلقائي بالكامل. ' + (S.match && S.match.rules ? 'قتال الحملة أفضل من ٣ جولات: أول من يفوز بجولتين يكسب.' : 'المباراة ٧ جولات وبعد كل مرحلة مكافأة.')],
     ];
     modal(`<h2>دليل سريع</h2><div class="tut">${steps.map((st, i) => `<div class="tut-step"><span class="tut-n">${i + 1}</span><span class="tut-ic">${icon(st[0])}</span><div><b>${st[1]}</b><p>${st[2]}</p></div></div>`).join('')}</div>
       <div style="text-align:center;margin-top:10px"><button class="btn primary big" data-act="closeModal">فهمت</button></div>`);
@@ -5183,14 +5218,16 @@ AMB.IMAGES = {
     S.phase = 'resources';
     S.paused = false;
     renderMatch();
-    { const st = S.match.stageInfo(), first = st.rounds[0] === S.match.round;
+    // the first-run guide opens in a moment: skip the round banner and income toast so nothing stacks on it
+    let tutNext = false; try { tutNext = S.match.round === 1 && localStorage.getItem('amb_tut') !== '1'; } catch (e) { /* ignore */ }
+    if (!tutNext) { const st = S.match.stageInfo(), first = st.rounds[0] === S.match.round;
       if (S.match.rules) banner(`الجولة ${S.match.round} من ${maxR()}<small>أول من يفوز بجولتين يكسب القتال</small>`, S.match.round === 1 ? '' : 'fight');
       else if (st.id === 'finale') banner('الحسم!<small>جولة أخيرة: الخسارة هنا تتضاعف</small>', 'fight');
       else if (first) banner(`${st.name}<small>الجولة ${S.match.round} من ${CFG.match.maxRounds}</small>`);
       else banner('الجولة ' + S.match.round); }
     const p = me();
     const inc = p.lastIncome;
-    if (inc) {
+    if (inc && !tutNext) {
       const parts = [`+${inc.base} أساسي`];
       if (inc.interest) parts.push(`+${inc.interest} فائدة`);
       if (inc.streak) parts.push(`+${inc.streak} سلسلة`);
@@ -6172,7 +6209,7 @@ AMB.IMAGES = {
     buyFromUpg: (d) => { const r = S.match.buy(S.v, +d.idx); if (res(r) && r.merged && r.merged.length) toast(`تطوير! ${UNITS[r.merged[r.merged.length - 1].defId].name} ${'★'.repeat(r.merged[r.merged.length - 1].star)}`, 'good'); renderMatch(); upgradesModal(); },
     buyItem: (d) => { if (prepActive() && res(S.match.buyItem(S.v, +d.idx))) renderMatch(); },
     reroll: () => { if (prepActive() && res(S.match.reroll(S.v))) { sfx('reroll'); renderMatch(); } },
-    sound: () => { SND.on = !SND.on; try { localStorage.setItem('amb_sound', SND.on ? '1' : '0'); } catch (e) { /* ignore */ } if (SND.on) sfx('click'); document.querySelectorAll('[data-act="sound"]').forEach((b) => (b.textContent = (SND.on ? '🔊' : '🔇') + (b.id === 'menu-sound' ? ' الصوت' : ''))); },
+    sound: () => { SND.on = !SND.on; try { localStorage.setItem('amb_sound', SND.on ? '1' : '0'); } catch (e) { /* ignore */ } if (SND.on) sfx('click'); document.querySelectorAll('[data-act="sound"]').forEach((b) => { if (b.id === 'menu-sound') b.querySelector('.mt-ic').textContent = SND.on ? '🔊' : '🔇'; else b.textContent = SND.on ? '🔊' : '🔇'; }); },
     xp: () => { if (prepActive()) { const lv = me().level; if (res(S.match.buyXp(S.v))) { if (me().level > lv) toast(`المستوى ${me().level}! يمكنك وضع ${me().level} وحدات`, 'good'); renderMatch(); } } },
     lock: () => { if (prepActive()) { S.match.toggleLock(S.v); renderMatch(); } },
     ready: () => prepActive() && endPrep(),
@@ -6378,7 +6415,7 @@ AMB.IMAGES = {
   (function fillMenu() {
     const el = $('menu-heroes');
     if (el) el.innerHTML = Object.values(HEROES).map((h, i) => cardHTML(h, { k: 'menu' + i })).join('');
-    const ms = $('menu-sound'); if (ms) ms.textContent = SND.on ? '🔊 الصوت' : '🔇 الصوت';
+    const ms = $('menu-sound'); if (ms) ms.querySelector('.mt-ic').textContent = SND.on ? '🔊' : '🔇';
   })();
 
   // debug / testing hook
@@ -6460,7 +6497,7 @@ AMB.IMAGES = {
   function refreshMenu() {
     const b = $('menu-pass'); if (!b) return;
     const n = pass.unclaimedCount();
-    b.innerHTML = `ممر الصدع <small>مستوى ${pass.level()}</small>${n ? `<span class="dot">${n}</span>` : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `ممر الصدع <small>${pass.level()}</small>${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
   // ---------------------------------------------------------------- screen
@@ -6624,7 +6661,7 @@ AMB.IMAGES = {
   function refreshMenu() {
     const b = $('menu-cards'); if (!b) return;
     const n = C.ids().filter((id) => C.canUpgrade(id)).length;
-    b.innerHTML = `مجموعتي${n ? `<span class="dot">${n}</span>` : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `مجموعتي${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
   function installActions() {
@@ -6694,7 +6731,7 @@ AMB.IMAGES = {
   function refreshMenu() {
     const b = $('menu-packs'); if (!b) return;
     const n = Math.floor(W.balance('shards') / P.def(PACK).cost.shards);
-    b.innerHTML = `الباكجات${n ? `<span class="dot">${n}</span>` : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `الباكجات${n ? `<span class="dot">${n}</span>` : ''}`;
   }
 
   function tagFor(c) {
@@ -6789,7 +6826,12 @@ AMB.IMAGES = {
   function render() {
     const root = $('campaign'); if (!root) return;
     const R = LV.CAMPAIGN.rewards;
-    if (C.needsStarter()) { root.innerHTML = '<div class="cam-note">اختر بطلك الأول من «العب» قبل ما تبدأ الحملة.</div>'; return; }
+    if (C.needsStarter()) {   // brand-new player: pick the first hero right here, then straight to fight 1
+      root.innerHTML = `<div class="cam-starter"><h3>اختر بطلك الأول</h3><p class="hint">هذا بطلك الدائم. الأبطال الباقين تفتحهم لاحقًا من الباكجات أو الباتل باس. اضغط «ⓘ» لتفاصيل القدرات.</p>
+        <div class="cam-starter-row">${Object.values(AMB.DATA.HEROES).map((h) => `<div class="cs-pick">${UI().cardHTML(h, { k: 'cst' + h.id, attrs: `data-act="heroInfo" data-id="${h.id}"` })}
+          <div class="cs-style">${esc(h.style.split('—')[0])}</div><button class="btn primary" data-act="camStarter" data-id="${h.id}">اختر ${esc(h.name)}</button></div>`).join('')}</div></div>`;
+      return;
+    }
     root.innerHTML = `<div class="cam-note">كل قتال <b>أفضل من 3 جولات</b> ضد تشكيلة ثابتة. مستويات بطاقاتك وندرتها <b>تُحتسب هنا</b>، والمتجر يعرض الوحدات اللي تملكها فقط.
         الفوز الأول: ${icon('gem')} ${R.fight.shards} + ${R.fight.passXp} خبرة ممر · الزعيم: ${icon('gem')} ${R.boss.shards} + ${R.boss.passXp} خبرة · إنهاء المستوى: باكج مجاني · الإعادة: ${icon('gem')} ${R.replay.shards}</div>
       ${chestsHTML()}
@@ -6803,11 +6845,15 @@ AMB.IMAGES = {
     refreshMenu();
   }
 
+  /** a player who has not won a campaign fight yet (and never played before): keep the menu simple */
+  const isNewbie = () => !CAM.isCleared('l1f1') && !(AMB.pass && AMB.pass.state().xp > 0) && AMB.packs.stats().opened === 0;
   function refreshMenu() {
+    document.body.classList.toggle('newbie', isNewbie());
     const b = $('menu-campaign'); if (!b) return;
+    if (isNewbie()) { b.innerHTML = 'ابدأ المغامرة'; return; }
     const n = CAM.next(), f = n && CAM.find(n);
     const ch = CAM.readyChests();
-    b.innerHTML = `الحملة${f ? `<small>${f.li + 1}-${f.fi + 1}</small>` : '<small>✓</small>'}${ch ? `<span class="dot">${ch}</span>` : ''}`;
+    b.innerHTML = `الحملة${f ? ` <small>${f.li + 1}-${f.fi + 1}</small>` : '<small>✓</small>'}${ch ? `<span class="dot">${ch}</span>` : ''}`;
   }
 
   function preview(fightId) {
@@ -6820,6 +6866,7 @@ AMB.IMAGES = {
     ui.modal(`<div class="cam-pv" style="--wc:${W(l.world).color}">
       <h2>${f.boss ? '👑 ' : ''}${esc(f.name)}</h2><div class="hint">${esc(l.name)} · قتال ${x.fi + 1} من ${l.fights.length} · أفضل من 3 جولات</div>
       ${boss ? `<div class="boss-box">${ui.portrait(AMB.DATA.HEROES[l.hero], { k: 'cpb' })}<div><b>قدرة الزعيم: ${boss.name}</b><p>${boss.text}</p><small>الزعيم يقاتل بنفسه في الساحة.</small></div></div>` : ''}
+      ${h === l.hero ? `<div class="hint">قائد الخصم هو نفس بطلك، فبتواجه <b>ظلّ ${AMB.DATA.HEROES[h].name}</b>.</div>` : ''}
       <h4>تشكيلة الخصم</h4><div class="cam-units">${unitsHTML}</div>
       <h4>الجائزة</h4><div class="cam-reward">${reward}</div>
       <h4>بطلك</h4><div class="hchips">${heroes}</div>
@@ -6851,6 +6898,7 @@ AMB.IMAGES = {
         ${r.chestsReady > r.chestsBefore ? '<button class="btn primary" data-act="go" data-to="campaign">🎁 صندوق نجوم جاهز! افتحه من خريطة الحملة</button>' : ''}
         ${won ? `<p class="cam-pay">${r.first ? pay : `إعادة: ${pay || 'بدون جائزة'}`}</p>` : '<p class="hint">ما خسرت شي. طوّر بطاقاتك أو غيّر التشكيلة وجرّب مرة ثانية.</p>'}</div>
       ${pack}
+      ${r.first && fightId === 'l1f1' ? '<div class="cam-unlock">🔓 انفتح لك: <b>الباكجات</b> و<b>مجموعتي</b> و<b>ممر الصدع</b> و<b>الدخول اليومي</b> من القائمة الرئيسية. معك شظايا تكفي 3 باكجات!</div>' : ''}
       <div class="cam-btns">
         ${won && nx ? `<button class="btn primary big" data-act="camGo" data-id="${next}">القتال التالي: ${esc(nx.fight.name)}</button>` : ''}
         <button class="btn ${won ? '' : 'primary'} big" data-act="camGo" data-id="${fightId}">${won ? 'أعد القتال' : 'حاول مرة ثانية'}</button>
@@ -6867,6 +6915,11 @@ AMB.IMAGES = {
       camFight: (d) => preview(d.id),
       camHero: (d) => { hero = d.id; preview(d.f); },
       camGo: (d) => start(d.id),
+      camStarter: (d) => {
+        if (!C.chooseStarter(d.id)) return;
+        hero = d.id; ui.sfx('merge'); ui.toast(`${AMB.DATA.HEROES[d.id].name} صار بطلك!`, 'good');
+        render(); setTimeout(() => preview(CAM.next()), 250);
+      },
       camChest: (d) => {
         const r = CAM.claimChest(d.id); if (!r) return;
         ui.sfx('merge');
@@ -6881,7 +6934,7 @@ AMB.IMAGES = {
     });
   }
 
-  AMB.CampaignUI = { render, refreshMenu, showResult, installActions };
+  AMB.CampaignUI = { render, refreshMenu, showResult, installActions, isNewbie };
   if (UI()) installActions();
   refreshMenu();
 })();
@@ -6927,13 +6980,14 @@ AMB.IMAGES = {
   function open() { UI().overlay(calendarHTML(null)); }
   function refreshMenu() {
     const b = $('menu-login'); if (!b) return;
-    b.innerHTML = `🎁 الدخول اليومي${L.canClaim() ? '<span class="dot">1</span>' : ''}`;
+    (b.querySelector('.mt-l') || b).innerHTML = `الدخول اليومي${L.canClaim() ? '<span class="dot">1</span>' : ''}`;
   }
   /** called when the main menu shows: open the calendar once per session if a reward waits */
   function onMenu() {
     refreshMenu();
     if (shown || !L.canClaim() || $('overlay').classList.contains('on')) return;
-    shown = true; setTimeout(() => { if (L.canClaim() && document.querySelector('#scr-menu.active') && !$('overlay').classList.contains('on')) open(); }, 600);
+    if (AMB.CampaignUI && AMB.CampaignUI.isNewbie()) return;   // first visit: no popups before the first fight
+    shown = true; setTimeout(() => { if (L.canClaim() && !(AMB.CampaignUI && AMB.CampaignUI.isNewbie()) && document.querySelector('#scr-menu.active') && !$('overlay').classList.contains('on')) open(); }, 600);
   }
 
   function installActions() {

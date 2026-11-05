@@ -33,6 +33,7 @@
         <p class="hint">النسخ المكررة تطوّر البطاقة. كل مستوى +${Math.round(AMB.ECONOMY.cards.levelBonus * 100)}% صحة وهجوم، والندرة الأعلى أقوى لكنها تحتاج نسخًا أكثر.
         <b>المستويات والندرة تُحتسب في الحملة والبرج والأحداث فقط</b>، أما المباراة السريعة وعلى نفس الجهاز فالكل متساوٍ.</p>
         <div class="rar-legend">${Object.entries(RAR).map(([k, r]) => `<span class="rl r-${k}"><i></i>${r.name} <small>+${Math.round((r.power - 1) * 100)}% · نسخ ${r.copies.join('/')}</small></span>`).join('')}</div>
+        <button class="btn primary small" data-act="go" data-to="packs">افتح باكجات للحصول على نسخ</button>
         <div class="filters">${fb('', 'الكل')}${Object.entries(RAR).map(([k, r]) => fb(k, r.name, r.color)).join('')}</div>
       </div>
       <div class="col-grid">${ids.map(tile).join('')}</div>`;

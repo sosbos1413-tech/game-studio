@@ -12,7 +12,7 @@
 
   const ECONOMY = {
     currencies: {
-      shards: { name: 'شظايا', icon: 'gem', start: 0, max: 999999 },        // earned in missions/levels, spent on packs
+      shards: { name: 'شظايا', icon: 'gem', start: 300, max: 999999 },      // earned in missions/levels, spent on packs (new players start with 3 packs' worth)
     },
     // Card rarity. `power` and card levels only apply in progression fights (campaign, tower, events),
     // never in quick matches or same-device play, so those stay fair.
@@ -23,6 +23,14 @@
       epic:      { name: 'إيبك',     en: 'Epic',      order: 3, color: '#a855f7', c2: '#5b1d99', power: 1.08, copies: [4, 8, 14, 20] },
       legendary: { name: 'ليجندري', en: 'Legendary', order: 4, color: '#ff9f1a', c2: '#a34f00', power: 1.12, copies: [5, 10, 16, 25] },
     },
+    // Packs. weights are % per card; pity guarantees `pity.rarity` in the pack after `pity.after` packs without one.
+    // Duplicates of a card already at max level turn into shards (maxedRefund).
+    packs: {
+      basic: { id: 'basic', name: 'باكج الصدع', cost: { shards: 100 }, cards: 5,
+        weights: { common: 70, rare: 22, epic: 7, legendary: 1 },
+        pity: { rarity: 'legendary', after: 10 } },
+    },
+    maxedRefund: { common: 5, rare: 10, epic: 25, legendary: 60 },
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
       allUnlocked: true,       // phase 3 switches this off (start with one character, unlock the rest)

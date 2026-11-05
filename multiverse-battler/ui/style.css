@@ -1359,3 +1359,54 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 .cp-pow { font: 700 12px system-ui; color: var(--paper3); direction: ltr; } .cp-lock { font-size: 13px; color: var(--paper3); }
 #menu-cards { position: relative; }
 @media (max-width: 700px) { .col-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 8px; } }
+
+/* ======================================================================= packs «الباكجات» */
+#menu-packs { position: relative; }
+.packs { max-width: 1100px; margin: 0 auto; padding: 0 10px 40px; color: var(--paper); }
+.packs .hint { color: var(--paper3); }
+.shards { display: inline-flex; align-items: center; gap: 6px; background: #000; border: 3px solid #5fe3ff; padding: 4px 14px; font: 400 24px var(--display); color: #fff; box-shadow: var(--hard-sm); }
+.shards svg { width: 22px; height: 22px; color: #5fe3ff; }
+.pk-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.pk-main { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+.pk-pack { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.pk-pack .btn svg { width: 18px; height: 18px; vertical-align: -3px; }
+.pk-art { position: relative; width: 220px; height: 310px; border: 4px solid #000; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: radial-gradient(circle at 50% 35%, #ff4f8b55, transparent 55%), repeating-linear-gradient(135deg, #ffffff10 0 8px, transparent 8px 16px), linear-gradient(160deg, #3a1a6e, #0b0b24 60%, #6e1020);
+  box-shadow: 0 0 0 4px var(--gold), 8px 8px 0 var(--red), 0 0 40px #a855f766; animation: pkfloat 3s ease-in-out infinite; overflow: hidden; }
+.pk-art::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, #fff3 50%, transparent 60%); animation: sheen 3.2s linear infinite; }
+@keyframes pkfloat { 50% { transform: translateY(-8px) rotate(-1deg); } }
+.pk-logo { font: 400 64px var(--display); color: var(--gold); text-shadow: 4px 4px 0 var(--red), 0 0 20px #ffd24a88; }
+.pk-name { font: 400 24px var(--display); color: #fff; } .pk-n { font-size: 14px; color: var(--paper3); }
+.pk-side { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.pity, .pk-odds { width: 100%; background: var(--ink2); border: 3px solid var(--paper); box-shadow: var(--hard); padding: 12px 16px; }
+.pity.ready { border-color: var(--rc); box-shadow: 0 0 0 3px var(--rc), var(--hard); }
+.pity-t { font-size: 18px; margin-bottom: 8px; } .pity-t b { color: var(--rc); }
+.pity-bar { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-bottom: 8px; }
+.pity-bar i { height: 16px; background: #000; border: 2px solid var(--paper3); } .pity-bar i.on { background: var(--rc); border-color: #000; }
+.pk-odds ul { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 18px; }
+.pk-odds li { display: flex; align-items: center; gap: 8px; } .pk-odds li b { margin-inline-start: auto; direction: ltr; }
+.pk-odds li i { width: 14px; height: 14px; border: 2px solid #000; border-radius: 3px; background: var(--rc); }
+.pk-odds li.r-common { --rc: #9aa3ad; } .pk-odds li.r-rare { --rc: #3d8ff0; } .pk-odds li.r-epic { --rc: #a855f7; } .pk-odds li.r-legendary { --rc: #ff9f1a; }
+/* reveal */
+.rv-wrap { text-align: center; color: var(--paper); max-width: 1000px; }
+.rv-wrap h2 { font: 400 36px var(--display); color: var(--gold); text-shadow: 3px 3px 0 var(--red); margin: 0 0 12px; }
+.rv-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 12px; perspective: 900px; }
+.rv { width: 150px; }
+.rv-in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transform: rotateY(180deg); animation: rvflip .55s cubic-bezier(.3,1.4,.5,1) forwards; animation-delay: var(--d); }
+@keyframes rvflip { to { transform: rotateY(0); } }
+.rv-front { position: relative; }
+.rv-back { position: absolute; inset: 0; }
+.rv-back, .rv-front { backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 12px; gap: 14px; }
+.rv-back { transform: rotateY(180deg); border: 4px solid #000; border-radius: 14px; background: repeating-linear-gradient(135deg, #ffffff10 0 8px, transparent 8px 16px), linear-gradient(160deg, #3a1a6e, #0b0b24 60%, #6e1020); box-shadow: 0 0 0 3px var(--gold); justify-content: center; padding: 0; }
+.rv-back span { font: 400 42px var(--display); color: var(--gold); text-shadow: 3px 3px 0 var(--red); }
+.rv[data-r=epic] .rv-front .tcard, .rv[data-r=legendary] .rv-front .tcard { filter: drop-shadow(0 0 14px var(--rc)); }
+.rv-tag { font: 700 13px system-ui; padding: 2px 10px; background: #000; color: #fff; border: 2px solid var(--paper3); white-space: nowrap; }
+.rv-tag.new { background: var(--red); border-color: #fff; } .rv-tag.up { background: var(--gold); color: #000; border-color: #000; } .rv-tag.gold { color: #5fe3ff; border-color: #5fe3ff; }
+.rv-tag svg { width: 12px; height: 12px; vertical-align: -2px; }
+.rv-pity { color: var(--gold); margin: 10px 0; }
+.rv-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; } .rv-btns svg { width: 14px; height: 14px; vertical-align: -2px; }
+.rv-wrap.best-legendary h2 { color: #ff9f1a; animation: pcpulse .6s infinite alternate; }
+@media (max-width: 760px) {
+  .pk-main { grid-template-columns: 1fr; } .pk-art { width: 180px; height: 250px; } .pk-logo { font-size: 50px; }
+  .rv { width: 116px; } .rv-row { gap: 14px 4px; } .rv-wrap h2 { font-size: 26px; } .rv-tag { font-size: 11px; padding: 2px 6px; }
+}

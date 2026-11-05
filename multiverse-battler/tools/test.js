@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Rule tests for the core (no browser needed):  node tools/test.js */
 const path = require('path');
-['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
+['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'packs', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -374,6 +374,7 @@ t('save: export / import round trip, bad import rejected', () => {
 t('wallet: add/spend are all-or-nothing, unknown currency rejected, events fire', () => {
   const p = AMB.Profile.boot(MEM());
   const seen = []; p.events.on('currency', (e) => seen.push(e.n));
+  const s0 = p.wallet.balance('shards'); p.wallet.spend({ shards: s0 });
   eq(p.wallet.balance('shards'), 0);
   p.wallet.add('shards', 120, 'test'); eq(p.wallet.balance('shards'), 120);
   p.wallet.add('shards', -50); p.wallet.add('shards', 0); eq(p.wallet.balance('shards'), 120, 'non-positive ignored');
@@ -381,7 +382,7 @@ t('wallet: add/spend are all-or-nothing, unknown currency rejected, events fire'
   ok(p.wallet.spend({ shards: 100 })); eq(p.wallet.balance('shards'), 20);
   let threw = false; try { p.wallet.add('gold_coins', 5); } catch (e) { threw = true; }
   ok(threw); eq(seen.join(), '120');
-  eq(AMB.Profile.boot(MEM()).wallet.balance('shards'), 0, 'fresh profile');
+  eq(AMB.Profile.boot(MEM()).wallet.balance('shards'), AMB.ECONOMY.currencies.shards.start, 'fresh profile');
 });
 t('events: a throwing listener does not stop the others', () => {
   const ev = AMB.Events(); let n = 0;
@@ -449,6 +450,68 @@ t('progression power scales unit stats after synergies; synergies unchanged', ()
   ok(Math.abs(fb.maxHp / fa.maxHp - 1.5) < 1e-9, 'hp x1.5'); ok(Math.abs(fb.atk / fa.atk - 1.5) < 1e-9, 'atk x1.5');
   const ids = (c) => c.sides[0].synergy.list.map((x) => x.id + ':' + x.activeTier).join();
   ok(a.sides[0].synergy.list.length > 0, 'test board should have an active synergy'); eq(ids(a), ids(b));
+});
+
+console.log('packs & pity');
+const rich = (seed) => { const p = AMB.Profile.boot(MEM(), null, AMB.util.RNG(seed)); p.wallet.add('shards', 1e5); return p; };
+t('packs: costs shards, 5 valid cards, nothing happens without shards', () => {
+  const p = AMB.Profile.boot(MEM(), null, AMB.util.RNG(1));
+  const start = p.wallet.balance('shards');
+  const r = p.packs.open('basic');
+  eq(r.cards.length, 5); eq(p.wallet.balance('shards'), start - 100);
+  r.cards.forEach((c) => ok(p.collection.def(c.id) && c.rarity === p.collection.rarity(c.id), c.id));
+  p.wallet.spend({ shards: p.wallet.balance('shards') });
+  const before = JSON.stringify(p.save.get('packs'));
+  eq(p.packs.open('basic'), null); eq(JSON.stringify(p.save.get('packs')), before, 'no state change when unaffordable');
+});
+t('packs: rarity odds match the published table (100k cards)', () => {
+  const p = rich(42);
+  const n = { common: 0, rare: 0, epic: 0, legendary: 0 }; let total = 0, forced = 0;
+  for (let i = 0; i < 20000; i++) { const r = p.packs.open('basic', { free: true }); if (r.forced) forced++; r.cards.forEach((c) => { n[c.rarity]++; total++; }); }
+  const odds = p.packs.oddsTable('basic');
+  // among non-legendary cards the split must follow the table exactly (pity only swaps a slot for a legendary)
+  const nl = total - n.legendary, wl = odds.filter((o) => o.rarity !== 'legendary').reduce((a, o) => a + o.pct, 0);
+  odds.forEach((o) => { if (o.rarity !== 'legendary') ok(Math.abs((100 * n[o.rarity]) / nl - (100 * o.pct) / wl) < 0.5, `${o.rarity}: ${(100 * n[o.rarity] / nl).toFixed(2)}%`); });
+  const leg = (100 * n.legendary) / total;
+  ok(leg >= 1 && leg < 3, 'legendary incl. pity ' + leg.toFixed(2) + '%');   // 1% base; the 10-pack guarantee lifts the real rate to ~2.3%
+  ok(forced > 0, 'pity should trigger sometimes');
+});
+t('pity: never more than 10 packs in a row without a legendary; counter is right', () => {
+  const p = rich(7);
+  let run = 0, maxRun = 0;
+  for (let i = 0; i < 3000; i++) {
+    const left = p.packs.pityLeft('basic');
+    eq(left, Math.max(0, 10 - run), 'counter before pack ' + i);
+    const r = p.packs.open('basic', { free: true });
+    const hit = r.cards.some((c) => c.rarity === 'legendary');
+    if (left === 0) ok(hit, 'guaranteed pack had no legendary');
+    run = hit ? 0 : run + 1; maxRun = Math.max(maxRun, run);
+  }
+  ok(maxRun <= 10, 'max run ' + maxRun);
+});
+t('pity counter is saved and resets on a natural legendary', () => {
+  const mem = MEM();
+  const a = AMB.Profile.boot(mem, null, AMB.util.RNG(3)); a.wallet.add('shards', 1e5);
+  let r; do { r = a.packs.open('basic'); } while (r.cards.some((c) => c.rarity === 'legendary'));
+  const left = a.packs.pityLeft('basic'); ok(left < 10);
+  eq(AMB.Profile.boot(mem).packs.pityLeft('basic'), left, 'reloaded');
+});
+t('packs: duplicates become upgrade copies; copies of max-level cards become shards', () => {
+  const p = rich(9);
+  const r = p.packs.open('basic');
+  const c0 = r.cards[0];
+  ok(p.collection.copies(c0.id) >= 1);
+  // max out every card, then a pack refunds shards for each card
+  p.collection.ids().forEach((id) => { p.collection.add(id, 200); while (p.collection.canUpgrade(id)) p.collection.upgrade(id); });
+  const bal = p.wallet.balance('shards');
+  const r2 = p.packs.open('basic');
+  const refund = r2.cards.reduce((a, c) => a + AMB.ECONOMY.maxedRefund[c.rarity], 0);
+  eq(r2.refund, refund); eq(p.wallet.balance('shards'), bal - 100 + refund);
+});
+t('packs: exclusive cards never drop', () => {
+  AMB.DATA.UNITS.ash_ronin.exclusive = true;
+  try { const p = rich(11); for (let i = 0; i < 400; i++) p.packs.open('basic').cards.forEach((c) => ok(c.id !== 'ash_ronin', 'exclusive dropped')); }
+  finally { delete AMB.DATA.UNITS.ash_ronin.exclusive; }
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

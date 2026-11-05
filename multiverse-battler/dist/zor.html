@@ -1374,6 +1374,57 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 #menu-cards { position: relative; }
 @media (max-width: 700px) { .col-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 8px; } }
 
+/* ======================================================================= packs «الباكجات» */
+#menu-packs { position: relative; }
+.packs { max-width: 1100px; margin: 0 auto; padding: 0 10px 40px; color: var(--paper); }
+.packs .hint { color: var(--paper3); }
+.shards { display: inline-flex; align-items: center; gap: 6px; background: #000; border: 3px solid #5fe3ff; padding: 4px 14px; font: 400 24px var(--display); color: #fff; box-shadow: var(--hard-sm); }
+.shards svg { width: 22px; height: 22px; color: #5fe3ff; }
+.pk-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.pk-main { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+.pk-pack { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.pk-pack .btn svg { width: 18px; height: 18px; vertical-align: -3px; }
+.pk-art { position: relative; width: 220px; height: 310px; border: 4px solid #000; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: radial-gradient(circle at 50% 35%, #ff4f8b55, transparent 55%), repeating-linear-gradient(135deg, #ffffff10 0 8px, transparent 8px 16px), linear-gradient(160deg, #3a1a6e, #0b0b24 60%, #6e1020);
+  box-shadow: 0 0 0 4px var(--gold), 8px 8px 0 var(--red), 0 0 40px #a855f766; animation: pkfloat 3s ease-in-out infinite; overflow: hidden; }
+.pk-art::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, #fff3 50%, transparent 60%); animation: sheen 3.2s linear infinite; }
+@keyframes pkfloat { 50% { transform: translateY(-8px) rotate(-1deg); } }
+.pk-logo { font: 400 64px var(--display); color: var(--gold); text-shadow: 4px 4px 0 var(--red), 0 0 20px #ffd24a88; }
+.pk-name { font: 400 24px var(--display); color: #fff; } .pk-n { font-size: 14px; color: var(--paper3); }
+.pk-side { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.pity, .pk-odds { width: 100%; background: var(--ink2); border: 3px solid var(--paper); box-shadow: var(--hard); padding: 12px 16px; }
+.pity.ready { border-color: var(--rc); box-shadow: 0 0 0 3px var(--rc), var(--hard); }
+.pity-t { font-size: 18px; margin-bottom: 8px; } .pity-t b { color: var(--rc); }
+.pity-bar { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-bottom: 8px; }
+.pity-bar i { height: 16px; background: #000; border: 2px solid var(--paper3); } .pity-bar i.on { background: var(--rc); border-color: #000; }
+.pk-odds ul { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 18px; }
+.pk-odds li { display: flex; align-items: center; gap: 8px; } .pk-odds li b { margin-inline-start: auto; direction: ltr; }
+.pk-odds li i { width: 14px; height: 14px; border: 2px solid #000; border-radius: 3px; background: var(--rc); }
+.pk-odds li.r-common { --rc: #9aa3ad; } .pk-odds li.r-rare { --rc: #3d8ff0; } .pk-odds li.r-epic { --rc: #a855f7; } .pk-odds li.r-legendary { --rc: #ff9f1a; }
+/* reveal */
+.rv-wrap { text-align: center; color: var(--paper); max-width: 1000px; }
+.rv-wrap h2 { font: 400 36px var(--display); color: var(--gold); text-shadow: 3px 3px 0 var(--red); margin: 0 0 12px; }
+.rv-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 12px; perspective: 900px; }
+.rv { width: 150px; }
+.rv-in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transform: rotateY(180deg); animation: rvflip .55s cubic-bezier(.3,1.4,.5,1) forwards; animation-delay: var(--d); }
+@keyframes rvflip { to { transform: rotateY(0); } }
+.rv-front { position: relative; }
+.rv-back { position: absolute; inset: 0; }
+.rv-back, .rv-front { backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 12px; gap: 14px; }
+.rv-back { transform: rotateY(180deg); border: 4px solid #000; border-radius: 14px; background: repeating-linear-gradient(135deg, #ffffff10 0 8px, transparent 8px 16px), linear-gradient(160deg, #3a1a6e, #0b0b24 60%, #6e1020); box-shadow: 0 0 0 3px var(--gold); justify-content: center; padding: 0; }
+.rv-back span { font: 400 42px var(--display); color: var(--gold); text-shadow: 3px 3px 0 var(--red); }
+.rv[data-r=epic] .rv-front .tcard, .rv[data-r=legendary] .rv-front .tcard { filter: drop-shadow(0 0 14px var(--rc)); }
+.rv-tag { font: 700 13px system-ui; padding: 2px 10px; background: #000; color: #fff; border: 2px solid var(--paper3); white-space: nowrap; }
+.rv-tag.new { background: var(--red); border-color: #fff; } .rv-tag.up { background: var(--gold); color: #000; border-color: #000; } .rv-tag.gold { color: #5fe3ff; border-color: #5fe3ff; }
+.rv-tag svg { width: 12px; height: 12px; vertical-align: -2px; }
+.rv-pity { color: var(--gold); margin: 10px 0; }
+.rv-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; } .rv-btns svg { width: 14px; height: 14px; vertical-align: -2px; }
+.rv-wrap.best-legendary h2 { color: #ff9f1a; animation: pcpulse .6s infinite alternate; }
+@media (max-width: 760px) {
+  .pk-main { grid-template-columns: 1fr; } .pk-art { width: 180px; height: 250px; } .pk-logo { font-size: 50px; }
+  .rv { width: 116px; } .rv-row { gap: 14px 4px; } .rv-wrap h2 { font-size: 26px; } .rv-tag { font-size: 11px; padding: 2px 6px; }
+}
+
 </style>
 </head>
 <body>
@@ -1391,6 +1442,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         <button class="btn big primary" data-act="go" data-to="mode">العب</button>
         <button class="btn big" data-act="go" data-to="pass" id="menu-pass">ممر الصدع</button>
         <button class="btn big" data-act="go" data-to="cards" id="menu-cards">مجموعتي</button>
+        <button class="btn big" data-act="go" data-to="packs" id="menu-packs">الباكجات</button>
         <button class="btn big" data-act="go" data-to="codex">مكتبة الشخصيات</button>
         <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
         <button class="btn big ghost" data-act="howto">كيف ألعب؟</button>
@@ -1487,6 +1539,11 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   <section class="screen" id="scr-cards">
     <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>مجموعتي</h2></header>
     <div class="collection" id="collection"></div>
+  </section>
+
+  <section class="screen" id="scr-packs">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الباكجات</h2></header>
+    <div class="packs" id="packs"></div>
   </section>
 
   <section class="screen" id="scr-stats">
@@ -3530,7 +3587,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 
   const ECONOMY = {
     currencies: {
-      shards: { name: 'شظايا', icon: 'gem', start: 0, max: 999999 },        // earned in missions/levels, spent on packs
+      shards: { name: 'شظايا', icon: 'gem', start: 300, max: 999999 },      // earned in missions/levels, spent on packs (new players start with 3 packs' worth)
     },
     // Card rarity. `power` and card levels only apply in progression fights (campaign, tower, events),
     // never in quick matches or same-device play, so those stay fair.
@@ -3541,6 +3598,14 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       epic:      { name: 'إيبك',     en: 'Epic',      order: 3, color: '#a855f7', c2: '#5b1d99', power: 1.08, copies: [4, 8, 14, 20] },
       legendary: { name: 'ليجندري', en: 'Legendary', order: 4, color: '#ff9f1a', c2: '#a34f00', power: 1.12, copies: [5, 10, 16, 25] },
     },
+    // Packs. weights are % per card; pity guarantees `pity.rarity` in the pack after `pity.after` packs without one.
+    // Duplicates of a card already at max level turn into shards (maxedRefund).
+    packs: {
+      basic: { id: 'basic', name: 'باكج الصدع', cost: { shards: 100 }, cards: 5,
+        weights: { common: 70, rare: 22, epic: 7, legendary: 1 },
+        pity: { rarity: 'legendary', after: 10 } },
+    },
+    maxedRefund: { common: 5, rare: 10, epic: 25, legendary: 60 },
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
       allUnlocked: true,       // phase 3 switches this off (start with one character, unlock the rest)
@@ -3678,23 +3743,113 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 </script>
 <script>
 /*
+ * Card packs with a pity counter.
+ *  - each card: roll a rarity by the pack's weights, then a random card of that rarity
+ *    (cards marked `exclusive` — event rewards — never appear in packs)
+ *  - pity: after `pity.after` packs in a row without a legendary, the next pack is guaranteed one
+ *  - duplicates go to the collection as upgrade copies; copies of a max-level card become shards
+ * Odds are shown to the player (oddsTable) — nothing is hidden.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const EC = () => AMB.ECONOMY;
+
+  AMB.Save.register('packs', {
+    version: 1,
+    defaults: () => ({ opened: 0, since: {}, found: { common: 0, rare: 0, epic: 0, legendary: 0 }, last: [] }),   // since[packId] = packs since the pity rarity
+  });
+
+  function poolByRarity() {
+    const pool = {};
+    Object.values(AMB.DATA.HEROES).concat(Object.values(AMB.DATA.UNITS)).forEach((d) => {
+      if (d.exclusive) return;
+      (pool[d.rarity] = pool[d.rarity] || []).push(d.id);
+    });
+    return pool;
+  }
+
+  function Packs(save, wallet, collection, events, rng) {
+    rng = rng || AMB.util.RNG(Math.floor(Math.random() * 2 ** 31));
+    const st = () => save.get('packs');
+    const def = (id) => { const p = EC().packs[id || 'basic']; if (!p) throw new Error('باكج غير معروف: ' + id); return p; };
+
+    function rollRarity(p) {
+      const w = p.weights, total = Object.values(w).reduce((a, b) => a + b, 0);
+      let r = rng.next() * total;
+      for (const [k, v] of Object.entries(w)) { r -= v; if (r < 0) return k; }
+      return 'common';
+    }
+
+    const api = {
+      def,
+      /** packs left before the guarantee kicks in; 0 = the next pack is guaranteed */
+      pityLeft(id) { const p = def(id); return Math.max(0, p.pity.after - (st().since[p.id] || 0)); },
+      canOpen(id) { return wallet.canAfford(def(id).cost); },
+      oddsTable(id) { const p = def(id), total = Object.values(p.weights).reduce((a, b) => a + b, 0); return Object.entries(p.weights).map(([r, w]) => ({ rarity: r, pct: (100 * w) / total })); },
+      stats: () => st(),
+
+      /** Pay and open a pack. Returns { cards:[{id,rarity,isNew,refund,level,copies}], pity, shards } or null when unaffordable. */
+      open(id, opts) {
+        const p = def(id);
+        if (!(opts && opts.free) && !wallet.spend(p.cost, 'pack:' + p.id)) return null;
+        const pool = poolByRarity();
+        const forced = api.pityLeft(p.id) === 0;
+        const rar = [];
+        for (let i = 0; i < p.cards; i++) rar.push(rollRarity(p));
+        if (forced && !rar.includes(p.pity.rarity)) rar[rar.length - 1] = p.pity.rarity;   // the guarantee
+        let refund = 0;
+        const cards = rar.map((r) => {
+          const list = pool[r] && pool[r].length ? pool[r] : pool.common;
+          const cid = list[rng.int(list.length)];
+          const rarity = AMB.DATA.UNITS[cid] ? AMB.DATA.UNITS[cid].rarity : AMB.DATA.HEROES[cid].rarity;
+          if (collection.owned(cid) && collection.isMax(cid)) {
+            const n = EC().maxedRefund[rarity] || 0; refund += n;
+            return { id: cid, rarity, isNew: false, refund: n, level: collection.level(cid) };
+          }
+          const res = collection.add(cid, 1);
+          return { id: cid, rarity, isNew: res.isNew, refund: 0, level: collection.level(cid), copies: collection.copies(cid), canUpgrade: collection.canUpgrade(cid) };
+        });
+        if (refund) wallet.add('shards', refund, 'pack-refund');
+        const hit = cards.some((c) => c.rarity === p.pity.rarity);
+        save.update('packs', (s) => {
+          s.opened += 1;
+          s.since[p.id] = hit ? 0 : (s.since[p.id] || 0) + 1;
+          cards.forEach((c) => (s.found[c.rarity] = (s.found[c.rarity] || 0) + 1));
+          s.last = cards.map((c) => c.id);
+        });
+        const out = { pack: p.id, cards, forced, refund, pityLeft: api.pityLeft(p.id) };
+        if (events) events.emit('packOpened', out);
+        return out;
+      },
+    };
+    return api;
+  }
+
+  AMB.Packs = Packs;
+  AMB.Packs.pool = poolByRarity;
+})();
+
+</script>
+<script>
+/*
  * Player profile bootstrap: one save, one event bus, one wallet shared by
  * every progression system. In the browser it runs once on load and exposes
  * AMB.save / AMB.events / AMB.wallet. Tests call AMB.Profile.boot(memoryStorage).
  */
 (function () {
   const AMB = globalThis.AMB;
-  function boot(storage, nowFn) {
+  function boot(storage, nowFn, rng) {
     const save = AMB.Save.create(storage, nowFn);
     const events = AMB.Events();
     const wallet = AMB.Wallet(save, events);
     const collection = AMB.Collection(save, events);
-    return { save, events, wallet, collection };
+    const packs = AMB.Packs(save, wallet, collection, events, rng);
+    return { save, events, wallet, collection, packs };
   }
   AMB.Profile = { boot };
   if (typeof document !== 'undefined' && !AMB.save) {
     const p = boot();
-    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection;
+    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs;
   }
 })();
 
@@ -4407,6 +4562,7 @@ AMB.IMAGES = {
     window.scrollTo(0, 0);
     if (globalThis.AMB && AMB.PassUI) { if (screen === 'menu') AMB.PassUI.refreshMenu(); if (screen === 'pass') AMB.PassUI.render(); }
     if (globalThis.AMB && AMB.CollectionUI) { if (screen === 'menu') AMB.CollectionUI.refreshMenu(); if (screen === 'cards') AMB.CollectionUI.render(); }
+    if (globalThis.AMB && AMB.PacksUI) { if (screen === 'menu') AMB.PacksUI.refreshMenu(); if (screen === 'packs') AMB.PacksUI.render(); }
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -5740,7 +5896,7 @@ AMB.IMAGES = {
   })();
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal };
+  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay };
   if (AMB.PassUI) { AMB.PassUI.installActions(); AMB.PassUI.applyCosmetics(); AMB.PassUI.refreshMenu(); }
 })();
 
@@ -5958,6 +6114,7 @@ AMB.IMAGES = {
         <p class="hint">النسخ المكررة تطوّر البطاقة. كل مستوى +${Math.round(AMB.ECONOMY.cards.levelBonus * 100)}% صحة وهجوم، والندرة الأعلى أقوى لكنها تحتاج نسخًا أكثر.
         <b>المستويات والندرة تُحتسب في الحملة والبرج والأحداث فقط</b>، أما المباراة السريعة وعلى نفس الجهاز فالكل متساوٍ.</p>
         <div class="rar-legend">${Object.entries(RAR).map(([k, r]) => `<span class="rl r-${k}"><i></i>${r.name} <small>+${Math.round((r.power - 1) * 100)}% · نسخ ${r.copies.join('/')}</small></span>`).join('')}</div>
+        <button class="btn primary small" data-act="go" data-to="packs">افتح باكجات للحصول على نسخ</button>
         <div class="filters">${fb('', 'الكل')}${Object.entries(RAR).map(([k, r]) => fb(k, r.name, r.color)).join('')}</div>
       </div>
       <div class="col-grid">${ids.map(tile).join('')}</div>`;
@@ -5985,6 +6142,101 @@ AMB.IMAGES = {
   }
 
   AMB.CollectionUI = { render, refreshMenu, installActions };
+  if (UI()) installActions();
+  refreshMenu();
+})();
+
+</script>
+<script>
+/*
+ * "الباكجات" screen: buy/open packs with shards, see the odds and the legendary pity counter,
+ * and a card-by-card reveal. Logic lives in core/packs.js.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const $ = (id) => document.getElementById(id);
+  const P = AMB.packs, C = AMB.collection, W = AMB.wallet, RAR = AMB.ECONOMY.rarities;
+  const { icon } = AMB.art;
+  const UI = () => globalThis.AMB_UI;
+  const PACK = 'basic';
+  let busy = false;
+
+  const shardsHTML = (n) => `<span class="shards">${icon('gem')}<b>${n.toLocaleString('en-US')}</b></span>`;
+
+  function pityHTML() {
+    const d = P.def(PACK), left = P.pityLeft(PACK), done = d.pity.after - left;
+    const segs = Array.from({ length: d.pity.after }, (_, i) => `<i class="${i < done ? 'on' : ''}"></i>`).join('');
+    const R = RAR[d.pity.rarity];
+    return `<div class="pity ${left === 0 ? 'ready' : ''}" style="--rc:${R.color}">
+      <div class="pity-t">${left === 0 ? `🎉 الباكج الجاي فيه <b>${R.name}</b> مضمون!` : `باقي <b>${left}</b> ${left === 1 ? 'باكج' : 'باكجات'} على ضمان <b>${R.name}</b>`}</div>
+      <div class="pity-bar">${segs}</div>
+      <div class="hint">إذا فتحت ${d.pity.after} باكجات بدون ${R.name}، الباكج اللي بعدها يحتوي ${R.name} أكيد. العدّاد يرجع للصفر كلما طلعت لك ${R.name}.</div></div>`;
+  }
+
+  function render() {
+    const root = $('packs'); if (!root) return;
+    const d = P.def(PACK), cost = d.cost.shards, st = P.stats();
+    const odds = P.oddsTable(PACK).map((o) => `<li class="r-${o.rarity}"><i></i>${RAR[o.rarity].name}<b>${o.pct.toFixed(o.pct < 1 ? 1 : 0)}%</b></li>`).join('');
+    root.innerHTML = `<div class="pk-top">${shardsHTML(W.balance('shards'))}<span class="hint">الشظايا تجيك من المهام والمستويات (المراحل الجاية). اللعبة ما تبيع شي بفلوس حقيقية.</span></div>
+      <div class="pk-main">
+        <div class="pk-pack"><div class="pk-art"><span class="pk-logo">ZOR</span><span class="pk-name">${d.name}</span><span class="pk-n">${d.cards} بطاقات</span></div>
+          <button class="btn primary big" data-act="packOpen" ${W.canAfford(d.cost) ? '' : 'disabled'}>افتح · ${icon('gem')} ${cost}</button>
+          ${W.canAfford(d.cost) ? '' : `<div class="hint">تحتاج ${cost - W.balance('shards')} شظية إضافية</div>`}</div>
+        <div class="pk-side">${pityHTML()}
+          <div class="pk-odds"><b>نسبة ظهور كل بطاقة</b><ul>${odds}</ul>
+            <div class="hint">مع الضمان، المعدل الفعلي للـ${RAR.legendary.name} تقريبًا بطاقة كل 8–9 باكجات. النسخة المكررة تطوّر البطاقة، ونسخة بطاقة وصلت للمستوى الأقصى تتحوّل إلى شظايا.</div></div>
+          <div class="pk-stats hint">فتحت ${st.opened} باكج · ${Object.keys(RAR).map((r) => `${RAR[r].name}: ${st.found[r] || 0}`).join(' · ')}</div>
+          <button class="btn" data-act="go" data-to="cards">مجموعتي ←</button></div>
+      </div>`;
+    refreshMenu();
+  }
+
+  function refreshMenu() {
+    const b = $('menu-packs'); if (!b) return;
+    const n = Math.floor(W.balance('shards') / P.def(PACK).cost.shards);
+    b.innerHTML = `الباكجات${n ? `<span class="dot">${n}</span>` : ''}`;
+  }
+
+  function tagFor(c) {
+    if (c.refund) return `<span class="rv-tag gold">+${c.refund} ${icon('gem')}</span>`;
+    if (c.isNew) return '<span class="rv-tag new">جديدة!</span>';
+    if (c.canUpgrade) return '<span class="rv-tag up">↑ جاهزة للتطوير</span>';
+    return `<span class="rv-tag">+1 نسخة · ${c.copies}/${C.needed(c.id) || '—'}</span>`;
+  }
+
+  function reveal(res) {
+    const ui = UI();
+    const best = res.cards.reduce((b, c) => (RAR[c.rarity].order > RAR[b.rarity].order ? c : b), res.cards[0]);
+    const cards = res.cards.map((c, i) => `<div class="rv" style="--d:${i * 0.45}s;--rc:${RAR[c.rarity].color}" data-r="${c.rarity}">
+        <div class="rv-in"><div class="rv-back"><span>ZOR</span></div><div class="rv-front">${ui.cardHTML(C.def(c.id), { k: 'rv' + i + c.id, lvl: c.level })}${tagFor(c)}</div></div></div>`).join('');
+    ui.overlay(`<div class="rv-wrap ${'best-' + best.rarity}"><h2>${res.forced ? 'الضمان اشتغل! ' : ''}${RAR[best.rarity].name === RAR.legendary.name ? '✨ ليجندري! ✨' : 'باكج الصدع'}</h2>
+      <div class="rv-row">${cards}</div>
+      ${res.refund ? `<p class="hint">نسخ بطاقات بالمستوى الأقصى تحوّلت إلى ${res.refund} شظية.</p>` : ''}
+      <p class="rv-pity">${res.pityLeft === 0 ? 'الباكج الجاي فيه ليجندري مضمون!' : `باقي ${res.pityLeft} على ضمان الليجندري`}</p>
+      <div class="rv-btns"><button class="btn primary" data-act="packOpen" ${W.canAfford(P.def(PACK).cost) ? '' : 'disabled'}>افتح باكج ثاني · ${icon('gem')} ${P.def(PACK).cost.shards}</button>
+        <button class="btn" data-act="packDone" data-to="cards">مجموعتي</button><button class="btn ghost" data-act="packDone">تم</button></div></div>`);
+    res.cards.forEach((c, i) => setTimeout(() => {
+      if (!$('overlay').classList.contains('on')) return;
+      ui.sfx(RAR[c.rarity].order >= 3 ? 'merge' : 'click');
+      const el = document.querySelectorAll('.rv')[i];
+      if (el && RAR[c.rarity].order >= 3 && ui.burst) [RAR[c.rarity].color, '#ffffff'].forEach((col) => ui.burst(el, col, 14, { r: 110, s: 7 }));
+    }, 450 * i + 350));
+  }
+
+  function installActions() {
+    const ui = UI(); if (!ui || ui.ACT.packOpen) return;
+    Object.assign(ui.ACT, {
+      packOpen: () => {
+        if (busy) return; busy = true; setTimeout(() => (busy = false), 600);
+        const res = P.open(PACK);
+        if (!res) { ui.toast('ما عندك شظايا كافية', 'err'); return; }
+        render(); reveal(res);
+      },
+      packDone: (d) => { ui.closeOverlay(); if (d.to) ui.show(d.to); else render(); },
+    });
+  }
+
+  AMB.PacksUI = { render, refreshMenu, installActions };
   if (UI()) installActions();
   refreshMenu();
 })();

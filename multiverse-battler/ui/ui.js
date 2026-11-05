@@ -33,6 +33,7 @@
     window.scrollTo(0, 0);
     if (globalThis.AMB && AMB.PassUI) { if (screen === 'menu') AMB.PassUI.refreshMenu(); if (screen === 'pass') AMB.PassUI.render(); }
     if (globalThis.AMB && AMB.CollectionUI) { if (screen === 'menu') AMB.CollectionUI.refreshMenu(); if (screen === 'cards') AMB.CollectionUI.render(); }
+    if (globalThis.AMB && AMB.PacksUI) { if (screen === 'menu') AMB.PacksUI.refreshMenu(); if (screen === 'packs') AMB.PacksUI.render(); }
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -1366,6 +1367,6 @@
   })();
 
   // debug / testing hook
-  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal };
+  globalThis.AMB_UI = { S, ACT, renderMatch, cardHTML, itemCardHTML, show, toast, sfx, burst, modal, closeModal, overlay, closeOverlay };
   if (AMB.PassUI) { AMB.PassUI.installActions(); AMB.PassUI.applyCosmetics(); AMB.PassUI.refreshMenu(); }
 })();

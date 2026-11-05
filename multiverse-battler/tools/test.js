@@ -641,5 +641,49 @@ t('a real campaign fight runs end to end and pays out', () => {
   ok(r.first && r.shards > 0);
 });
 
+console.log('stars & chests');
+const camOf = (prof, rng) => AMB.Campaign(prof.save, { wallet: prof.wallet, packs: prof.packs, collection: prof.collection, events: prof.events, rng });
+t('stars: 1 win, 2 no round lost, 3 also full hero life; loss = 0', () => {
+  const r = AMB.Campaign(AMB.Save.create(MEM())).rate;
+  eq(r({ won: false }), 0); eq(r({ won: true, roundsLost: 1, lifeLeft: 100 }), 1);
+  eq(r({ won: true, roundsLost: 0, lifeLeft: 92 }), 2); eq(r({ won: true, roundsLost: 0, lifeLeft: 100 }), 3);
+  eq(r({ won: true, roundsLost: 0, lifeLeft: 50, maxLife: 50 }), 3);
+});
+t('stars: best result is kept, replays only add the difference, totals per level', () => {
+  const prof = AMB.Profile.boot(MEM()), cam = camOf(prof);
+  let o = cam.recordResult('l1f1', { won: true, roundsLost: 1, lifeLeft: 70 }); eq(o.stars, 1); ok(o.newBest);
+  o = cam.recordResult('l1f1', { won: true, roundsLost: 0, lifeLeft: 100 }); eq(o.stars, 3); eq(o.prevStars, 1); ok(o.newBest);
+  o = cam.recordResult('l1f1', { won: true, roundsLost: 1, lifeLeft: 10 }); ok(!o.newBest); eq(cam.stars('l1f1'), 3, 'worse replay keeps best');
+  cam.recordResult('l1f2', { won: false }); eq(cam.stars('l1f2'), 0);
+  cam.recordResult('l1f2', { won: true, roundsLost: 0, lifeLeft: 90 });
+  eq(cam.levelStars('l1'), 5); eq(cam.totalStars(), 5); eq(cam.maxStars(), 60);
+});
+t('chests: open at 10/25/40/60 stars, once each, with their rewards', () => {
+  const prof = AMB.Profile.boot(MEM()), cam = camOf(prof, AMB.util.RNG(4));
+  const C = AMB.LEVELS.CAMPAIGN.stars.chests;
+  eq(C.map((c) => c.need).join(), '10,25,40,60'); eq(cam.readyChests(), 0);
+  eq(cam.claimChest('ch10'), null, 'locked chest');
+  const all = AMB.LEVELS.LEVELS.flatMap((l) => l.fights.map((f) => f.id));
+  all.slice(0, 4).forEach((id) => cam.recordResult(id, { won: true, roundsLost: 0, lifeLeft: 100 }));   // 12 stars
+  eq(cam.totalStars(), 12); eq(cam.readyChests(), 1);
+  const sh = prof.wallet.balance('shards');
+  const c1 = cam.claimChest('ch10'); eq(c1.shards, 100); eq(prof.wallet.balance('shards'), sh + 100);
+  eq(cam.claimChest('ch10'), null, 'only once');
+  all.forEach((id) => cam.recordResult(id, { won: true, roundsLost: 0, lifeLeft: 100 }));
+  eq(cam.totalStars(), 60); eq(cam.readyChests(), 3);
+  const opened = prof.packs.stats().opened;
+  eq(cam.claimChest('ch25').packs.length, 1); eq(cam.claimChest('ch40').packs.length, 2); eq(prof.packs.stats().opened, opened + 3);
+  const c4 = cam.claimChest('ch60'); ok(['epic', 'legendary'].includes(c4.card.rarity), c4.card.rarity); ok(prof.collection.owned(c4.card.id));
+  eq(cam.readyChests(), 0); ok(cam.chests().every((c) => c.state === 'claimed'));
+});
+t('stars: saves from before stars get rated from their best results (migration)', () => {
+  const mem = MEM();
+  const sv = AMB.Save.create(mem);
+  sv.set('campaign', { cleared: { l1f1: true, l1f2: true }, levelsDone: {}, stats: { l1f1: { attempts: 1, wins: 1, best: { lifeLeft: 100, roundsLost: 0 } }, l1f2: { attempts: 2, wins: 1, best: null } } });
+  const raw = JSON.parse(mem.getItem(AMB.Save.KEY)); raw.sysV.campaign = 1; mem.setItem(AMB.Save.KEY, JSON.stringify(raw));
+  const cam = AMB.Profile.boot(mem).campaign;
+  eq(cam.stars('l1f1'), 3); eq(cam.stars('l1f2'), 1); eq(cam.totalStars(), 4); ok(Array.isArray(cam.chests()));
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

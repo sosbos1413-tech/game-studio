@@ -19,6 +19,21 @@
       level: { pack: 'basic' },                       // bonus for clearing every fight of a level
       replay: { shards: 5 },
     },
+    // star rating per fight (best result is kept): 1 = win, 2 = win without losing a round,
+    // 3 = that, and your hero ended at full life. Star totals open chests (each once).
+    stars: {
+      rules: [
+        { n: 1, text: 'فوز' },
+        { n: 2, text: 'فوز بدون خسارة أي جولة' },
+        { n: 3, text: 'فوز بدون خسارة جولة وبطلك بكامل حياته' },
+      ],
+      chests: [
+        { id: 'ch10', need: 10, name: 'صندوق برونزي', reward: { shards: 100 } },
+        { id: 'ch25', need: 25, name: 'صندوق فضي', reward: { packs: 1 } },
+        { id: 'ch40', need: 40, name: 'صندوق ذهبي', reward: { packs: 2 } },
+        { id: 'ch60', need: 60, name: 'صندوق الصدع', reward: { card: 'epic' } },   // one guaranteed card of this rarity or rarer
+      ],
+    },
   };
 
   // boss specials: stat blessings + hero abilities fired at the start of every round

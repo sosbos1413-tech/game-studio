@@ -1475,6 +1475,29 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   .cam-level h3 { font-size: 20px; }
 }
 
+/* ======================================================================= stars & chests */
+#menu-campaign { position: relative; }
+.cstars { display: inline-flex; gap: 1px; font-style: normal; direction: ltr; }
+.cstars i { font-style: normal; color: #ffffff30; text-shadow: 1px 1px 0 #000; } .cstars i.on { color: var(--gold); }
+.cstars.mini { position: absolute; bottom: -2px; left: 50%; transform: translate(-50%, 50%); background: #000; padding: 0 4px; border-radius: 8px; font-size: 12px; line-height: 16px; }
+.cnode.boss .cstars.mini { bottom: 2px; }
+.cam-pv h4 .cstars { font-size: 20px; margin-inline-start: 6px; vertical-align: -2px; } .cam-pv h4 .cstars i { color: #0003; } .cam-pv h4 .cstars i.on { color: var(--gold2); }
+.star-rules { list-style: none; padding: 0; margin: 0; font-size: 14px; } .star-rules li { padding: 2px 0; color: var(--muted); } .star-rules li.got { color: var(--green); font-weight: 700; }
+.cam-chests { background: var(--ink2); border: 3px solid var(--gold); box-shadow: var(--hard); padding: 10px 16px 18px; margin-bottom: 18px; }
+.cc-top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.cc-total { font: 400 30px var(--display); color: var(--gold); direction: ltr; } .cc-total small { font-size: 16px; color: var(--paper3); }
+.cc-track { position: relative; height: 12px; background: #000; border: 2px solid var(--paper3); margin: 18px 22px 26px; }
+.cc-track > i { position: absolute; inset-block: 0; inset-inline-start: 0; background: linear-gradient(90deg, var(--gold2), var(--gold)); }
+.chest { position: absolute; top: 50%; inset-inline-start: var(--at); transform: translate(50%, -50%); width: 46px; height: 46px; border-radius: 10px; border: 3px solid #000; background: var(--paper3); display: grid; place-items: center; padding: 0; cursor: default; font-family: inherit; }
+.chest .ch-ic { font-size: 20px; line-height: 1; } .chest b { position: absolute; top: calc(100% + 2px); font: 700 11px system-ui; color: var(--paper); white-space: nowrap; direction: ltr; }
+.chest.ready { background: var(--gold); cursor: pointer; animation: pcpulse .7s infinite alternate; box-shadow: 0 0 14px var(--gold); }
+.chest.claimed { background: var(--green); color: #fff; } .chest.locked { filter: grayscale(1); opacity: .7; }
+.res-stars { display: flex; justify-content: center; gap: 8px; direction: ltr; font-size: 54px; line-height: 1; margin: 6px 0; }
+.res-stars i { font-style: normal; color: #ffffff22; text-shadow: 3px 3px 0 #000; transform: scale(0); animation: starpop .45s cubic-bezier(.3,1.6,.5,1) forwards; animation-delay: var(--d); }
+.res-stars i.on { color: var(--gold); text-shadow: 3px 3px 0 #000, 0 0 18px #ffd24a; }
+@keyframes starpop { to { transform: scale(1); } }
+@media (max-width: 700px) { .chest { width: 38px; height: 38px; } .cc-track { margin-inline: 18px; } .cstars.mini { font-size: 10px; } }
+
 </style>
 </head>
 <body>
@@ -3961,6 +3984,21 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       level: { pack: 'basic' },                       // bonus for clearing every fight of a level
       replay: { shards: 5 },
     },
+    // star rating per fight (best result is kept): 1 = win, 2 = win without losing a round,
+    // 3 = that, and your hero ended at full life. Star totals open chests (each once).
+    stars: {
+      rules: [
+        { n: 1, text: 'فوز' },
+        { n: 2, text: 'فوز بدون خسارة أي جولة' },
+        { n: 3, text: 'فوز بدون خسارة جولة وبطلك بكامل حياته' },
+      ],
+      chests: [
+        { id: 'ch10', need: 10, name: 'صندوق برونزي', reward: { shards: 100 } },
+        { id: 'ch25', need: 25, name: 'صندوق فضي', reward: { packs: 1 } },
+        { id: 'ch40', need: 40, name: 'صندوق ذهبي', reward: { packs: 2 } },
+        { id: 'ch60', need: 60, name: 'صندوق الصدع', reward: { card: 'epic' } },   // one guaranteed card of this rarity or rarer
+      ],
+    },
   };
 
   // boss specials: stat blessings + hero abilities fired at the start of every round
@@ -4019,10 +4057,24 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   const AMB = globalThis.AMB;
   const LV = () => AMB.LEVELS;
 
+  /** stars for one result: 0 = loss, 1 = win, 2 = no round lost, 3 = no round lost and full hero life */
+  function rate(res) {
+    if (!res || !res.won) return 0;
+    const clean = (res.roundsLost || 0) === 0;
+    return 1 + (clean ? 1 : 0) + (clean && (res.lifeLeft || 0) >= (res.maxLife || AMB.CONFIG.match.heroLife) ? 1 : 0);
+  }
+
   AMB.Save.register('campaign', {
-    version: 1,
-    // cleared[fightId] = true; levelsDone[levelId] = true; stats per fight: { attempts, wins, best:{ lifeLeft, roundsLost } }
-    defaults: () => ({ cleared: {}, levelsDone: {}, stats: {} }),
+    version: 2,
+    // cleared[fightId] = true; levelsDone[levelId] = true; stars[fightId] = best 1..3; chests = claimed chest ids;
+    // stats per fight: { attempts, wins, best:{ lifeLeft, roundsLost } }
+    defaults: () => ({ cleared: {}, levelsDone: {}, stats: {}, stars: {}, chests: [] }),
+    // v1 had no stars: rate the best recorded result of every cleared fight (at least 1 star)
+    migrate: (s) => {
+      s.stars = s.stars || {};
+      Object.keys(s.cleared || {}).forEach((id) => { const b = (s.stats[id] || {}).best; s.stars[id] = Math.max(1, b ? rate(Object.assign({ won: true }, b)) : 1); });
+      return s;
+    },
   });
 
   function Campaign(save, deps) {
@@ -4036,6 +4088,17 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         if (fi >= 0) return { level: l, li, fight: l.fights[fi], fi };
       }
       return null;
+    }
+
+    // one card of `minRarity` or rarer — prefer ones you don't own yet, then ones not at max level
+    function grantCard(minRarity) {
+      const R = AMB.ECONOMY.rarities, C = deps.collection, rng = deps.rng || AMB.util.RNG(Math.floor(Math.random() * 2 ** 31));
+      const all = C.ids().filter((id) => !C.def(id).exclusive && R[C.rarity(id)].order >= R[minRarity].order);
+      const tiers = [all.filter((id) => !C.owned(id)), all.filter((id) => !C.isMax(id)), all];
+      const pool = tiers.find((t) => t.length);
+      const id = pool[rng.int(pool.length)];
+      const res = C.add(id, 1);
+      return { id, rarity: C.rarity(id), isNew: res.isNew };
     }
 
     const api = {
@@ -4053,6 +4116,26 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       /** first unlocked fight not yet cleared (or null when everything is done) */
       next() { for (const l of levels()) for (const f of l.fights) if (api.isUnlocked(f.id) && !api.isCleared(f.id)) return f.id; return null; },
       stats: (fightId) => st().stats[fightId] || { attempts: 0, wins: 0, best: null },
+      rate,
+      stars: (fightId) => st().stars[fightId] || 0,
+      levelStars(levelId) { const l = levels().find((x) => x.id === levelId); return l.fights.reduce((a, f) => a + api.stars(f.id), 0); },
+      totalStars() { return levels().reduce((a, l) => a + api.levelStars(l.id), 0); },
+      maxStars() { return levels().reduce((a, l) => a + l.fights.length * 3, 0); },
+      /** chests with state: 'claimed' | 'ready' | 'locked' */
+      chests() { const tot = api.totalStars(); return LV().CAMPAIGN.stars.chests.map((c) => Object.assign({}, c, { state: st().chests.includes(c.id) ? 'claimed' : tot >= c.need ? 'ready' : 'locked' })); },
+      readyChests() { return api.chests().filter((c) => c.state === 'ready').length; },
+      /** open a chest whose star total is reached; returns what it gave or null */
+      claimChest(id) {
+        const c = api.chests().find((x) => x.id === id);
+        if (!c || c.state !== 'ready') return null;
+        save.update('campaign', (s) => { s.chests.push(id); });
+        const out = { id, shards: 0, packs: [], card: null }, rw = c.reward;
+        if (rw.shards && deps.wallet) { deps.wallet.add('shards', rw.shards, 'chest'); out.shards = rw.shards; }
+        for (let i = 0; i < (rw.packs || 0); i++) if (deps.packs) out.packs.push(deps.packs.open('basic', { free: true }));
+        if (rw.card && deps.collection) out.card = grantCard(rw.card);
+        if (deps.events) deps.events.emit('chestOpened', out);
+        return out;
+      },
       rewardsFor(fightId) {
         const f = find(fightId), R = LV().CAMPAIGN.rewards;
         if (api.isCleared(fightId)) return { replay: true, shards: R.replay.shards, passXp: 0 };
@@ -4084,7 +4167,9 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         const f = find(fightId); if (!f) return null;
         const won = !!res.won;
         const pay = won ? api.rewardsFor(fightId) : null;
-        const out = { fightId, won, boss: !!f.fight.boss, first: !!(pay && !pay.replay), shards: 0, passXp: 0, pack: null, levelComplete: false };
+        const stars = rate(res), prevStars = api.stars(fightId);
+        const out = { fightId, won, boss: !!f.fight.boss, first: !!(pay && !pay.replay), shards: 0, passXp: 0, pack: null, levelComplete: false,
+          stars, prevStars, newBest: stars > prevStars, chestsBefore: api.readyChests() };
         save.update('campaign', (s) => {
           const x = (s.stats[fightId] = s.stats[fightId] || { attempts: 0, wins: 0, best: null });
           x.attempts++;
@@ -4093,6 +4178,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
           const cur = { lifeLeft: res.lifeLeft || 0, roundsLost: res.roundsLost || 0 };
           if (!x.best || cur.lifeLeft > x.best.lifeLeft) x.best = cur;
           s.cleared[fightId] = true;
+          s.stars[fightId] = Math.max(s.stars[fightId] || 0, stars);
           if (f.level.fights.every((ff) => s.cleared[ff.id]) && !s.levelsDone[f.level.id]) { s.levelsDone[f.level.id] = true; out.levelComplete = true; }
         });
         if (pay) {
@@ -4100,6 +4186,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
           if (pay.passXp && deps.addPassXp) { deps.addPassXp(pay.passXp); out.passXp = pay.passXp; }
           if (out.levelComplete && pay.pack && deps.packs) out.pack = deps.packs.open(pay.pack, { free: true });
         }
+        out.chestsReady = api.readyChests();
         if (deps.events) deps.events.emit('fightEnd', Object.assign({}, out, { summary: res }));
         return out;
       },
@@ -6579,11 +6666,26 @@ AMB.IMAGES = {
     return (hero = C.starterHero() && owned.includes(C.starterHero()) ? C.starterHero() : owned[0] || null);
   };
 
+  const starRow = (n, cls) => `<span class="cstars ${cls || ''}">${[1, 2, 3].map((k) => `<i class="${k <= n ? 'on' : ''}">★</i>`).join('')}</span>`;
+
+  function chestsHTML() {
+    const tot = CAM.totalStars(), max = CAM.maxStars();
+    const items = CAM.chests().map((c) => `<button class="chest ${c.state}" style="--at:${(100 * c.need) / max}%" ${c.state === 'ready' ? `data-act="camChest" data-id="${c.id}"` : 'disabled'} title="${esc(c.name)}: ${rewardText(c.reward)}">
+        <span class="ch-ic">${c.state === 'claimed' ? '✓' : '🎁'}</span><b>${c.need}★</b></button>`).join('');
+    return `<div class="cam-chests"><div class="cc-top"><span class="cc-total">★ ${tot}<small>/${max}</small></span>
+        <span class="hint">${LV.CAMPAIGN.stars.rules.map((r) => '★'.repeat(r.n) + ' ' + r.text).join(' · ')}</span></div>
+      <div class="cc-track"><i style="width:${(100 * tot) / max}%"></i>${items}</div></div>`;
+  }
+  function rewardText(rw) {
+    const R = AMB.ECONOMY.rarities;
+    return [rw.shards ? `${rw.shards} شظية` : '', rw.packs ? `${rw.packs === 1 ? 'باكج' : rw.packs + ' باكجات'}` : '', rw.card ? `بطاقة ${R[rw.card].name} أو أندر مضمونة` : ''].filter(Boolean).join(' + ');
+  }
+
   function node(l, f, i) {
     const cleared = CAM.isCleared(f.id), open = CAM.isUnlocked(f.id), next = CAM.next() === f.id;
     const cls = ['cnode', f.boss ? 'boss' : '', cleared ? 'cleared' : '', open ? 'open' : 'locked', next ? 'next' : ''].join(' ');
     const inner = f.boss ? UI().portrait(AMB.DATA.HEROES[l.hero], { bare: true, k: 'cb' + l.id }) : `<b>${i + 1}</b>`;
-    return `<button class="${cls}" ${open ? `data-act="camFight" data-id="${f.id}"` : 'disabled'} title="${esc(f.name)}">${inner}${cleared ? '<i class="ck">✓</i>' : open ? '' : '<i class="lk">🔒</i>'}<span class="cn-name">${esc(f.name)}</span></button>`;
+    return `<button class="${cls}" ${open ? `data-act="camFight" data-id="${f.id}"` : 'disabled'} title="${esc(f.name)}">${inner}${cleared ? starRow(CAM.stars(f.id), 'mini') : open ? '' : '<i class="lk">🔒</i>'}<span class="cn-name">${esc(f.name)}</span></button>`;
   }
 
   function render() {
@@ -6592,10 +6694,11 @@ AMB.IMAGES = {
     if (C.needsStarter()) { root.innerHTML = '<div class="cam-note">اختر بطلك الأول من «العب» قبل ما تبدأ الحملة.</div>'; return; }
     root.innerHTML = `<div class="cam-note">كل قتال <b>أفضل من 3 جولات</b> ضد تشكيلة ثابتة. مستويات بطاقاتك وندرتها <b>تُحتسب هنا</b>، والمتجر يعرض الوحدات اللي تملكها فقط.
         الفوز الأول: ${icon('gem')} ${R.fight.shards} + ${R.fight.passXp} خبرة ممر · الزعيم: ${icon('gem')} ${R.boss.shards} + ${R.boss.passXp} خبرة · إنهاء المستوى: باكج مجاني · الإعادة: ${icon('gem')} ${R.replay.shards}</div>
+      ${chestsHTML()}
       <div class="cam-levels">${LV.LEVELS.map((l, li) => {
         const pr = CAM.progress(l.id), unlocked = CAM.levelUnlocked(li);
         return `<section class="cam-level ${unlocked ? '' : 'locked'} ${CAM.levelDone(l.id) ? 'done' : ''}" style="--wc:${W(l.world).color}">
-          <header><span class="cl-n">${li + 1}</span><div><h3>${esc(l.name)}</h3><small>${W(l.world).name} · ${pr.cleared}/${pr.total}${CAM.levelDone(l.id) ? ' · ✓ مكتمل' : ''}</small></div>
+          <header><span class="cl-n">${li + 1}</span><div><h3>${esc(l.name)}</h3><small>${W(l.world).name} · ${pr.cleared}/${pr.total} · ★ ${CAM.levelStars(l.id)}/${l.fights.length * 3}${CAM.levelDone(l.id) ? ' · ✓ مكتمل' : ''}</small></div>
           ${unlocked ? '' : '<span class="cl-lock">🔒 أنهِ المستوى السابق</span>'}</header>
           <div class="cpath">${l.fights.map((f, i) => node(l, f, i)).join('<i class="cline"></i>')}</div></section>`;
       }).join('')}</div>`;
@@ -6605,7 +6708,8 @@ AMB.IMAGES = {
   function refreshMenu() {
     const b = $('menu-campaign'); if (!b) return;
     const n = CAM.next(), f = n && CAM.find(n);
-    b.innerHTML = `الحملة${f ? `<small>${f.li + 1}-${f.fi + 1}</small>` : '<small>✓</small>'}`;
+    const ch = CAM.readyChests();
+    b.innerHTML = `الحملة${f ? `<small>${f.li + 1}-${f.fi + 1}</small>` : '<small>✓</small>'}${ch ? `<span class="dot">${ch}</span>` : ''}`;
   }
 
   function preview(fightId) {
@@ -6621,6 +6725,7 @@ AMB.IMAGES = {
       <h4>تشكيلة الخصم</h4><div class="cam-units">${unitsHTML}</div>
       <h4>الجائزة</h4><div class="cam-reward">${reward}</div>
       <h4>بطلك</h4><div class="hchips">${heroes}</div>
+      <h4>النجوم ${starRow(CAM.stars(fightId))}</h4><ul class="star-rules">${LV.CAMPAIGN.stars.rules.map((r) => `<li class="${CAM.stars(fightId) >= r.n ? 'got' : ''}">${'★'.repeat(r.n)} ${r.text}</li>`).join('')}</ul>
       ${st.attempts ? `<div class="hint">محاولات: ${st.attempts} · فوز: ${st.wins}</div>` : ''}
       <div class="cam-go"><button class="btn primary big" data-act="camGo" data-id="${fightId}" ${h ? '' : 'disabled'}>قاتل!</button></div></div>`);
   }
@@ -6634,7 +6739,7 @@ AMB.IMAGES = {
   /** results screen for a finished campaign fight (called from ui.js showResults) */
   function showResult(m, secs) {
     const ui = UI(), S = ui.S, fightId = S.campaign.fightId, x = CAM.find(fightId);
-    if (!m._camDone) { m._camDone = true; S.camResult = CAM.recordResult(fightId, Object.assign(m.summary(0), { lifeLeft: m.players[0].life, roundsLost: m.players[0].stats.losses })); }
+    if (!m._camDone) { m._camDone = true; S.camResult = CAM.recordResult(fightId, Object.assign(m.summary(0), { lifeLeft: m.players[0].life, maxLife: m.players[0].maxLife, roundsLost: m.players[0].stats.losses })); }
     const r = S.camResult, won = r.won, next = CAM.next(), nx = next && CAM.find(next);
     const score = `${m.players[0].stats.wins} – ${m.players[1].stats.wins}`;
     const pay = won ? [r.shards ? `${icon('gem')} +${r.shards} شظية` : '', r.passXp ? `+${r.passXp} خبرة ممر` : ''].filter(Boolean).join(' · ') : '';
@@ -6643,6 +6748,9 @@ AMB.IMAGES = {
         <div class="res-hero">${ui.portrait(won ? AMB.DATA.HEROES[m.players[0].heroId] : AMB.DATA.HEROES[x.level.hero], { bare: true, k: 'crh' })}<i class="sheen"></i></div>
         <div class="res-hname">${esc(x.fight.name)}</div></div>
       <div class="res-banner"><h1>${won ? (x.fight.boss ? 'هزمت الزعيم!' : 'فوز!') : 'خسارة'}</h1><p class="hint">النتيجة ${score} · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} دقيقة</p>
+        ${won ? `<div class="res-stars">${[1, 2, 3].map((k) => `<i class="${k <= r.stars ? 'on' : ''}" style="--d:${0.3 + k * 0.35}s">★</i>`).join('')}</div>
+          <p class="hint">${r.newBest ? (r.prevStars ? `رقم جديد! من ${r.prevStars} إلى ${r.stars} نجوم` : `${r.stars} من 3 نجوم`) : `أفضل نتيجة لك هنا: ${CAM.stars(fightId)} نجوم`}${r.stars < 3 ? ' · ' + LV.CAMPAIGN.stars.rules[r.stars].text + ' = نجمة إضافية' : ''}</p>` : ''}
+        ${r.chestsReady > r.chestsBefore ? '<button class="btn primary" data-act="go" data-to="campaign">🎁 صندوق نجوم جاهز! افتحه من خريطة الحملة</button>' : ''}
         ${won ? `<p class="cam-pay">${r.first ? pay : `إعادة: ${pay || 'بدون جائزة'}`}</p>` : '<p class="hint">ما خسرت شي. طوّر بطاقاتك أو غيّر التشكيلة وجرّب مرة ثانية.</p>'}</div>
       ${pack}
       <div class="cam-btns">
@@ -6661,6 +6769,17 @@ AMB.IMAGES = {
       camFight: (d) => preview(d.id),
       camHero: (d) => { hero = d.id; preview(d.f); },
       camGo: (d) => start(d.id),
+      camChest: (d) => {
+        const r = CAM.claimChest(d.id); if (!r) return;
+        ui.sfx('merge');
+        const C2 = AMB.collection, R = AMB.ECONOMY.rarities;
+        const cards = r.packs.flatMap((p) => p.cards).concat(r.card ? [Object.assign({ isNew: r.card.isNew }, r.card)] : []);
+        ui.overlay(`<div class="rv-wrap"><h2>🎁 ${esc(LV.CAMPAIGN.stars.chests.find((c) => c.id === d.id).name)}</h2>
+          ${r.shards ? `<p class="cam-pay">${icon('gem')} +${r.shards} شظية</p>` : ''}
+          ${cards.length ? `<div class="cam-pack-row">${cards.map((c, i) => `<div class="cu">${ui.portrait(C2.def(c.id), { k: 'chs' + i + c.id })}<small style="color:${R[c.rarity].color}">${R[c.rarity].name}${c.isNew ? ' · جديدة!' : ''}</small></div>`).join('')}</div>` : ''}
+          <div class="rv-btns"><button class="btn primary" data-act="packDone">تم</button></div></div>`);
+        render();
+      },
     });
   }
 

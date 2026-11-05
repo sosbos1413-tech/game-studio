@@ -31,6 +31,12 @@
         pity: { rarity: 'legendary', after: 10 } },
     },
     maxedRefund: { common: 5, rare: 10, epic: 25, legendary: 60 },
+    // 7-day login calendar: one reward per day you open the game. A missed day does not reset it;
+    // after day 7 a new cycle starts. Day 7: a pack + a guaranteed card of this rarity or rarer.
+    login: [
+      { shards: 30 }, { shards: 40 }, { shards: 50 }, { shards: 60 }, { shards: 80 }, { shards: 100 },
+      { packs: 1, card: 'rare', big: true },
+    ],
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
       allUnlocked: false,      // true = every card owned (dev / testing)

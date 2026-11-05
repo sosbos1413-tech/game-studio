@@ -80,6 +80,15 @@
       /** Unlock without copies (starter card, battle-pass reward…). */
       unlock(id) { R(id); return save.update('collection', (s) => { const c = rec(s, id); const was = c.owned; c.owned = true; return !was; }); },
 
+      /** one random card of `minRarity` or rarer: prefers cards you don't own, then ones not at max level */
+      grantRandom(minRarity, rng) {
+        const R = EC().rarities; rng = rng || AMB.util.RNG(Math.floor(Math.random() * 2 ** 31));
+        const all = allIds().filter((id) => !defOf(id).exclusive && R[defOf(id).rarity].order >= R[minRarity].order);
+        const pool = [all.filter((id) => !api.owned(id)), all.filter((id) => !api.isMax(id)), all].find((t) => t.length);
+        const id = pool[rng.int(pool.length)];
+        const res = api.add(id, 1);
+        return { id, rarity: defOf(id).rarity, isNew: res.isNew };
+      },
       /** stat multiplier of a card in progression fights */
       power(id) { return R(id).power * (1 + EC().cards.levelBonus * (api.level(id) - 1)); },
       /** { defId: multiplier } for every owned card — what a progression Match receives */

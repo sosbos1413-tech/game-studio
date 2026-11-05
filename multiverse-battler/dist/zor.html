@@ -1498,6 +1498,19 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 @keyframes starpop { to { transform: scale(1); } }
 @media (max-width: 700px) { .chest { width: 38px; height: 38px; } .cc-track { margin-inline: 18px; } .cstars.mini { font-size: 10px; } }
 
+/* ======================================================================= daily login calendar */
+#menu-login { position: relative; }
+.login-wrap { text-align: center; color: var(--paper); max-width: 760px; background: var(--ink2); border: 3px solid var(--gold); box-shadow: var(--hard); padding: 16px; }
+.login-wrap h2 { font: 400 36px var(--display); color: var(--gold); text-shadow: 3px 3px 0 var(--red); margin: 0 0 6px; }
+.lcal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 16px 0; }
+.lday { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 92px; padding: 8px 4px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); box-shadow: var(--hard-sm); font-size: 13px; }
+.lday small { font-size: 11px; color: var(--muted); } .lday b { display: block; font-size: 15px; white-space: nowrap; } .lday svg { width: 13px; height: 13px; vertical-align: -2px; color: var(--cyan); }
+.lday.big { background: linear-gradient(160deg, #fff2c2, #ffd24a); }
+.lday.got { opacity: .55; } .lday .lck { position: absolute; top: 4px; inset-inline-end: 6px; font-style: normal; color: var(--green); font-weight: 900; }
+.lday.today { border-color: var(--red); box-shadow: 0 0 0 3px var(--gold), var(--hard-sm); animation: pcpulse .7s infinite alternate; }
+.lday.now { opacity: 1; box-shadow: 0 0 0 3px var(--green), 0 0 18px var(--gold); }
+@media (max-width: 700px) { .lcal { grid-template-columns: repeat(4, 1fr); } .lday.big { grid-column: span 2; } .login-wrap h2 { font-size: 28px; } }
+
 </style>
 </head>
 <body>
@@ -1519,6 +1532,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         <button class="btn big" data-act="go" data-to="packs" id="menu-packs">الباكجات</button>
         <button class="btn big" data-act="go" data-to="codex">مكتبة الشخصيات</button>
         <button class="btn big" data-act="go" data-to="stats">الإحصائيات</button>
+        <button class="btn ghost" data-act="loginOpen" id="menu-login">🎁 الدخول اليومي</button>
         <button class="btn big ghost" data-act="howto">كيف ألعب؟</button>
         <button class="btn ghost" data-act="sound" id="menu-sound">🔊 الصوت</button>
       </div>
@@ -3716,6 +3730,12 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         pity: { rarity: 'legendary', after: 10 } },
     },
     maxedRefund: { common: 5, rare: 10, epic: 25, legendary: 60 },
+    // 7-day login calendar: one reward per day you open the game. A missed day does not reset it;
+    // after day 7 a new cycle starts. Day 7: a pack + a guaranteed card of this rarity or rarer.
+    login: [
+      { shards: 30 }, { shards: 40 }, { shards: 50 }, { shards: 60 }, { shards: 80 }, { shards: 100 },
+      { packs: 1, card: 'rare', big: true },
+    ],
     cards: {
       levelBonus: 0.07,        // +7% hp & attack per card level above 1 (progression fights only)
       allUnlocked: false,      // true = every card owned (dev / testing)
@@ -3859,6 +3879,15 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       /** Unlock without copies (starter card, battle-pass reward…). */
       unlock(id) { R(id); return save.update('collection', (s) => { const c = rec(s, id); const was = c.owned; c.owned = true; return !was; }); },
 
+      /** one random card of `minRarity` or rarer: prefers cards you don't own, then ones not at max level */
+      grantRandom(minRarity, rng) {
+        const R = EC().rarities; rng = rng || AMB.util.RNG(Math.floor(Math.random() * 2 ** 31));
+        const all = allIds().filter((id) => !defOf(id).exclusive && R[defOf(id).rarity].order >= R[minRarity].order);
+        const pool = [all.filter((id) => !api.owned(id)), all.filter((id) => !api.isMax(id)), all].find((t) => t.length);
+        const id = pool[rng.int(pool.length)];
+        const res = api.add(id, 1);
+        return { id, rarity: defOf(id).rarity, isNew: res.isNew };
+      },
       /** stat multiplier of a card in progression fights */
       power(id) { return R(id).power * (1 + EC().cards.levelBonus * (api.level(id) - 1)); },
       /** { defId: multiplier } for every owned card — what a progression Match receives */
@@ -4091,15 +4120,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
     }
 
     // one card of `minRarity` or rarer — prefer ones you don't own yet, then ones not at max level
-    function grantCard(minRarity) {
-      const R = AMB.ECONOMY.rarities, C = deps.collection, rng = deps.rng || AMB.util.RNG(Math.floor(Math.random() * 2 ** 31));
-      const all = C.ids().filter((id) => !C.def(id).exclusive && R[C.rarity(id)].order >= R[minRarity].order);
-      const tiers = [all.filter((id) => !C.owned(id)), all.filter((id) => !C.isMax(id)), all];
-      const pool = tiers.find((t) => t.length);
-      const id = pool[rng.int(pool.length)];
-      const res = C.add(id, 1);
-      return { id, rarity: C.rarity(id), isNew: res.isNew };
-    }
+    const grantCard = (minRarity) => deps.collection.grantRandom(minRarity, deps.rng);
 
     const api = {
       levels,
@@ -4200,6 +4221,53 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
 </script>
 <script>
 /*
+ * Daily login calendar (7 days). Opening the game on a new day lets you claim the next reward;
+ * missing days does not reset progress; after day 7 a new cycle starts. Rewards: AMB.ECONOMY.login.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const dayKey = (t) => { const d = new Date(t); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+
+  AMB.Save.register('login', {
+    version: 1,
+    defaults: () => ({ next: 0, lastKey: 0, claims: 0, cycles: 0 }),   // next = index (0..6) of the reward to claim
+  });
+
+  function Login(save, deps) {
+    deps = deps || {};
+    const now = deps.now || save.now || (() => Date.now());
+    const st = () => save.get('login');
+    const R = () => AMB.ECONOMY.login;
+    const api = {
+      rewards: R,
+      today: () => dayKey(now()),
+      canClaim: () => st().lastKey !== dayKey(now()),
+      /** index (0..6) of today's reward if claimable, else of tomorrow's */
+      nextIndex: () => st().next,
+      claimedToday: () => st().lastKey === dayKey(now()),
+      status() { const s = st(); return { next: s.next, canClaim: api.canClaim(), claims: s.claims, cycles: s.cycles }; },
+      /** claim today's reward; returns what was given or null if already claimed today */
+      claim() {
+        if (!api.canClaim()) return null;
+        const idx = st().next, rw = R()[idx], out = { day: idx + 1, shards: 0, packs: [], card: null };
+        save.update('login', (s) => { s.lastKey = dayKey(now()); s.claims++; s.next = (s.next + 1) % R().length; if (s.next === 0) s.cycles++; });
+        if (rw.shards && deps.wallet) { deps.wallet.add('shards', rw.shards, 'login'); out.shards = rw.shards; }
+        for (let i = 0; i < (rw.packs || 0); i++) if (deps.packs) out.packs.push(deps.packs.open('basic', { free: true }));
+        if (rw.card && deps.collection) out.card = deps.collection.grantRandom(rw.card, deps.rng);
+        if (deps.events) deps.events.emit('loginClaimed', out);
+        return out;
+      },
+    };
+    return api;
+  }
+
+  AMB.Login = Login;
+  AMB.Login.dayKey = dayKey;
+})();
+
+</script>
+<script>
+/*
  * Player profile bootstrap: one save, one event bus, one wallet shared by
  * every progression system. In the browser it runs once on load and exposes
  * AMB.save / AMB.events / AMB.wallet. Tests call AMB.Profile.boot(memoryStorage).
@@ -4214,12 +4282,13 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
     const packs = AMB.Packs(save, wallet, collection, events, rng);
     // battle-pass XP from campaign rewards goes to the pass instance (created by the pass UI in the browser)
     const campaign = AMB.Campaign(save, { wallet, packs, collection, events, addPassXp: (n) => AMB.pass && AMB.pass.addXp(n) });
-    return { save, events, wallet, collection, packs, campaign };
+    const login = AMB.Login(save, { wallet, packs, collection, events, now: nowFn });
+    return { save, events, wallet, collection, packs, campaign, login };
   }
   AMB.Profile = { boot };
   if (typeof document !== 'undefined' && !AMB.save) {
     const p = boot();
-    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs; AMB.campaign = p.campaign;
+    AMB.save = p.save; AMB.events = p.events; AMB.wallet = p.wallet; AMB.collection = p.collection; AMB.packs = p.packs; AMB.campaign = p.campaign; AMB.login = p.login;
   }
 })();
 
@@ -4317,17 +4386,24 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
   const TYPE_NAME = { title: 'لقب', frame: 'إطار', arena: 'ثيم ساحة', fx: 'تأثير فوز', avatar: 'شخصية', perk: 'ميزة' };
 
   // ------------------------------------------------------------- missions
+  // Daily missions: 3 a day from this pool. Each gives battle-pass XP + shards (to buy packs).
+  // Stats count in every mode (quick matches, same device, campaign) except friendly matches.
   const DAILY = [
-    { id: 'd_play2', name: 'العب مباراتين', stat: 'matches', target: 2, xp: 50 },
-    { id: 'd_win1', name: 'افز بمباراة', stat: 'wins', target: 1, xp: 60 },
-    { id: 'd_rounds5', name: 'افز بـ٥ جولات', stat: 'rounds_won', target: 5, xp: 50 },
-    { id: 'd_buy10', name: 'اشترِ ١٠ وحدات', stat: 'buys', target: 10, xp: 40 },
-    { id: 'd_merge1', name: 'رقِّ وحدة (٣ نسخ ← نجمة)', stat: 'merges', target: 1, xp: 50 },
-    { id: 'd_summon1', name: 'استدعِ بطلك إلى الساحة', stat: 'summons', target: 1, xp: 40 },
-    { id: 'd_reroll8', name: 'حدّث المتجر ٨ مرات', stat: 'rerolls', target: 8, xp: 30 },
-    { id: 'd_reward2', name: 'اختر مكافأتي مراحل', stat: 'stage_rewards', target: 2, xp: 40 },
-    { id: 'd_finale', name: 'افز بجولة الحسم', stat: 'finale_won', target: 1, xp: 70 },
-    { id: 'd_dmg', name: 'تسبّب بـ ٥٠٠٠ ضرر بوحداتك', stat: 'damage', target: 5000, xp: 40 },
+    { id: 'd_play2', name: 'العب مباراتين أو قتالين', stat: 'matches', target: 2, xp: 50, shards: 30 },
+    { id: 'd_win1', name: 'افز بمباراة', stat: 'wins', target: 1, xp: 60, shards: 30 },
+    { id: 'd_fights3', name: 'افز بـ٣ قتالات (أي نمط)', stat: 'fights_won', target: 3, xp: 60, shards: 50 },
+    { id: 'd_rounds5', name: 'افز بـ٥ جولات', stat: 'rounds_won', target: 5, xp: 50, shards: 30 },
+    { id: 'd_buy10', name: 'اشترِ ١٠ وحدات', stat: 'buys', target: 10, xp: 40, shards: 30 },
+    { id: 'd_merge1', name: 'رقِّ وحدة (٣ نسخ ← نجمة)', stat: 'merges', target: 1, xp: 50, shards: 30 },
+    { id: 'd_summon1', name: 'استدعِ بطلك إلى الساحة', stat: 'summons', target: 1, xp: 40, shards: 30 },
+    { id: 'd_reroll8', name: 'حدّث المتجر ٨ مرات', stat: 'rerolls', target: 8, xp: 30, shards: 30 },
+    { id: 'd_reward2', name: 'اختر مكافأتي مراحل', stat: 'stage_rewards', target: 2, xp: 40, shards: 30 },
+    { id: 'd_finale', name: 'افز بجولة الحسم', stat: 'finale_won', target: 1, xp: 70, shards: 40 },
+    { id: 'd_dmg', name: 'تسبّب بـ ٥٠٠٠ ضرر بوحداتك', stat: 'damage', target: 5000, xp: 40, shards: 30 },
+    { id: 'd_upgrade1', name: 'طوّر بطاقة', stat: 'upgrades', target: 1, xp: 40, shards: 40 },
+    { id: 'd_pack1', name: 'افتح باكج', stat: 'packs', target: 1, xp: 30, shards: 30 },
+    { id: 'd_stars3', name: 'اجمع ٣ نجوم جديدة في الحملة', stat: 'stars', target: 3, xp: 60, shards: 50 },
+    { id: 'd_campaign2', name: 'العب قتالين في الحملة', stat: 'campaign', target: 2, xp: 40, shards: 40 },
   ];
   const WEEKLY = [
     { id: 'w_win5', name: 'افز بـ٥ مباريات', stat: 'wins', target: 5, xp: 200 },
@@ -4368,6 +4444,15 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
       if (st.weekly.key !== wk) { st.weekly = { key: wk, p: {} }; st.claimedMissions = st.claimedMissions.filter((id) => !id.startsWith('w_')); }
     };
     roll();
+    function bumpAll(sm) {
+      const bump = (p, k, n) => { if (n) p[k] = (p[k] || 0) + n; };
+      [st.daily.p, st.weekly.p].forEach((p) => {
+        bump(p, 'matches', 1); if (sm.won) { bump(p, 'wins', 1); bump(p, 'fights_won', 1); }
+        bump(p, 'rounds_won', sm.roundsWon || 0); bump(p, 'buys', sm.buys || 0); bump(p, 'rerolls', sm.rerolls || 0);
+        bump(p, 'merges', sm.merges || 0); bump(p, 'summons', sm.summoned ? 1 : 0); bump(p, 'stage_rewards', sm.stageRewards || 0); bump(p, 'damage', Math.round(sm.damage || 0));
+        bump(p, 'finale_won', sm.finaleWon ? 1 : 0); bump(p, 'four_worlds', sm.worldsUsed >= 4 ? 1 : 0);
+      });
+    }
 
     const api = {
       SEASON, COSMETICS, FREE, PREMIUM, TYPE_NAME, rewardName,
@@ -4388,8 +4473,13 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         const m = api.dailyMissions().concat(api.weeklyMissions()).find((x) => x.id === id);
         if (!m || !m.done || m.claimed) return null;
         st.claimedMissions.push(id); const before = api.level(); st.xp += m.xp; save();
-        return { xp: m.xp, levelUp: api.level() - before > 0 };
+        if (m.shards && onReward) { try { onReward({ type: 'shards', n: m.shards, mission: id }); } catch (e) { /* never blocks claiming */ } }
+        return { xp: m.xp, shards: m.shards || 0, levelUp: api.level() - before > 0 };
       },
+      /** add progress to a mission stat (daily + weekly), e.g. track('upgrades', 1) */
+      track(stat, n) { if (!(n > 0)) return; roll(); [st.daily.p, st.weekly.p].forEach((p) => { p[stat] = (p[stat] || 0) + n; }); save(); },
+      /** mission stats from a finished match/fight summary, without the match XP (campaign pays its own) */
+      recordStats(sm) { roll(); bumpAll(sm); save(); },
 
       /** summary: { mode, won, roundsPlayed, roundsWon, finaleWon, buys, rerolls, merges, summoned, stageRewards, damage, worldsUsed } */
       recordMatch(sm) {
@@ -4403,15 +4493,7 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
         let xp = Math.round(lines.reduce((s, l) => s + l[1], 0) * mult);
         const beforeLevel = api.level();
         const added = api.ended() ? 0 : xp;
-        if (mult > 0) {
-          const bump = (p, k, n) => { p[k] = (p[k] || 0) + n; };
-          [st.daily.p, st.weekly.p].forEach((p) => {
-            bump(p, 'matches', 1); if (sm.won) bump(p, 'wins', 1); bump(p, 'rounds_won', sm.roundsWon); bump(p, 'buys', sm.buys); bump(p, 'rerolls', sm.rerolls);
-            bump(p, 'merges', sm.merges); bump(p, 'summons', sm.summoned ? 1 : 0); bump(p, 'stage_rewards', sm.stageRewards); bump(p, 'damage', Math.round(sm.damage));
-            bump(p, 'finale_won', sm.finaleWon ? 1 : 0); bump(p, 'four_worlds', sm.worldsUsed >= 4 ? 1 : 0);
-          });
-          st.matches++;
-        }
+        if (mult > 0) { bumpAll(sm); st.matches++; }
         st.xp += added; save();
         const doneNow = [];   // missions that are complete but unclaimed (the UI shows a dot)
         return { xp: added, mult, lines: lines.map((l) => [l[0], Math.round(l[1] * mult)]), levelBefore: beforeLevel, levelAfter: api.level(), ended: api.ended(),
@@ -4443,7 +4525,18 @@ html[data-frame]:not([data-frame=default]) .res-hero { border-color: var(--frame
     return api;
   }
 
-  AMB.Pass = { create, KEY, SEASON, COSMETICS, FREE, PREMIUM, DAILY, WEEKLY, dayKey, weekKey, rewardName };
+  /** connect a pass to the game event bus so missions count upgrades, packs, campaign fights and stars */
+  function wire(pass, events) {
+    events.on('cardUpgraded', () => pass.track('upgrades', 1));
+    events.on('packOpened', () => pass.track('packs', 1));
+    events.on('fightEnd', (r) => {
+      if (r.summary) pass.recordStats(Object.assign({}, r.summary, { won: r.won }));
+      pass.track('campaign', 1);
+      if (r.newBest) pass.track('stars', r.stars - (r.prevStars || 0));
+    });
+  }
+
+  AMB.Pass = { create, wire, KEY, SEASON, COSMETICS, FREE, PREMIUM, DAILY, WEEKLY, dayKey, weekKey, rewardName };
 })();
 
 </script>
@@ -4934,6 +5027,7 @@ AMB.IMAGES = {
     if (globalThis.AMB && AMB.CollectionUI) { if (screen === 'menu') AMB.CollectionUI.refreshMenu(); if (screen === 'cards') AMB.CollectionUI.render(); }
     if (globalThis.AMB && AMB.PacksUI) { if (screen === 'menu') AMB.PacksUI.refreshMenu(); if (screen === 'packs') AMB.PacksUI.render(); }
     if (globalThis.AMB && AMB.CampaignUI) { if (screen === 'campaign') AMB.CampaignUI.render(); if (screen === 'menu') AMB.CampaignUI.refreshMenu(); }
+    if (globalThis.AMB && AMB.DailyUI && screen === 'menu') AMB.DailyUI.onMenu();
   }
   function modal(html) { $('modal').innerHTML = `<button class="btn small ghost x" data-act="closeModal">✕</button>` + html; $('modal-back').classList.add('on');
     // opening any details window stops the prep timer so you can read in peace
@@ -6304,7 +6398,11 @@ AMB.IMAGES = {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const store = AMB.save.storageFor('pass');   // battle pass lives inside the unified save (core/save.js)
   // character rewards also give the card (unlock or +1 copy) — see core/collection.js
-  const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => AMB.collection && AMB.collection.grantPassReward(r)));
+  const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => {
+    if (r.type === 'shards') { if (AMB.wallet) AMB.wallet.add('shards', r.n, 'mission'); return; }   // daily-mission shards
+    if (AMB.collection) AMB.collection.grantPassReward(r);
+  }));
+  if (AMB.events) AMB.Pass.wire(pass, AMB.events);   // missions also count campaign fights, upgrades, packs and stars
   // rewards claimed before characters could be unlocked: make sure those characters are owned
   if (AMB.collection) ['free', 'premium'].forEach((t) => (pass.state().claimed[t] || []).forEach((l) => { const r = pass.reward(l, t); if (r && r.type === 'avatar' && !AMB.collection.owned(r.id)) AMB.collection.grantPassReward(r); }));
   const P = AMB.Pass, C = P.COSMETICS, TYPE = pass.TYPE_NAME;
@@ -6391,7 +6489,7 @@ AMB.IMAGES = {
 
   function missionHTML(m) {
     const pct = Math.round((m.progress / m.target) * 100);
-    return `<div class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}"><div class="m-top"><b>${esc(m.name)}</b><span class="m-xp">+${m.xp} خبرة</span></div>
+    return `<div class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}"><div class="m-top"><b>${esc(m.name)}</b><span class="m-xp">+${m.xp} خبرة${m.shards ? ` · ${icon('gem')} ${m.shards}` : ''}</span></div>
       <div class="xp-bar"><i style="width:${pct}%"></i></div>
       <div class="m-bot"><span>${m.progress.toLocaleString('en-US')} / ${m.target.toLocaleString('en-US')}</span>
       ${m.claimed ? '<span class="m-ok">✓ تم الاستلام</span>' : m.done ? `<button class="btn small primary" data-act="passClaimMission" data-id="${m.id}">استلم</button>` : '<span class="m-wait">جارية</span>'}</div></div>`;
@@ -6400,7 +6498,7 @@ AMB.IMAGES = {
     const d = new Date(), mid = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), hrs = Math.max(1, Math.ceil((mid - d) / 3600000));
     return `<h3>مهام اليوم <small>تتجدد بعد ${hrs} ساعة</small></h3><div class="missions">${pass.dailyMissions().map(missionHTML).join('')}</div>
       <h3>مهام الأسبوع</h3><div class="missions">${pass.weeklyMissions().map(missionHTML).join('')}</div>
-      <p class="hint">تُحتسب المباريات ضد الذكاء الاصطناعي أو على نفس الجهاز. المباراة الودية لا تُحتسب.</p>`;
+      <p class="hint">مهام اليوم تعطي خبرة ممر + شظايا تشتري فيها باكجات. تُحتسب المباريات السريعة وعلى نفس الجهاز وقتالات الحملة، وتطوير البطاقات وفتح الباكجات. المباراة الودية لا تُحتسب.</p>`;
   }
 
   function optionHTML(type, id) {
@@ -6461,7 +6559,7 @@ AMB.IMAGES = {
       },
       passEquipReward: (d) => { const r = pass.reward(+d.level, d.track); if (r && pass.equip(r.type, r.id)) { UI().sfx('click'); toast(`تم تجهيز: ${pass.rewardName(r)}`, 'good'); after(); } },
       passEquip: (d) => { if (pass.equip(d.type, d.id === '' ? null : d.id)) { UI().sfx('click'); after(); } },
-      passClaimMission: (d) => { const r = pass.claimMission(d.id); if (r) { UI().sfx('merge'); toast(`+${r.xp} خبرة${r.levelUp ? ' — ارتفع مستواك!' : ''}`, 'good'); after(); } },
+      passClaimMission: (d) => { const r = pass.claimMission(d.id); if (r) { UI().sfx('merge'); toast(`+${r.xp} خبرة${r.shards ? ` و +${r.shards} شظية` : ''}${r.levelUp ? ' — ارتفع مستواك!' : ''}`, 'good'); after(); } },
       passPremium: () => toast('المسار المميز غير متاح بعد: يحتاج نظام حسابات ودفع غير موجود حاليًا. كل مكافآت المسار المجاني متاحة لك.', ''),
     });
   }
@@ -6786,6 +6884,76 @@ AMB.IMAGES = {
   AMB.CampaignUI = { render, refreshMenu, showResult, installActions };
   if (UI()) installActions();
   refreshMenu();
+})();
+
+</script>
+<script>
+/*
+ * Daily login calendar popup (7 days). Shown once per session on the main menu when today's
+ * reward is waiting; also opened from the menu button. Logic: core/daily.js, rewards: AMB.ECONOMY.login.
+ */
+(function () {
+  const AMB = globalThis.AMB;
+  const $ = (id) => document.getElementById(id);
+  const L = AMB.login, RAR = AMB.ECONOMY.rarities;
+  const { icon } = AMB.art;
+  const UI = () => globalThis.AMB_UI;
+  let shown = false;
+
+  const rewardHTML = (rw) => [rw.shards ? `<b>${icon('gem')} ${rw.shards}</b>` : '', rw.packs ? `<b>📦 باكج</b>` : '', rw.card ? `<b style="color:${RAR[rw.card].color}">+ بطاقة ${RAR[rw.card].name}+</b>` : ''].filter(Boolean).join('');
+
+  function calendarHTML(got) {
+    const st = L.status(), R = L.rewards();
+    const tiles = R.map((rw, i) => {
+      const past = got ? i < (got.day - 1) || (got.day - 1 === i) : i < st.next;
+      const today = !got && st.canClaim && i === st.next;
+      const justNow = got && i === got.day - 1;
+      return `<div class="lday ${past ? 'got' : ''} ${today ? 'today' : ''} ${justNow ? 'now' : ''} ${rw.big ? 'big' : ''}"><small>اليوم ${i + 1}</small>${rewardHTML(rw)}${past ? '<i class="lck">✓</i>' : ''}</div>`;
+    }).join('');
+    let body;
+    if (got) {
+      const cards = got.packs.flatMap((p) => p.cards).concat(got.card ? [got.card] : []);
+      body = `<p class="cam-pay">استلمت جائزة اليوم ${got.day}${got.shards ? ` · ${icon('gem')} +${got.shards} شظية` : ''}</p>
+        ${cards.length ? `<div class="cam-pack-row">${cards.map((c, i) => `<div class="cu">${UI().portrait(AMB.collection.def(c.id), { k: 'lg' + i + c.id })}<small style="color:${RAR[c.rarity].color}">${RAR[c.rarity].name}${c.isNew ? ' · جديدة!' : ''}</small></div>`).join('')}</div>` : ''}
+        <div class="rv-btns"><button class="btn primary" data-act="loginClose">تم</button></div>`;
+    } else {
+      body = st.canClaim ? `<div class="rv-btns"><button class="btn primary big" data-act="loginClaim">استلم جائزة اليوم ${st.next + 1}</button><button class="btn ghost" data-act="loginClose">لاحقًا</button></div>`
+        : `<p class="hint">استلمت جائزة اليوم. ارجع بكرة لجائزة اليوم ${st.next + 1}.</p><div class="rv-btns"><button class="btn" data-act="loginClose">تم</button></div>`;
+    }
+    return `<div class="login-wrap"><h2>🎁 الدخول اليومي</h2><p class="hint">ادخل كل يوم واستلم جائزة تكبر يومًا بعد يوم. لو فاتك يوم ما يرجع العدّاد، وبعد اليوم السابع تبدأ دورة جديدة.</p>
+      <div class="lcal">${tiles}</div>${body}</div>`;
+  }
+
+  function open() { UI().overlay(calendarHTML(null)); }
+  function refreshMenu() {
+    const b = $('menu-login'); if (!b) return;
+    b.innerHTML = `🎁 الدخول اليومي${L.canClaim() ? '<span class="dot">1</span>' : ''}`;
+  }
+  /** called when the main menu shows: open the calendar once per session if a reward waits */
+  function onMenu() {
+    refreshMenu();
+    if (shown || !L.canClaim() || $('overlay').classList.contains('on')) return;
+    shown = true; setTimeout(() => { if (L.canClaim() && document.querySelector('#scr-menu.active') && !$('overlay').classList.contains('on')) open(); }, 600);
+  }
+
+  function installActions() {
+    const ui = UI(); if (!ui || ui.ACT.loginOpen) return;
+    Object.assign(ui.ACT, {
+      loginOpen: () => open(),
+      loginClaim: () => {
+        const got = L.claim(); if (!got) return;
+        ui.sfx('merge'); ui.overlay(calendarHTML(got));
+        const el = document.querySelector('.lday.now'); if (el && ui.burst) ['#ffd24a', '#5fe3ff', '#ffffff'].forEach((c) => ui.burst(el, c, 12, { r: 90, s: 6 }));
+        refreshMenu(); ['PacksUI', 'CollectionUI', 'PassUI', 'CampaignUI'].forEach((k) => AMB[k] && AMB[k].refreshMenu && AMB[k].refreshMenu());
+      },
+      loginClose: () => ui.closeOverlay(),
+    });
+  }
+
+  AMB.DailyUI = { open, refreshMenu, onMenu, installActions };
+  if (UI()) installActions();
+  // the game opens on the menu: offer today's reward right away
+  if (document.querySelector('#scr-menu.active')) onMenu(); else refreshMenu();
 })();
 
 </script>

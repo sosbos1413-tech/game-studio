@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Rule tests for the core (no browser needed):  node tools/test.js */
 const path = require('path');
-['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'packs', 'levels', 'campaign', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
+['config', 'data', 'util', 'synergy', 'combat', 'match', 'ai', 'telemetry', 'pass', 'save', 'economy', 'collection', 'packs', 'levels', 'campaign', 'daily', 'profile'].forEach((f) => require(path.join(__dirname, '..', 'core', f + '.js')));
 const AMB = globalThis.AMB;
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -683,6 +683,59 @@ t('stars: saves from before stars get rated from their best results (migration)'
   const raw = JSON.parse(mem.getItem(AMB.Save.KEY)); raw.sysV.campaign = 1; mem.setItem(AMB.Save.KEY, JSON.stringify(raw));
   const cam = AMB.Profile.boot(mem).campaign;
   eq(cam.stars('l1f1'), 3); eq(cam.stars('l1f2'), 1); eq(cam.totalStars(), 4); ok(Array.isArray(cam.chests()));
+});
+
+console.log('daily missions & login calendar');
+const passFor = (prof, clock) => {
+  const pass = AMB.Pass.create(prof.save.storageFor('pass'), clock, (r) => { if (r.type === 'shards') prof.wallet.add('shards', r.n, 'mission'); else prof.collection.grantPassReward(r); });
+  AMB.Pass.wire(pass, prof.events); return pass;
+};
+t('every daily mission gives shards (30-50) and XP; 3 a day', () => {
+  AMB.Pass.DAILY.forEach((m) => ok(m.shards >= 30 && m.shards <= 50 && m.xp > 0, m.id));
+  const pass = passFor(AMB.Profile.boot(MEM()));
+  eq(pass.dailyMissions().length, 3);
+});
+t('claiming a daily mission pays shards to the wallet once', () => {
+  const T = Date.UTC(2026, 10, 5, 12); let now = T;
+  const prof = AMB.Profile.boot(MEM(), () => now), pass = passFor(prof, () => now);
+  const m = pass.dailyMissions()[0];
+  pass.track(m.stat, m.target);
+  const bal = prof.wallet.balance('shards');
+  const r = pass.claimMission(m.id); eq(r.shards, m.shards); eq(prof.wallet.balance('shards'), bal + m.shards);
+  eq(pass.claimMission(m.id), null); eq(prof.wallet.balance('shards'), bal + m.shards, 'only once');
+});
+t('missions count campaign fights, card upgrades, packs and new stars (event bus)', () => {
+  const prof = AMB.Profile.boot(MEM()), pass = passFor(prof);
+  const p = () => pass.state().daily.p;
+  prof.collection.add('ash_ronin', 2); prof.collection.upgrade('ash_ronin'); eq(p().upgrades, 1);
+  prof.packs.open('basic'); eq(p().packs, 1);
+  const cam = AMB.Campaign(prof.save, { events: prof.events, wallet: prof.wallet, packs: prof.packs, collection: prof.collection });
+  cam.recordResult('l1f1', { won: true, roundsLost: 0, lifeLeft: 100, roundsWon: 2, buys: 4 });
+  eq(p().campaign, 1); eq(p().fights_won, 1); eq(p().wins, 1); eq(p().matches, 1); eq(p().stars, 3); eq(p().buys, 4);
+  cam.recordResult('l1f1', { won: true, roundsLost: 0, lifeLeft: 100 }); eq(p().stars, 3, 'replaying a 3-star fight gives no new stars');
+  cam.recordResult('l1f2', { won: false }); eq(p().campaign, 3); eq(p().fights_won, 2);
+  eq(pass.state().weekly.p.campaign, 3, 'weekly counts too');
+});
+t('quick-match wins count for "win 3 fights"; friendly matches do not', () => {
+  const pass = passFor(AMB.Profile.boot(MEM()));
+  const sm = { mode: 'normal', won: true, roundsPlayed: 7, roundsWon: 4, buys: 0, rerolls: 0, merges: 0, stageRewards: 0, damage: 0, worldsUsed: 1 };
+  pass.recordMatch(sm); pass.recordMatch(Object.assign({}, sm, { mode: 'friendly' }));
+  eq(pass.state().daily.p.fights_won, 1);
+});
+t('login calendar: one claim per day, rewards grow, missed days do not reset, day 7 = pack + rare+ card, cycles', () => {
+  const D = 864e5; let now = new Date(2026, 10, 5, 10).getTime();
+  const mem = MEM(), prof = AMB.Profile.boot(mem, () => now), L = prof.login, R = AMB.ECONOMY.login;
+  eq(R.length, 7); for (let i = 1; i < 6; i++) ok(R[i].shards > R[i - 1].shards, 'grows');
+  ok(L.canClaim());
+  const bal = prof.wallet.balance('shards');
+  const c1 = L.claim(); eq(c1.day, 1); eq(c1.shards, R[0].shards); eq(prof.wallet.balance('shards'), bal + R[0].shards);
+  eq(L.claim(), null, 'once per day'); ok(!L.canClaim());
+  now += 3 * D;   // missed two days
+  const prof2 = AMB.Profile.boot(mem, () => now);   // reloaded game
+  const c2 = prof2.login.claim(); eq(c2.day, 2, 'continues, no reset');
+  let last; for (let d = 3; d <= 7; d++) { now += D; last = prof2.login.claim(); eq(last.day, d); }
+  eq(last.packs.length, 1); ok(['rare', 'epic', 'legendary'].includes(last.card.rarity));
+  now += D; eq(prof2.login.claim().day, 1, 'new cycle'); eq(prof2.login.status().cycles, 1);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

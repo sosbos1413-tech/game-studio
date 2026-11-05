@@ -41,15 +41,7 @@
     }
 
     // one card of `minRarity` or rarer — prefer ones you don't own yet, then ones not at max level
-    function grantCard(minRarity) {
-      const R = AMB.ECONOMY.rarities, C = deps.collection, rng = deps.rng || AMB.util.RNG(Math.floor(Math.random() * 2 ** 31));
-      const all = C.ids().filter((id) => !C.def(id).exclusive && R[C.rarity(id)].order >= R[minRarity].order);
-      const tiers = [all.filter((id) => !C.owned(id)), all.filter((id) => !C.isMax(id)), all];
-      const pool = tiers.find((t) => t.length);
-      const id = pool[rng.int(pool.length)];
-      const res = C.add(id, 1);
-      return { id, rarity: C.rarity(id), isNew: res.isNew };
-    }
+    const grantCard = (minRarity) => deps.collection.grantRandom(minRarity, deps.rng);
 
     const api = {
       levels,

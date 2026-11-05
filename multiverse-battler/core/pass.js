@@ -90,17 +90,24 @@
   const TYPE_NAME = { title: 'لقب', frame: 'إطار', arena: 'ثيم ساحة', fx: 'تأثير فوز', avatar: 'شخصية', perk: 'ميزة' };
 
   // ------------------------------------------------------------- missions
+  // Daily missions: 3 a day from this pool. Each gives battle-pass XP + shards (to buy packs).
+  // Stats count in every mode (quick matches, same device, campaign) except friendly matches.
   const DAILY = [
-    { id: 'd_play2', name: 'العب مباراتين', stat: 'matches', target: 2, xp: 50 },
-    { id: 'd_win1', name: 'افز بمباراة', stat: 'wins', target: 1, xp: 60 },
-    { id: 'd_rounds5', name: 'افز بـ٥ جولات', stat: 'rounds_won', target: 5, xp: 50 },
-    { id: 'd_buy10', name: 'اشترِ ١٠ وحدات', stat: 'buys', target: 10, xp: 40 },
-    { id: 'd_merge1', name: 'رقِّ وحدة (٣ نسخ ← نجمة)', stat: 'merges', target: 1, xp: 50 },
-    { id: 'd_summon1', name: 'استدعِ بطلك إلى الساحة', stat: 'summons', target: 1, xp: 40 },
-    { id: 'd_reroll8', name: 'حدّث المتجر ٨ مرات', stat: 'rerolls', target: 8, xp: 30 },
-    { id: 'd_reward2', name: 'اختر مكافأتي مراحل', stat: 'stage_rewards', target: 2, xp: 40 },
-    { id: 'd_finale', name: 'افز بجولة الحسم', stat: 'finale_won', target: 1, xp: 70 },
-    { id: 'd_dmg', name: 'تسبّب بـ ٥٠٠٠ ضرر بوحداتك', stat: 'damage', target: 5000, xp: 40 },
+    { id: 'd_play2', name: 'العب مباراتين أو قتالين', stat: 'matches', target: 2, xp: 50, shards: 30 },
+    { id: 'd_win1', name: 'افز بمباراة', stat: 'wins', target: 1, xp: 60, shards: 30 },
+    { id: 'd_fights3', name: 'افز بـ٣ قتالات (أي نمط)', stat: 'fights_won', target: 3, xp: 60, shards: 50 },
+    { id: 'd_rounds5', name: 'افز بـ٥ جولات', stat: 'rounds_won', target: 5, xp: 50, shards: 30 },
+    { id: 'd_buy10', name: 'اشترِ ١٠ وحدات', stat: 'buys', target: 10, xp: 40, shards: 30 },
+    { id: 'd_merge1', name: 'رقِّ وحدة (٣ نسخ ← نجمة)', stat: 'merges', target: 1, xp: 50, shards: 30 },
+    { id: 'd_summon1', name: 'استدعِ بطلك إلى الساحة', stat: 'summons', target: 1, xp: 40, shards: 30 },
+    { id: 'd_reroll8', name: 'حدّث المتجر ٨ مرات', stat: 'rerolls', target: 8, xp: 30, shards: 30 },
+    { id: 'd_reward2', name: 'اختر مكافأتي مراحل', stat: 'stage_rewards', target: 2, xp: 40, shards: 30 },
+    { id: 'd_finale', name: 'افز بجولة الحسم', stat: 'finale_won', target: 1, xp: 70, shards: 40 },
+    { id: 'd_dmg', name: 'تسبّب بـ ٥٠٠٠ ضرر بوحداتك', stat: 'damage', target: 5000, xp: 40, shards: 30 },
+    { id: 'd_upgrade1', name: 'طوّر بطاقة', stat: 'upgrades', target: 1, xp: 40, shards: 40 },
+    { id: 'd_pack1', name: 'افتح باكج', stat: 'packs', target: 1, xp: 30, shards: 30 },
+    { id: 'd_stars3', name: 'اجمع ٣ نجوم جديدة في الحملة', stat: 'stars', target: 3, xp: 60, shards: 50 },
+    { id: 'd_campaign2', name: 'العب قتالين في الحملة', stat: 'campaign', target: 2, xp: 40, shards: 40 },
   ];
   const WEEKLY = [
     { id: 'w_win5', name: 'افز بـ٥ مباريات', stat: 'wins', target: 5, xp: 200 },
@@ -141,6 +148,15 @@
       if (st.weekly.key !== wk) { st.weekly = { key: wk, p: {} }; st.claimedMissions = st.claimedMissions.filter((id) => !id.startsWith('w_')); }
     };
     roll();
+    function bumpAll(sm) {
+      const bump = (p, k, n) => { if (n) p[k] = (p[k] || 0) + n; };
+      [st.daily.p, st.weekly.p].forEach((p) => {
+        bump(p, 'matches', 1); if (sm.won) { bump(p, 'wins', 1); bump(p, 'fights_won', 1); }
+        bump(p, 'rounds_won', sm.roundsWon || 0); bump(p, 'buys', sm.buys || 0); bump(p, 'rerolls', sm.rerolls || 0);
+        bump(p, 'merges', sm.merges || 0); bump(p, 'summons', sm.summoned ? 1 : 0); bump(p, 'stage_rewards', sm.stageRewards || 0); bump(p, 'damage', Math.round(sm.damage || 0));
+        bump(p, 'finale_won', sm.finaleWon ? 1 : 0); bump(p, 'four_worlds', sm.worldsUsed >= 4 ? 1 : 0);
+      });
+    }
 
     const api = {
       SEASON, COSMETICS, FREE, PREMIUM, TYPE_NAME, rewardName,
@@ -161,8 +177,13 @@
         const m = api.dailyMissions().concat(api.weeklyMissions()).find((x) => x.id === id);
         if (!m || !m.done || m.claimed) return null;
         st.claimedMissions.push(id); const before = api.level(); st.xp += m.xp; save();
-        return { xp: m.xp, levelUp: api.level() - before > 0 };
+        if (m.shards && onReward) { try { onReward({ type: 'shards', n: m.shards, mission: id }); } catch (e) { /* never blocks claiming */ } }
+        return { xp: m.xp, shards: m.shards || 0, levelUp: api.level() - before > 0 };
       },
+      /** add progress to a mission stat (daily + weekly), e.g. track('upgrades', 1) */
+      track(stat, n) { if (!(n > 0)) return; roll(); [st.daily.p, st.weekly.p].forEach((p) => { p[stat] = (p[stat] || 0) + n; }); save(); },
+      /** mission stats from a finished match/fight summary, without the match XP (campaign pays its own) */
+      recordStats(sm) { roll(); bumpAll(sm); save(); },
 
       /** summary: { mode, won, roundsPlayed, roundsWon, finaleWon, buys, rerolls, merges, summoned, stageRewards, damage, worldsUsed } */
       recordMatch(sm) {
@@ -176,15 +197,7 @@
         let xp = Math.round(lines.reduce((s, l) => s + l[1], 0) * mult);
         const beforeLevel = api.level();
         const added = api.ended() ? 0 : xp;
-        if (mult > 0) {
-          const bump = (p, k, n) => { p[k] = (p[k] || 0) + n; };
-          [st.daily.p, st.weekly.p].forEach((p) => {
-            bump(p, 'matches', 1); if (sm.won) bump(p, 'wins', 1); bump(p, 'rounds_won', sm.roundsWon); bump(p, 'buys', sm.buys); bump(p, 'rerolls', sm.rerolls);
-            bump(p, 'merges', sm.merges); bump(p, 'summons', sm.summoned ? 1 : 0); bump(p, 'stage_rewards', sm.stageRewards); bump(p, 'damage', Math.round(sm.damage));
-            bump(p, 'finale_won', sm.finaleWon ? 1 : 0); bump(p, 'four_worlds', sm.worldsUsed >= 4 ? 1 : 0);
-          });
-          st.matches++;
-        }
+        if (mult > 0) { bumpAll(sm); st.matches++; }
         st.xp += added; save();
         const doneNow = [];   // missions that are complete but unclaimed (the UI shows a dot)
         return { xp: added, mult, lines: lines.map((l) => [l[0], Math.round(l[1] * mult)]), levelBefore: beforeLevel, levelAfter: api.level(), ended: api.ended(),
@@ -216,5 +229,16 @@
     return api;
   }
 
-  AMB.Pass = { create, KEY, SEASON, COSMETICS, FREE, PREMIUM, DAILY, WEEKLY, dayKey, weekKey, rewardName };
+  /** connect a pass to the game event bus so missions count upgrades, packs, campaign fights and stars */
+  function wire(pass, events) {
+    events.on('cardUpgraded', () => pass.track('upgrades', 1));
+    events.on('packOpened', () => pass.track('packs', 1));
+    events.on('fightEnd', (r) => {
+      if (r.summary) pass.recordStats(Object.assign({}, r.summary, { won: r.won }));
+      pass.track('campaign', 1);
+      if (r.newBest) pass.track('stars', r.stars - (r.prevStars || 0));
+    });
+  }
+
+  AMB.Pass = { create, wire, KEY, SEASON, COSMETICS, FREE, PREMIUM, DAILY, WEEKLY, dayKey, weekKey, rewardName };
 })();

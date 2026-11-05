@@ -8,7 +8,11 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const store = AMB.save.storageFor('pass');   // battle pass lives inside the unified save (core/save.js)
   // character rewards also give the card (unlock or +1 copy) — see core/collection.js
-  const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => AMB.collection && AMB.collection.grantPassReward(r)));
+  const pass = (AMB.pass = AMB.Pass.create(store, null, (r) => {
+    if (r.type === 'shards') { if (AMB.wallet) AMB.wallet.add('shards', r.n, 'mission'); return; }   // daily-mission shards
+    if (AMB.collection) AMB.collection.grantPassReward(r);
+  }));
+  if (AMB.events) AMB.Pass.wire(pass, AMB.events);   // missions also count campaign fights, upgrades, packs and stars
   // rewards claimed before characters could be unlocked: make sure those characters are owned
   if (AMB.collection) ['free', 'premium'].forEach((t) => (pass.state().claimed[t] || []).forEach((l) => { const r = pass.reward(l, t); if (r && r.type === 'avatar' && !AMB.collection.owned(r.id)) AMB.collection.grantPassReward(r); }));
   const P = AMB.Pass, C = P.COSMETICS, TYPE = pass.TYPE_NAME;
@@ -95,7 +99,7 @@
 
   function missionHTML(m) {
     const pct = Math.round((m.progress / m.target) * 100);
-    return `<div class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}"><div class="m-top"><b>${esc(m.name)}</b><span class="m-xp">+${m.xp} خبرة</span></div>
+    return `<div class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}"><div class="m-top"><b>${esc(m.name)}</b><span class="m-xp">+${m.xp} خبرة${m.shards ? ` · ${icon('gem')} ${m.shards}` : ''}</span></div>
       <div class="xp-bar"><i style="width:${pct}%"></i></div>
       <div class="m-bot"><span>${m.progress.toLocaleString('en-US')} / ${m.target.toLocaleString('en-US')}</span>
       ${m.claimed ? '<span class="m-ok">✓ تم الاستلام</span>' : m.done ? `<button class="btn small primary" data-act="passClaimMission" data-id="${m.id}">استلم</button>` : '<span class="m-wait">جارية</span>'}</div></div>`;
@@ -104,7 +108,7 @@
     const d = new Date(), mid = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), hrs = Math.max(1, Math.ceil((mid - d) / 3600000));
     return `<h3>مهام اليوم <small>تتجدد بعد ${hrs} ساعة</small></h3><div class="missions">${pass.dailyMissions().map(missionHTML).join('')}</div>
       <h3>مهام الأسبوع</h3><div class="missions">${pass.weeklyMissions().map(missionHTML).join('')}</div>
-      <p class="hint">تُحتسب المباريات ضد الذكاء الاصطناعي أو على نفس الجهاز. المباراة الودية لا تُحتسب.</p>`;
+      <p class="hint">مهام اليوم تعطي خبرة ممر + شظايا تشتري فيها باكجات. تُحتسب المباريات السريعة وعلى نفس الجهاز وقتالات الحملة، وتطوير البطاقات وفتح الباكجات. المباراة الودية لا تُحتسب.</p>`;
   }
 
   function optionHTML(type, id) {
@@ -165,7 +169,7 @@
       },
       passEquipReward: (d) => { const r = pass.reward(+d.level, d.track); if (r && pass.equip(r.type, r.id)) { UI().sfx('click'); toast(`تم تجهيز: ${pass.rewardName(r)}`, 'good'); after(); } },
       passEquip: (d) => { if (pass.equip(d.type, d.id === '' ? null : d.id)) { UI().sfx('click'); after(); } },
-      passClaimMission: (d) => { const r = pass.claimMission(d.id); if (r) { UI().sfx('merge'); toast(`+${r.xp} خبرة${r.levelUp ? ' — ارتفع مستواك!' : ''}`, 'good'); after(); } },
+      passClaimMission: (d) => { const r = pass.claimMission(d.id); if (r) { UI().sfx('merge'); toast(`+${r.xp} خبرة${r.shards ? ` و +${r.shards} شظية` : ''}${r.levelUp ? ' — ارتفع مستواك!' : ''}`, 'good'); after(); } },
       passPremium: () => toast('المسار المميز غير متاح بعد: يحتاج نظام حسابات ودفع غير موجود حاليًا. كل مكافآت المسار المجاني متاحة لك.', ''),
     });
   }

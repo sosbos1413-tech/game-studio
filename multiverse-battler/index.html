@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121010">
+<meta name="description" content="ZOR — لعبة بطاقات استراتيجية 1 ضد 1 بقتال تلقائي بين أربعة عوالم. ٧ جولات، ٥ دقائق.">
+<meta property="og:title" content="ZOR — Zones Of Rift">
+<meta property="og:description" content="لعبة بطاقات استراتيجية 1 ضد 1 بقتال تلقائي. ٧ جولات، ٥ دقائق.">
+<title>ZOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Readex+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ui/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ MAIN MENU ============ -->
+  <section class="screen active" id="scr-menu">
+    <div class="menu-wrap">
+      <div class="logo">
+        <div class="logo-rift"></div>
+        <h1>ZOR</h1>
+        <p class="sub">Zones Of Rift · مناطق الصدع</p>
+      </div>
+      <div class="menu-buttons">
+        <button class="btn big primary menu-cta" data-act="go" data-to="campaign" id="menu-campaign">الحملة</button>
+        <button class="btn big" data-act="go" data-to="mode" id="menu-play">مباراة سريعة</button>
+      </div>
+      <!-- secondary screens as small tiles; the progression ones appear after the first campaign win -->
+      <div class="menu-tiles">
+        <button class="mtile mt-prog" data-act="go" data-to="pass" id="menu-pass"><span class="mt-ic">🎖️</span><span class="mt-l">ممر الصدع</span></button>
+        <button class="mtile mt-prog" data-act="go" data-to="cards" id="menu-cards"><span class="mt-ic">🃏</span><span class="mt-l">مجموعتي</span></button>
+        <button class="mtile mt-prog" data-act="go" data-to="packs" id="menu-packs"><span class="mt-ic">📦</span><span class="mt-l">الباكجات</span></button>
+        <button class="mtile mt-prog" data-act="loginOpen" id="menu-login"><span class="mt-ic">🎁</span><span class="mt-l">الدخول اليومي</span></button>
+        <button class="mtile" data-act="go" data-to="codex" id="menu-album"><span class="mt-ic">📖</span><span class="mt-l">الألبوم</span></button>
+        <button class="mtile" data-act="go" data-to="stats"><span class="mt-ic">📊</span><span class="mt-l">الإحصائيات</span></button>
+        <button class="mtile" data-act="saveOpen" id="menu-save"><span class="mt-ic">💾</span><span class="mt-l">الحفظ</span></button>
+        <button class="mtile" data-act="howto"><span class="mt-ic">❓</span><span class="mt-l">كيف ألعب؟</span></button>
+        <button class="mtile" data-act="sound" id="menu-sound"><span class="mt-ic">🔊</span><span class="mt-l">الصوت</span></button>
+      </div>
+      <p class="menu-newbie">ابدأ بالحملة: أول فوز يفتح لك الباكجات ومجموعتك وممر الصدع والجوائز اليومية.</p>
+      <div class="menu-heroes" id="menu-heroes"></div>
+      <p class="fineprint">كل العوالم والشخصيات أصلية. لعبة تجريبية: تقدّمك محفوظ في هذا المتصفح.</p>
+    </div>
+  </section>
+
+  <!-- ============ MODE SELECT ============ -->
+  <section class="screen" id="scr-mode">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>اختر نمط اللعب</h2></header>
+    <div class="mode-grid">
+      <div class="mode-card">
+        <h3>ضد الذكاء الاصطناعي</h3>
+        <p>7 جولات ضد خصم آلي</p>
+        <div class="seg" id="diff-seg">
+          <button data-act="diff" data-v="easy">سهل</button>
+          <button data-act="diff" data-v="normal" class="on">عادي</button>
+          <button data-act="diff" data-v="hard">صعب</button>
+        </div>
+        <button class="btn primary" data-act="mode" data-v="ai">ابدأ</button>
+      </div>
+      <div class="mode-card">
+        <h3>1 ضد 1 — نفس الجهاز</h3>
+        <p>لاعبان على جهاز واحد</p>
+        <button class="btn primary" data-act="mode" data-v="hotseat">ابدأ</button>
+      </div>
+      <div class="mode-card">
+        <h3>مباراة ودية</h3>
+        <p>سهلة وبوقت مضاعف للتعلّم</p>
+        <button class="btn" data-act="mode" data-v="friendly">ابدأ</button>
+      </div>
+      <div class="mode-card">
+        <h3>الحملة</h3>
+        <p>قتالات قصيرة، زعماء، جوائز · ابدأ من هنا</p>
+        <button class="btn primary" data-act="go" data-to="campaign">افتح الحملة</button>
+      </div>
+      <div class="mode-card soon">
+        <h3>التحدي التنافسي</h3>
+        <p>ضد لاعبين حقيقيين</p>
+        <span class="tag">قريبًا</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HERO SELECT ============ -->
+  <section class="screen" id="scr-hero">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="mode">→ رجوع</button><h2 id="hero-title">اختر بطلك</h2></header>
+    <div class="hero-grid" id="hero-grid"></div>
+    <div class="hero-foot"><button class="btn primary big" id="hero-confirm" data-act="heroConfirm" disabled>تأكيد</button></div>
+  </section>
+
+  <!-- ============ MATCH ============ -->
+  <section class="screen" id="scr-match">
+    <div class="topbar" id="topbar"></div>
+    <div class="match-grid">
+      <aside class="panel left" id="panel-left"></aside>
+      <main class="center">
+        <div class="field-wrap">
+          <div class="field" id="field">
+            <div class="field-bg"><div class="rift-line"></div></div>
+            <div class="slots" id="slots"></div>
+            <svg class="fx" id="fx" preserveAspectRatio="none"></svg>
+            <div class="floats" id="floats"></div>
+          </div>
+          <div class="side" id="side">
+            <div class="post" id="post-top"></div>
+            <div class="side-mid">
+              <div class="bench-row" id="bench"></div>
+              <div class="combat-ctrl" id="combat-ctrl"></div>
+            </div>
+            <div class="post" id="post-bottom"></div>
+          </div>
+        </div>
+      </main>
+      <aside class="panel right" id="panel-right"></aside>
+    </div>
+    <div class="shopbar" id="shopbar"></div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="screen" id="scr-results">
+    <div class="results" id="results"></div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="screen" id="scr-pass">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>ممر الصدع</h2></header>
+    <div class="pass" id="pass"></div>
+  </section>
+
+  <section class="screen" id="scr-cards">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>مجموعتي</h2></header>
+    <div class="collection" id="collection"></div>
+  </section>
+
+  <section class="screen" id="scr-packs">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الباكجات</h2></header>
+    <div class="packs" id="packs"></div>
+  </section>
+
+  <section class="screen" id="scr-campaign">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الحملة</h2></header>
+    <div class="campaign" id="campaign"></div>
+  </section>
+
+  <section class="screen" id="scr-stats">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الإحصائيات والتوازن</h2></header>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <!-- ============ CODEX ============ -->
+  <section class="screen" id="scr-codex">
+    <header class="scr-head"><button class="btn ghost" data-act="go" data-to="menu">→ رجوع</button><h2>الألبوم</h2></header>
+    <div class="codex" id="codex"></div>
+  </section>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="modal-back" id="modal-back"><div class="modal" id="modal"></div></div>
+  <div class="toasts" id="toasts"></div>
+</div>
+
+<script src="core/config.js"></script>
+<script src="core/data.js"></script>
+<script src="core/util.js"></script>
+<script src="core/synergy.js"></script>
+<script src="core/combat.js"></script>
+<script src="core/match.js"></script>
+<script src="core/ai.js"></script>
+<script src="core/telemetry.js"></script>
+<script src="core/save.js"></script>
+<script src="core/economy.js"></script>
+<script src="core/collection.js"></script>
+<script src="core/packs.js"></script>
+<script src="core/levels.js"></script>
+<script src="core/campaign.js"></script>
+<script src="core/daily.js"></script>
+<script src="core/album.js"></script>
+<script src="core/profile.js"></script>
+<script src="core/pass.js"></script>
+<script src="assets/characters/manifest.js"></script>
+<script src="ui/characters.js"></script>
+<script src="ui/art.js"></script>
+<script src="ui/ui.js"></script>
+<script src="ui/pass-ui.js"></script>
+<script src="ui/collection-ui.js"></script>
+<script src="ui/packs-ui.js"></script>
+<script src="ui/campaign-ui.js"></script>
+<script src="ui/daily-ui.js"></script>
+<script src="ui/album-ui.js"></script>
+<script src="ui/save-ui.js"></script>
+<script src="ui/update-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#111111">
+  <title>صانع المانجا</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- شاشة البداية -->
+  <section id="screen-start" class="screen active">
+    <div class="speedlines"></div>
+    <div class="start-box panel">
+      <div class="logo">
+        <span class="logo-small">週刊</span>
+        <h1>صانع<br><em>المانجا</em></h1>
+      </div>
+      <p class="tagline">10 أسابيع. فصل كل أسبوع. لا تخلّي القرّاء يملّون!</p>
+      <label class="name-label" for="series-name">اسم سلسلتك</label>
+      <input id="series-name" type="text" maxlength="28" placeholder="مثلاً: سيف الصحراء" autocomplete="off">
+      <button id="btn-new" class="btn btn-red">سلسلة جديدة ✒️</button>
+      <div id="start-stats" class="start-stats"></div>
+      <details class="howto">
+        <summary>كيف ألعب؟</summary>
+        <ul>
+          <li>اختر 5 بطاقات (كل مرة من 3 خيارات) ورتّب 4 منها في الصفحة خلال 45 ثانية.</li>
+          <li>💪→⚔️ ×2 · 😈→⚔️→❗ ×3 · 😂→😢 ×2 · ❗ بالنهاية +3</li>
+          <li>نفس النوع متتالي -2 · نفس النوع المسيطر 3 أسابيع = القرّاء يملّون -30%</li>
+          <li>آخر 3 أسابيع بالمراكز 8 وتحت = إلغاء! أفضل 3 بالنهاية = صفقة أنمي.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <!-- شاشة اللعب -->
+  <section id="screen-game" class="screen">
+    <header class="hud">
+      <div class="hud-name" id="hud-name"></div>
+      <div class="hud-row">
+        <span id="hud-week"></span>
+        <span id="hud-readers"></span>
+        <span class="hud-rank">المركز <b id="hud-rank">—</b></span>
+      </div>
+    </header>
+
+    <div id="phase-draw">
+      <div class="timer-wrap">
+        <div class="timer-bar"><div id="timer-bar"></div></div>
+        <div id="timer" class="timer">45</div>
+      </div>
+      <div class="draft">
+        <div id="draft-label" class="label"></div>
+        <div id="options" class="cards-row options"></div>
+      </div>
+      <div class="hand-wrap">
+        <div class="label">يدك</div>
+        <div id="hand" class="cards-row hand"></div>
+      </div>
+    </div>
+
+    <div class="page-wrap">
+      <div id="page" class="page"></div>
+      <div id="preview" class="preview"></div>
+    </div>
+
+    <div class="actions" id="actions">
+      <button id="btn-publish" class="btn btn-red">انشر الفصل 📤</button>
+    </div>
+
+    <div id="phase-publish" hidden>
+      <div id="meter" class="meter">
+        <div class="meter-label">حماس القرّاء</div>
+        <div class="meter-track"><div id="meter-fill"></div></div>
+        <div id="meter-num" class="meter-num">0</div>
+      </div>
+      <div id="rival-box" class="rival" hidden></div>
+      <div id="ranking" class="ranking" hidden></div>
+      <button id="btn-next" class="btn btn-red" hidden>الأسبوع الجاي ▶</button>
+    </div>
+
+    <div id="fx" class="fx"></div>
+  </section>
+
+  <!-- شاشة النهاية -->
+  <section id="screen-end" class="screen">
+    <div class="speedlines"></div>
+    <div id="end-fx" class="end-fx"></div>
+    <div class="end-box panel">
+      <div id="end-icon" class="end-icon"></div>
+      <h2 id="end-title"></h2>
+      <p id="end-sub"></p>
+      <div id="end-stats" class="end-stats"></div>
+      <button id="btn-again" class="btn btn-red">سلسلة جديدة ✒️</button>
+    </div>
+  </section>
+
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
